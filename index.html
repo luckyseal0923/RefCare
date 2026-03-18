@@ -271,262 +271,197 @@
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="hero">
-      <div class="pill">醫療端起案</div>
-      <h1>個案安置轉介平台</h1>
-      <p>
-        此頁提供醫療端建立安置轉介案件。送出後可串接 n8n / LINE Bot / 資料庫，
-        自動通知安置中心群組或各機構。
-      </p>
-    </div>
+<div class="wrap">
 
-    <div class="card">
-      <div class="section-title">個案基本資料</div>
-<div class="card">
-  <div class="section-title">長照轉介資訊</div>
+  <!-- =========================
+       HERO
+  ========================= -->
+  <div class="hero">
+    <div class="pill">醫療端起案</div>
+    <h1>個案安置轉介平台</h1>
+    <p>
+      此頁提供醫療端建立安置轉介案件。送出後可串接 n8n / LINE Bot / 資料庫，
+      自動通知安置中心群組或各機構。
+    </p>
+  </div>
 
-  <div class="grid">
-    <div class="field">
-      <label>服務類型</label>
-      <select id="serviceType">
-        <option value="">請選擇</option>
-        <option value="居家服務">居家服務</option>
-        <option value="居家喘息服務">居家喘息服務</option>
-      </select>
-    </div>
+  <!-- =========================
+       個案基本資料
+  ========================= -->
+  <div class="card">
+    <div class="section-title">個案基本資料</div>
 
-    <div class="field">
-      <label>CMS 失能等級</label>
-      <select id="cmsLevel">
-        <option value="">請選擇</option>
-        <option value="2">2級</option>
-        <option value="3">3級</option>
-        <option value="4">4級</option>
-        <option value="5">5級</option>
-        <option value="6">6級</option>
-        <option value="7">7級</option>
-        <option value="8">8級</option>
-      </select>
-    </div>
+    <div class="grid">
+      <div class="field">
+        <label for="caseId">案件編號</label>
+        <input type="text" id="caseId" readonly />
+        <div class="helper">系統自動產生，可避免直接顯示姓名。</div>
+      </div>
 
-    <div class="field">
-      <label>身高(cm)</label>
-      <input type="number" id="height" />
-    </div>
+      <div class="field">
+        <label for="referralTime">起案時間</label>
+        <input type="datetime-local" id="referralTime" />
+      </div>
 
-    <div class="field">
-      <label>體重(kg)</label>
-      <input type="number" id="weight" />
-    </div>
+      <div class="field">
+        <label for="hospital">轉介醫療單位<span class="required">*</span></label>
+        <input type="text" id="hospital" placeholder="例如：萬芳醫院急診" />
+      </div>
 
-    <div class="field full">
-      <label>地址</label>
-      <input type="text" id="address" />
-    </div>
+      <div class="field">
+        <label for="staffName">起案人<span class="required">*</span></label>
+        <input type="text" id="staffName" placeholder="例如：王小明 NP" />
+      </div>
 
-    <div class="field full">
-      <label>服務時段</label>
-      <input type="text" id="serviceTime" placeholder="例：每週一至五 08:00-10:00" />
+      <div class="field">
+        <label for="gender">性別<span class="required">*</span></label>
+        <select id="gender">
+          <option value="">請選擇</option>
+          <option value="男">男</option>
+          <option value="女">女</option>
+          <option value="其他">其他</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="age">年齡<span class="required">*</span></label>
+        <input type="number" id="age" min="0" max="120" />
+      </div>
+
+      <div class="field full">
+        <label for="diagnosis">主要診斷 / 安置原因<span class="required">*</span></label>
+        <textarea id="diagnosis"></textarea>
+      </div>
     </div>
   </div>
 
-  <div class="sub-title">服務碼別</div>
-  <div class="check-grid">
-    <label class="check-item"><input type="checkbox" value="BA02 基本照顧" class="service-code">BA02 基本照顧</label>
-    <label class="check-item"><input type="checkbox" value="BA11 關節運動" class="service-code">BA11 關節運動</label>
-    <label class="check-item"><input type="checkbox" value="BA13 外出陪同" class="service-code">BA13 外出陪同</label>
-    <label class="check-item"><input type="checkbox" value="BA20 陪伴服務" class="service-code">BA20 陪伴服務</label>
-    <label class="check-item"><input type="checkbox" value="BA15-1 家務協助" class="service-code">BA15-1 家務協助</label>
-  </div>
+  <!-- =========================
+       長照轉介資訊（獨立一張卡）
+  ========================= -->
+  <div class="card">
+    <div class="section-title">長照轉介資訊</div>
 
-  <div class="field">
-    <label>案況簡述（長照）</label>
-    <textarea id="caseSummary"></textarea>
-  </div>
+    <div class="grid">
+      <div class="field">
+        <label>服務類型</label>
+        <select id="serviceType">
+          <option value="">請選擇</option>
+          <option value="居家服務">居家服務</option>
+          <option value="居家喘息服務">居家喘息服務</option>
+        </select>
+      </div>
 
-  <div class="field">
-    <label>特殊需求（長照）</label>
-    <textarea id="specialNeedLong"></textarea>
-  </div>
+      <div class="field">
+        <label>CMS 失能等級</label>
+        <select id="cmsLevel">
+          <option value="">請選擇</option>
+          <option value="2">2級</option>
+          <option value="3">3級</option>
+          <option value="4">4級</option>
+          <option value="5">5級</option>
+          <option value="6">6級</option>
+          <option value="7">7級</option>
+          <option value="8">8級</option>
+        </select>
+      </div>
 
-  <div class="grid">
-    <div class="field">
-      <label>個管人員</label>
-      <input type="text" id="managerName" />
+      <div class="field">
+        <label>身高(cm)</label>
+        <input type="number" id="height" />
+      </div>
+
+      <div class="field">
+        <label>體重(kg)</label>
+        <input type="number" id="weight" />
+      </div>
+
+      <div class="field full">
+        <label>地址</label>
+        <input type="text" id="address" />
+      </div>
+
+      <div class="field full">
+        <label>服務時段</label>
+        <input type="text" id="serviceTime" />
+      </div>
+    </div>
+
+    <div class="sub-title">服務碼別</div>
+    <div class="check-grid">
+      <label class="check-item"><input type="checkbox" value="BA02 基本照顧" class="service-code">BA02 基本照顧</label>
+      <label class="check-item"><input type="checkbox" value="BA11 關節運動" class="service-code">BA11 關節運動</label>
+      <label class="check-item"><input type="checkbox" value="BA13 外出陪同" class="service-code">BA13 外出陪同</label>
+      <label class="check-item"><input type="checkbox" value="BA20 陪伴服務" class="service-code">BA20 陪伴服務</label>
+      <label class="check-item"><input type="checkbox" value="BA15-1 家務協助" class="service-code">BA15-1 家務協助</label>
     </div>
 
     <div class="field">
-      <label>手機</label>
-      <input type="text" id="managerPhone" />
+      <label>案況簡述（長照）</label>
+      <textarea id="caseSummary"></textarea>
     </div>
 
-    <div class="field full">
-      <label>市話 / 分機</label>
-      <input type="text" id="managerTel" />
+    <div class="field">
+      <label>特殊需求（長照）</label>
+      <textarea id="specialNeedLong"></textarea>
     </div>
   </div>
+
+  <!-- =========================
+       照護條件評估
+  ========================= -->
+  <div class="card">
+    <div class="section-title">照護條件評估</div>
+
+    <div class="grid-3">
+      <div class="field">
+        <label>ADL</label>
+        <select id="adl">
+          <option value="">請選擇</option>
+          <option value="可自理">可自理</option>
+          <option value="部分協助">部分協助</option>
+          <option value="完全依賴">完全依賴</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>行動能力</label>
+        <select id="mobility">
+          <option value="">請選擇</option>
+          <option value="可自行行走">可自行行走</option>
+          <option value="輪椅">輪椅</option>
+          <option value="臥床">臥床</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>意識</label>
+        <select id="consciousness">
+          <option value="">請選擇</option>
+          <option value="清楚">清楚</option>
+          <option value="混亂">混亂</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================
+       通知預覽
+  ========================= -->
+  <div class="card">
+    <div class="section-title">LINE 通知預覽</div>
+
+    <div id="messagePreview" class="preview-box"></div>
+
+    <div class="toolbar">
+      <button class="btn-secondary" id="btnPreview">更新預覽</button>
+      <button class="btn-primary" id="btnSubmit">送出案件</button>
+      <button class="btn-secondary" id="btnReset">清空</button>
+    </div>
+
+    <div id="statusBox" class="status"></div>
+  </div>
+
 </div>
-      <div class="grid">
-        <div class="field">
-          <label for="caseId">案件編號</label>
-          <input type="text" id="caseId" readonly />
-          <div class="helper">系統自動產生，可避免直接顯示姓名。</div>
-        </div>
-
-        <div class="field">
-          <label for="referralTime">起案時間</label>
-          <input type="datetime-local" id="referralTime" />
-        </div>
-
-        <div class="field">
-          <label for="hospital">轉介醫療單位<span class="required">*</span></label>
-          <input type="text" id="hospital" placeholder="例如：萬芳醫院急診" />
-        </div>
-
-        <div class="field">
-          <label for="staffName">起案人<span class="required">*</span></label>
-          <input type="text" id="staffName" placeholder="例如：王小明 NP" />
-        </div>
-
-        <div class="field">
-          <label for="gender">性別<span class="required">*</span></label>
-          <select id="gender">
-            <option value="">請選擇</option>
-            <option value="男">男</option>
-            <option value="女">女</option>
-            <option value="其他">其他</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label for="age">年齡<span class="required">*</span></label>
-          <input type="number" id="age" min="0" max="120" placeholder="請輸入年齡" />
-        </div>
-
-        <div class="field full">
-          <label for="diagnosis">主要診斷 / 安置原因<span class="required">*</span></label>
-          <textarea id="diagnosis" placeholder="例如：肺炎治療後病況穩定，需長照安置與後續照護"></textarea>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="section-title">照護條件評估</div>
-
-      <div class="grid-3">
-        <div class="field">
-          <label for="adl">ADL 狀態<span class="required">*</span></label>
-          <select id="adl">
-            <option value="">請選擇</option>
-            <option value="可自理">可自理</option>
-            <option value="部分協助">部分協助</option>
-            <option value="完全依賴">完全依賴</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label for="mobility">行動能力<span class="required">*</span></label>
-          <select id="mobility">
-            <option value="">請選擇</option>
-            <option value="可自行行走">可自行行走</option>
-            <option value="需助行器/輪椅">需助行器/輪椅</option>
-            <option value="臥床">臥床</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label for="consciousness">意識狀態</label>
-          <select id="consciousness">
-            <option value="">請選擇</option>
-            <option value="清楚">清楚</option>
-            <option value="嗜睡">嗜睡</option>
-            <option value="混亂">混亂</option>
-            <option value="失智/認知障礙">失智/認知障礙</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label for="oxygen">氧氣需求</label>
-          <select id="oxygen">
-            <option value="">請選擇</option>
-            <option value="無">無</option>
-            <option value="鼻導管 1-2L">鼻導管 1-2L</option>
-            <option value="鼻導管 3-5L">鼻導管 3-5L</option>
-            <option value="面罩氧氣">面罩氧氣</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label for="feeding">進食方式</label>
-          <select id="feeding">
-            <option value="">請選擇</option>
-            <option value="口服">口服</option>
-            <option value="鼻胃管">鼻胃管</option>
-            <option value="胃造口">胃造口</option>
-            <option value="靜脈營養">靜脈營養</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label for="excretion">排泄狀況</label>
-          <select id="excretion">
-            <option value="">請選擇</option>
-            <option value="可自理">可自理</option>
-            <option value="尿布使用">尿布使用</option>
-            <option value="留置導尿">留置導尿</option>
-            <option value="人工造口">人工造口</option>
-          </select>
-        </div>
-      </div>
-
-      <div style="height:18px;"></div>
-
-      <div class="sub-title">特殊照護需求</div>
-      <div class="check-grid">
-        <label class="check-item"><input type="checkbox" value="氣切照護" class="special-care">氣切照護</label>
-        <label class="check-item"><input type="checkbox" value="壓瘡傷口照護" class="special-care">壓瘡傷口照護</label>
-        <label class="check-item"><input type="checkbox" value="感染隔離需求" class="special-care">感染隔離需求</label>
-        <label class="check-item"><input type="checkbox" value="復健需求" class="special-care">復健需求</label>
-        <label class="check-item"><input type="checkbox" value="失智照護" class="special-care">失智照護</label>
-        <label class="check-item"><input type="checkbox" value="夜間躁動風險" class="special-care">夜間躁動風險</label>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="section-title">聯絡與備註</div>
-
-      <div class="grid">
-        <div class="field">
-          <label for="familyContact">家屬聯絡人</label>
-          <input type="text" id="familyContact" placeholder="例如：王先生" />
-        </div>
-
-        <div class="field">
-          <label for="familyPhone">聯絡電話</label>
-          <input type="text" id="familyPhone" placeholder="例如：0912-345-678" />
-        </div>
-
-        <div class="field full">
-          <label for="note">補充說明</label>
-          <textarea id="note" placeholder="例如：需女性床位、希望台北市區、可安排明日出院"></textarea>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="section-title">LINE / 群組通知預覽</div>
-      <div id="messagePreview" class="preview-box"></div>
-
-      <div class="toolbar">
-        <button type="button" class="btn-secondary" id="btnPreview">更新預覽</button>
-        <button type="button" class="btn-primary" id="btnSubmit">送出案件</button>
-        <button type="button" class="btn-secondary" id="btnReset">清空表單</button>
-      </div>
-
-      <div id="statusBox" class="status"></div>
-    </div>
-  </div>
 
   <script>
     function getServiceCodes() {
