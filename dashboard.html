@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>案件狀態看板｜個案安置轉介平台</title>
+  <style>
+    :root{
+      --primary:#7c3aed;
+      --primary-dark:#6d28d9;
+      --bg:#faf5ff;
+      --card:#ffffff;
+      --border:#e9d5ff;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --shadow:0 10px 30px rgba(15,23,42,0.08);
+      --pending-bg:#fff7ed;
+      --pending-tx:#9a3412;
+      --pending-bd:#fed7aa;
+      --match-bg:#eff6ff;
+      --match-tx:#1d4ed8;
+      --match-bd:#bfdbfe;
+      --done-bg:#f0fdf4;
+      --done-tx:#166534;
+      --done-bd:#bbf7d0;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif;
+      background:linear-gradient(180deg,#faf5ff 0%, #f8fafc 100%);
+      color:var(--text);
+    }
+
+    .wrap{
+      max-width:1200px;
+      margin:0 auto;
+      padding:24px 16px 50px;
+    }
+
+    .hero{
+      background:linear-gradient(135deg,#7c3aed 0%, #a78bfa 100%);
+      color:#fff;
+      border-radius:24px;
+      padding:26px 22px;
+      margin-bottom:18px;
+      box-shadow:var(--shadow);
+    }
+
+    .hero h1{
+      margin:0 0 8px;
+      font-size:28px;
+    }
+
+    .hero p{
+      margin:0;
+      color:rgba(255,255,255,0.92);
+      line-height:1.7;
+      font-size:15px;
+    }
+
+    .toolbar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      margin-bottom:18px;
+    }
+
+    .toolbar input,
+    .toolbar select{
+      border:1px solid #d8b4fe;
+      border-radius:14px;
+      padding:12px 14px;
+      font-size:14px;
+      background:#fff;
+      min-width:180px;
+    }
+
+    .toolbar button{
+      border:none;
+      border-radius:14px;
+      padding:12px 16px;
+      font-size:14px;
+      font-weight:700;
+      background:var(--primary);
+      color:#fff;
+      cursor:pointer;
+    }
+
+    .toolbar button:hover{
+      background:var(--primary-dark);
+    }
+
+    .board{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0,1fr));
+      gap:16px;
+    }
+
+    .column{
+      background:#ffffffcc;
+      backdrop-filter:blur(10px);
+      border:1px solid #e9d5ff;
+      border-radius:20px;
+      padding:14px;
+      min-height:420px;
+      box-shadow:var(--shadow);
+    }
+
+    .column h2{
+      margin:4px 0 14px;
+      font-size:18px;
+    }
+
+    .case-list{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .case-card{
+      background:#fff;
+      border:1px solid #e5e7eb;
+      border-radius:18px;
+      padding:14px;
+    }
+
+    .case-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      margin-bottom:10px;
+    }
+
+    .case-id{
+      font-size:14px;
+      font-weight:800;
+      color:#111827;
+      word-break:break-all;
+    }
+
+    .badge{
+      display:inline-block;
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:12px;
+      font-weight:800;
+      white-space:nowrap;
+    }
+
+    .badge.pending{
+      background:var(--pending-bg);
+      color:var(--pending-tx);
+      border:1px solid var(--pending-bd);
+    }
+
+    .badge.matching{
+      background:var(--match-bg);
+      color:var(--match-tx);
+      border:1px solid var(--match-bd);
+    }
+
+    .badge.done{
+      background:var(--done-bg);
+      color:var(--done-tx);
+      border:1px solid var(--done-bd);
+    }
+
+    .meta{
+      font-size:14px;
+      line-height:1.8;
+      color:#374151;
+    }
+
+    .meta strong{
+      color:#111827;
+    }
+
+    .reply-box{
+      margin-top:12px;
+      background:#f8fafc;
+      border:1px dashed #cbd5e1;
+      border-radius:14px;
+      padding:12px;
+    }
+
+    .reply-title{
+      font-size:13px;
+      font-weight:800;
+      margin-bottom:8px;
+      color:#334155;
+    }
+
+    .reply-item{
+      font-size:13px;
+      line-height:1.7;
+      margin-bottom:6px;
+      color:#475569;
+    }
+
+    .reply-item:last-child{
+      margin-bottom:0;
+    }
+
+    .empty{
+      color:#94a3b8;
+      font-size:14px;
+      padding:14px;
+      text-align:center;
+      border:1px dashed #cbd5e1;
+      border-radius:16px;
+      background:#f8fafc;
+    }
+
+    @media (max-width: 992px){
+      .board{
+        grid-template-columns:1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <h1>案件狀態看板</h1>
+      <p>
+        可查看每筆轉介案件目前進度、機構回覆狀況與結案狀態。
+        目前為前端 demo 版，之後可改為串接 API 自動載入資料。
+      </p>
+    </div>
+
+    <div class="toolbar">
+      <input type="text" id="searchInput" placeholder="搜尋案件編號 / 診斷 / 單位" />
+      <select id="statusFilter">
+        <option value="all">全部狀態</option>
+        <option value="待媒合">待媒合</option>
+        <option value="媒合中">媒合中</option>
+        <option value="已結案">已結案</option>
+      </select>
+      <button id="btnReload">重新整理</button>
+    </div>
+
+    <div class="board">
+      <div class="column">
+        <h2>待媒合</h2>
+        <div class="case-list" id="pendingList"></div>
+      </div>
+
+      <div class="column">
+        <h2>媒合中</h2>
+        <div class="case-list" id="matchingList"></div>
+      </div>
+
+      <div class="column">
+        <h2>已結案</h2>
+        <div class="case-list" id="doneList"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* =========================
+       之後可改成 API 載入
+       例如：
+       const DASHBOARD_API_URL = "https://your-n8n-url/webhook/referral-list";
+    ========================= */
+    const mockCases = [
+      {
+        case_id: "REF-20260318-A1B2",
+        hospital: "萬芳醫院急診",
+        age: 78,
+        gender: "男",
+        diagnosis: "肺炎治療後需長照安置",
+        adl: "部分協助",
+        mobility: "輪椅",
+        oxygen: "鼻導管 2L",
+        status: "待媒合",
+        created_at: "2026-03-18 09:10",
+        replies: []
+      },
+      {
+        case_id: "REF-20260318-C3D4",
+        hospital: "萬芳醫院急診",
+        age: 83,
+        gender: "女",
+        diagnosis: "中風後失能，需長期照護",
+        adl: "完全依賴",
+        mobility: "臥床",
+        oxygen: "無",
+        status: "媒合中",
+        created_at: "2026-03-18 08:30",
+        replies: [
+          { facility_name: "安心護理之家", reply: "accept", time: "09:00", note: "可先收案，需病摘" },
+          { facility_name: "福安長照中心", reply: "reject", time: "09:08", note: "目前滿床" }
+        ]
+      },
+      {
+        case_id: "REF-20260318-E5F6",
+        hospital: "萬芳醫院急診",
+        age: 91,
+        gender: "男",
+        diagnosis: "失智合併反覆感染，需安置",
+        adl: "完全依賴",
+        mobility: "臥床",
+        oxygen: "面罩氧氣",
+        status: "已結案",
+        created_at: "2026-03-18 07:20",
+        replies: [
+          { facility_name: "仁愛安養中心", reply: "accept", time: "08:15", note: "已確認收案" }
+        ]
+      }
+    ];
+
+    const pendingList = document.getElementById("pendingList");
+    const matchingList = document.getElementById("matchingList");
+    const doneList = document.getElementById("doneList");
+    const searchInput = document.getElementById("searchInput");
+    const statusFilter = document.getElementById("statusFilter");
+    const btnReload = document.getElementById("btnReload");
+
+    function replyText(reply) {
+      return reply === "accept" ? "✅ 可收案" : "❌ 無法收案";
+    }
+
+    function badgeClass(status) {
+      if (status === "待媒合") return "pending";
+      if (status === "媒合中") return "matching";
+      return "done";
+    }
+
+    function createCaseCard(item) {
+      const repliesHtml = item.replies.length
+        ? `
+          <div class="reply-box">
+            <div class="reply-title">機構回覆</div>
+            ${item.replies.map(r => `
+              <div class="reply-item">
+                <strong>${r.facility_name}</strong>｜${replyText(r.reply)}｜${r.time}<br>
+                ${r.note || "無補充說明"}
+              </div>
+            `).join("")}
+          </div>
+        `
+        : `
+          <div class="reply-box">
+            <div class="reply-title">機構回覆</div>
+            <div class="reply-item">目前尚無回覆</div>
+          </div>
+        `;
+
+      return `
+        <div class="case-card">
+          <div class="case-top">
+            <div class="case-id">${item.case_id}</div>
+            <span class="badge ${badgeClass(item.status)}">${item.status}</span>
+          </div>
+
+          <div class="meta">
+            <strong>單位：</strong>${item.hospital}<br>
+            <strong>個案：</strong>${item.age}歲 / ${item.gender}<br>
+            <strong>診斷：</strong>${item.diagnosis}<br>
+            <strong>ADL：</strong>${item.adl} / ${item.mobility}<br>
+            <strong>氧氣：</strong>${item.oxygen || "無"}<br>
+            <strong>起案時間：</strong>${item.created_at}
+          </div>
+
+          ${repliesHtml}
+        </div>
+      `;
+    }
+
+    function renderBoard() {
+      const keyword = searchInput.value.trim().toLowerCase();
+      const filterStatus = statusFilter.value;
+
+      const filtered = mockCases.filter(item => {
+        const matchKeyword =
+          item.case_id.toLowerCase().includes(keyword) ||
+          item.hospital.toLowerCase().includes(keyword) ||
+          item.diagnosis.toLowerCase().includes(keyword);
+
+        const matchStatus = filterStatus === "all" ? true : item.status === filterStatus;
+
+        return matchKeyword && matchStatus;
+      });
+
+      const pending = filtered.filter(i => i.status === "待媒合");
+      const matching = filtered.filter(i => i.status === "媒合中");
+      const done = filtered.filter(i => i.status === "已結案");
+
+      pendingList.innerHTML = pending.length
+        ? pending.map(createCaseCard).join("")
+        : `<div class="empty">目前沒有案件</div>`;
+
+      matchingList.innerHTML = matching.length
+        ? matching.map(createCaseCard).join("")
+        : `<div class="empty">目前沒有案件</div>`;
+
+      doneList.innerHTML = done.length
+        ? done.map(createCaseCard).join("")
+        : `<div class="empty">目前沒有案件</div>`;
+    }
+
+    searchInput.addEventListener("input", renderBoard);
+    statusFilter.addEventListener("change", renderBoard);
+    btnReload.addEventListener("click", renderBoard);
+
+    renderBoard();
+  </script>
+</body>
+</html>
