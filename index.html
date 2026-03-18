@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>個案安置轉介平台｜醫療端起案</title>
+  <style>
+    :root{
+      --primary:#0f766e;
+      --primary-dark:#115e59;
+      --bg:#f0fdfa;
+      --card:#ffffff;
+      --border:#cbd5e1;
+      --text:#0f172a;
+      --muted:#475569;
+      --danger:#dc2626;
+      --success:#16a34a;
+      --shadow:0 10px 30px rgba(15, 23, 42, 0.08);
+      --radius:18px;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif;
+      background:linear-gradient(180deg,#ecfeff 0%, #f8fafc 100%);
+      color:var(--text);
+    }
+
+    .wrap{
+      max-width:960px;
+      margin:0 auto;
+      padding:24px 16px 60px;
+    }
+
+    .hero{
+      background:linear-gradient(135deg,#0f766e 0%, #14b8a6 100%);
+      color:#fff;
+      border-radius:24px;
+      padding:28px 24px;
+      box-shadow:var(--shadow);
+      margin-bottom:22px;
+    }
+
+    .hero h1{
+      margin:0 0 10px;
+      font-size:28px;
+      line-height:1.3;
+    }
+
+    .hero p{
+      margin:0;
+      color:rgba(255,255,255,0.92);
+      font-size:15px;
+      line-height:1.7;
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid #e2e8f0;
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:22px;
+      margin-bottom:18px;
+    }
+
+    .section-title{
+      font-size:20px;
+      font-weight:700;
+      margin:0 0 18px;
+    }
+
+    .sub-title{
+      font-size:15px;
+      font-weight:700;
+      margin:0 0 14px;
+      color:var(--primary-dark);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0,1fr));
+      gap:16px;
+    }
+
+    .grid-3{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0,1fr));
+      gap:16px;
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .field.full{
+      grid-column:1 / -1;
+    }
+
+    label{
+      font-size:14px;
+      font-weight:700;
+      color:#1e293b;
+    }
+
+    .required{
+      color:var(--danger);
+      margin-left:4px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="datetime-local"],
+    select,
+    textarea{
+      width:100%;
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:13px 14px;
+      font-size:15px;
+      outline:none;
+      background:#fff;
+      transition:all .2s ease;
+    }
+
+    textarea{
+      min-height:110px;
+      resize:vertical;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus{
+      border-color:var(--primary);
+      box-shadow:0 0 0 4px rgba(20,184,166,0.12);
+    }
+
+    .check-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
+    }
+
+    .check-item{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:12px 14px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:#fff;
+    }
+
+    .check-item input{
+      width:18px;
+      height:18px;
+      accent-color:var(--primary);
+      flex-shrink:0;
+    }
+
+    .helper{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+    }
+
+    .toolbar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      margin-top:24px;
+    }
+
+    button{
+      border:none;
+      border-radius:14px;
+      padding:14px 18px;
+      font-size:15px;
+      font-weight:700;
+      cursor:pointer;
+      transition:all .2s ease;
+    }
+
+    .btn-primary{
+      background:var(--primary);
+      color:#fff;
+    }
+
+    .btn-primary:hover{
+      background:var(--primary-dark);
+      transform:translateY(-1px);
+    }
+
+    .btn-secondary{
+      background:#e2e8f0;
+      color:#0f172a;
+    }
+
+    .btn-secondary:hover{
+      background:#cbd5e1;
+    }
+
+    .preview-box{
+      background:#f8fafc;
+      border:1px dashed #94a3b8;
+      border-radius:16px;
+      padding:16px;
+      line-height:1.8;
+      font-size:14px;
+      color:#334155;
+      white-space:pre-wrap;
+      min-height:180px;
+    }
+
+    .status{
+      margin-top:16px;
+      padding:14px 16px;
+      border-radius:14px;
+      font-size:14px;
+      display:none;
+      line-height:1.7;
+    }
+
+    .status.success{
+      display:block;
+      background:#f0fdf4;
+      border:1px solid #bbf7d0;
+      color:#166534;
+    }
+
+    .status.error{
+      display:block;
+      background:#fef2f2;
+      border:1px solid #fecaca;
+      color:#991b1b;
+    }
+
+    .pill{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:700;
+      background:#ccfbf1;
+      color:#115e59;
+      margin-bottom:10px;
+    }
+
+    @media (max-width: 768px){
+      .grid,
+      .grid-3,
+      .check-grid{
+        grid-template-columns:1fr;
+      }
+
+      .hero h1{
+        font-size:24px;
+      }
+
+      .wrap{
+        padding:16px 12px 40px;
+      }
+
+      .card{
+        padding:18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div class="pill">醫療端起案</div>
+      <h1>個案安置轉介平台</h1>
+      <p>
+        此頁提供醫療端建立安置轉介案件。送出後可串接 n8n / LINE Bot / 資料庫，
+        自動通知安置中心群組或各機構。
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="section-title">個案基本資料</div>
+
+      <div class="grid">
+        <div class="field">
+          <label for="caseId">案件編號</label>
+          <input type="text" id="caseId" readonly />
+          <div class="helper">系統自動產生，可避免直接顯示姓名。</div>
+        </div>
+
+        <div class="field">
+          <label for="referralTime">起案時間</label>
+          <input type="datetime-local" id="referralTime" />
+        </div>
+
+        <div class="field">
+          <label for="hospital">轉介醫療單位<span class="required">*</span></label>
+          <input type="text" id="hospital" placeholder="例如：萬芳醫院急診" />
+        </div>
+
+        <div class="field">
+          <label for="staffName">起案人<span class="required">*</span></label>
+          <input type="text" id="staffName" placeholder="例如：王小明 NP" />
+        </div>
+
+        <div class="field">
+          <label for="gender">性別<span class="required">*</span></label>
+          <select id="gender">
+            <option value="">請選擇</option>
+            <option value="男">男</option>
+            <option value="女">女</option>
+            <option value="其他">其他</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="age">年齡<span class="required">*</span></label>
+          <input type="number" id="age" min="0" max="120" placeholder="請輸入年齡" />
+        </div>
+
+        <div class="field full">
+          <label for="diagnosis">主要診斷 / 安置原因<span class="required">*</span></label>
+          <textarea id="diagnosis" placeholder="例如：肺炎治療後病況穩定，需長照安置與後續照護"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">照護條件評估</div>
+
+      <div class="grid-3">
+        <div class="field">
+          <label for="adl">ADL 狀態<span class="required">*</span></label>
+          <select id="adl">
+            <option value="">請選擇</option>
+            <option value="可自理">可自理</option>
+            <option value="部分協助">部分協助</option>
+            <option value="完全依賴">完全依賴</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="mobility">行動能力<span class="required">*</span></label>
+          <select id="mobility">
+            <option value="">請選擇</option>
+            <option value="可自行行走">可自行行走</option>
+            <option value="需助行器/輪椅">需助行器/輪椅</option>
+            <option value="臥床">臥床</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="consciousness">意識狀態</label>
+          <select id="consciousness">
+            <option value="">請選擇</option>
+            <option value="清楚">清楚</option>
+            <option value="嗜睡">嗜睡</option>
+            <option value="混亂">混亂</option>
+            <option value="失智/認知障礙">失智/認知障礙</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="oxygen">氧氣需求</label>
+          <select id="oxygen">
+            <option value="">請選擇</option>
+            <option value="無">無</option>
+            <option value="鼻導管 1-2L">鼻導管 1-2L</option>
+            <option value="鼻導管 3-5L">鼻導管 3-5L</option>
+            <option value="面罩氧氣">面罩氧氣</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="feeding">進食方式</label>
+          <select id="feeding">
+            <option value="">請選擇</option>
+            <option value="口服">口服</option>
+            <option value="鼻胃管">鼻胃管</option>
+            <option value="胃造口">胃造口</option>
+            <option value="靜脈營養">靜脈營養</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="excretion">排泄狀況</label>
+          <select id="excretion">
+            <option value="">請選擇</option>
+            <option value="可自理">可自理</option>
+            <option value="尿布使用">尿布使用</option>
+            <option value="留置導尿">留置導尿</option>
+            <option value="人工造口">人工造口</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="height:18px;"></div>
+
+      <div class="sub-title">特殊照護需求</div>
+      <div class="check-grid">
+        <label class="check-item"><input type="checkbox" value="氣切照護" class="special-care">氣切照護</label>
+        <label class="check-item"><input type="checkbox" value="壓瘡傷口照護" class="special-care">壓瘡傷口照護</label>
+        <label class="check-item"><input type="checkbox" value="感染隔離需求" class="special-care">感染隔離需求</label>
+        <label class="check-item"><input type="checkbox" value="復健需求" class="special-care">復健需求</label>
+        <label class="check-item"><input type="checkbox" value="失智照護" class="special-care">失智照護</label>
+        <label class="check-item"><input type="checkbox" value="夜間躁動風險" class="special-care">夜間躁動風險</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">聯絡與備註</div>
+
+      <div class="grid">
+        <div class="field">
+          <label for="familyContact">家屬聯絡人</label>
+          <input type="text" id="familyContact" placeholder="例如：王先生" />
+        </div>
+
+        <div class="field">
+          <label for="familyPhone">聯絡電話</label>
+          <input type="text" id="familyPhone" placeholder="例如：0912-345-678" />
+        </div>
+
+        <div class="field full">
+          <label for="note">補充說明</label>
+          <textarea id="note" placeholder="例如：需女性床位、希望台北市區、可安排明日出院"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">LINE / 群組通知預覽</div>
+      <div id="messagePreview" class="preview-box"></div>
+
+      <div class="toolbar">
+        <button type="button" class="btn-secondary" id="btnPreview">更新預覽</button>
+        <button type="button" class="btn-primary" id="btnSubmit">送出案件</button>
+        <button type="button" class="btn-secondary" id="btnReset">清空表單</button>
+      </div>
+
+      <div id="statusBox" class="status"></div>
+    </div>
+  </div>
+
+  <script>
+    /* =========================
+       可改區：你的後端 Webhook URL
+    ========================= */
+    const CREATE_CASE_WEBHOOK_URL = "https://your-n8n-url/webhook/create-referral";
+
+    /* =========================
+       初始化
+    ========================= */
+    const $ = (id) => document.getElementById(id);
+
+    function getTaiwanDateTimeLocal() {
+      const now = new Date();
+      const taiwanTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+      return taiwanTime.toISOString().slice(0, 16);
+    }
+
+    function generateCaseId() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, "0");
+      const d = String(now.getDate()).padStart(2, "0");
+      const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
+      return `REF-${y}${m}${d}-${rand}`;
+    }
+
+    function initForm() {
+      $("caseId").value = generateCaseId();
+      $("referralTime").value = getTaiwanDateTimeLocal();
+      updatePreview();
+    }
+
+    /* =========================
+       收集表單資料
+    ========================= */
+    function getSpecialCareList() {
+      return Array.from(document.querySelectorAll(".special-care:checked")).map(item => item.value);
+    }
+
+    function getFormData() {
+      return {
+        case_id: $("caseId").value.trim(),
+        referral_time: $("referralTime").value,
+        hospital: $("hospital").value.trim(),
+        staff_name: $("staffName").value.trim(),
+        gender: $("gender").value,
+        age: $("age").value.trim(),
+        diagnosis: $("diagnosis").value.trim(),
+        adl: $("adl").value,
+        mobility: $("mobility").value,
+        consciousness: $("consciousness").value,
+        oxygen: $("oxygen").value,
+        feeding: $("feeding").value,
+        excretion: $("excretion").value,
+        special_care: getSpecialCareList(),
+        family_contact: $("familyContact").value.trim(),
+        family_phone: $("familyPhone").value.trim(),
+        note: $("note").value.trim(),
+        status: "待媒合"
+      };
+    }
+
+    function validateForm(data) {
+      if (!data.hospital) return "請填寫轉介醫療單位";
+      if (!data.staff_name) return "請填寫起案人";
+      if (!data.gender) return "請選擇性別";
+      if (!data.age) return "請填寫年齡";
+      if (!data.diagnosis) return "請填寫主要診斷 / 安置原因";
+      if (!data.adl) return "請選擇 ADL 狀態";
+      if (!data.mobility) return "請選擇行動能力";
+      return "";
+    }
+
+    /* =========================
+       通知文字預覽
+    ========================= */
+    function buildLineMessage(data) {
+      const specialCareText = data.special_care.length ? data.special_care.join("、") : "無";
+      const acceptUrl = `https://your-domain/facility.html?case_id=${encodeURIComponent(data.case_id)}`;
+
+      return [
+        "【新安置轉介案件】",
+        `案件編號：${data.case_id}`,
+        `起案單位：${data.hospital}`,
+        `個案資訊：${data.age}歲 / ${data.gender}`,
+        `主要診斷：${data.diagnosis || "未填寫"}`,
+        `ADL：${data.adl || "未填寫"}`,
+        `行動能力：${data.mobility || "未填寫"}`,
+        `氧氣需求：${data.oxygen || "未填寫"}`,
+        `特殊照護：${specialCareText}`,
+        "",
+        "可收案請點下方連結回覆：",
+        acceptUrl
+      ].join("\n");
+    }
+
+    function updatePreview() {
+      const data = getFormData();
+      $("messagePreview").textContent = buildLineMessage(data);
+    }
+
+    /* =========================
+       狀態顯示
+    ========================= */
+    function showStatus(type, message) {
+      const box = $("statusBox");
+      box.className = `status ${type}`;
+      box.textContent = message;
+    }
+
+    /* =========================
+       送出案件
+    ========================= */
+    async function submitForm() {
+      const data = getFormData();
+      const error = validateForm(data);
+
+      if (error) {
+        showStatus("error", error);
+        return;
+      }
+
+      const payload = {
+        ...data,
+        line_message_preview: buildLineMessage(data)
+      };
+
+      try {
+        showStatus("success", "送出中...");
+
+        const res = await fetch(CREATE_CASE_WEBHOOK_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+
+        const result = await res.json().catch(() => ({}));
+
+        showStatus(
+          "success",
+          `案件已成功送出。\n案件編號：${data.case_id}\n你之後可串接 LINE 群組通知、資料庫寫入與案件看板。`
+        );
+
+        console.log("create case result:", result);
+      } catch (err) {
+        showStatus(
+          "error",
+          `目前尚未成功送到後端。\n請先確認 CREATE_CASE_WEBHOOK_URL 是否已替換為你的 n8n webhook。\n錯誤：${err.message}`
+        );
+      }
+    }
+
+    /* =========================
+       清空表單
+    ========================= */
+    function resetForm() {
+      document.querySelectorAll("input[type='text'], input[type='number'], textarea").forEach(el => {
+        if (el.id !== "caseId") el.value = "";
+      });
+
+      document.querySelectorAll("select").forEach(el => el.value = "");
+      document.querySelectorAll(".special-care").forEach(el => el.checked = false);
+
+      $("referralTime").value = getTaiwanDateTimeLocal();
+      $("caseId").value = generateCaseId();
+      updatePreview();
+      $("statusBox").className = "status";
+      $("statusBox").textContent = "";
+    }
+
+    /* =========================
+       事件綁定
+    ========================= */
+    document.querySelectorAll("input, select, textarea").forEach(el => {
+      el.addEventListener("input", updatePreview);
+      el.addEventListener("change", updatePreview);
+    });
+
+    $("btnPreview").addEventListener("click", updatePreview);
+    $("btnSubmit").addEventListener("click", submitForm);
+    $("btnReset").addEventListener("click", resetForm);
+
+    initForm();
+  </script>
+</body>
+</html>
