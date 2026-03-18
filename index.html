@@ -283,7 +283,90 @@
 
     <div class="card">
       <div class="section-title">個案基本資料</div>
+<div class="card">
+  <div class="section-title">長照轉介資訊</div>
 
+  <div class="grid">
+    <div class="field">
+      <label>服務類型</label>
+      <select id="serviceType">
+        <option value="">請選擇</option>
+        <option value="居家服務">居家服務</option>
+        <option value="居家喘息服務">居家喘息服務</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>CMS 失能等級</label>
+      <select id="cmsLevel">
+        <option value="">請選擇</option>
+        <option value="2">2級</option>
+        <option value="3">3級</option>
+        <option value="4">4級</option>
+        <option value="5">5級</option>
+        <option value="6">6級</option>
+        <option value="7">7級</option>
+        <option value="8">8級</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>身高(cm)</label>
+      <input type="number" id="height" />
+    </div>
+
+    <div class="field">
+      <label>體重(kg)</label>
+      <input type="number" id="weight" />
+    </div>
+
+    <div class="field full">
+      <label>地址</label>
+      <input type="text" id="address" />
+    </div>
+
+    <div class="field full">
+      <label>服務時段</label>
+      <input type="text" id="serviceTime" placeholder="例：每週一至五 08:00-10:00" />
+    </div>
+  </div>
+
+  <div class="sub-title">服務碼別</div>
+  <div class="check-grid">
+    <label class="check-item"><input type="checkbox" value="BA02 基本照顧" class="service-code">BA02 基本照顧</label>
+    <label class="check-item"><input type="checkbox" value="BA11 關節運動" class="service-code">BA11 關節運動</label>
+    <label class="check-item"><input type="checkbox" value="BA13 外出陪同" class="service-code">BA13 外出陪同</label>
+    <label class="check-item"><input type="checkbox" value="BA20 陪伴服務" class="service-code">BA20 陪伴服務</label>
+    <label class="check-item"><input type="checkbox" value="BA15-1 家務協助" class="service-code">BA15-1 家務協助</label>
+  </div>
+
+  <div class="field">
+    <label>案況簡述（長照）</label>
+    <textarea id="caseSummary"></textarea>
+  </div>
+
+  <div class="field">
+    <label>特殊需求（長照）</label>
+    <textarea id="specialNeedLong"></textarea>
+  </div>
+
+  <div class="grid">
+    <div class="field">
+      <label>個管人員</label>
+      <input type="text" id="managerName" />
+    </div>
+
+    <div class="field">
+      <label>手機</label>
+      <input type="text" id="managerPhone" />
+    </div>
+
+    <div class="field full">
+      <label>市話 / 分機</label>
+      <input type="text" id="managerTel" />
+    </div>
+  </div>
+</div>
       <div class="grid">
         <div class="field">
           <label for="caseId">案件編號</label>
@@ -446,6 +529,10 @@
   </div>
 
   <script>
+    function getServiceCodes() {
+  return Array.from(document.querySelectorAll(".service-code:checked"))
+    .map(el => el.value);
+}
     /* =========================
        可改區：你的後端 Webhook URL
     ========================= */
@@ -484,28 +571,46 @@
       return Array.from(document.querySelectorAll(".special-care:checked")).map(item => item.value);
     }
 
-    function getFormData() {
-      return {
-        case_id: $("caseId").value.trim(),
-        referral_time: $("referralTime").value,
-        hospital: $("hospital").value.trim(),
-        staff_name: $("staffName").value.trim(),
-        gender: $("gender").value,
-        age: $("age").value.trim(),
-        diagnosis: $("diagnosis").value.trim(),
-        adl: $("adl").value,
-        mobility: $("mobility").value,
-        consciousness: $("consciousness").value,
-        oxygen: $("oxygen").value,
-        feeding: $("feeding").value,
-        excretion: $("excretion").value,
-        special_care: getSpecialCareList(),
-        family_contact: $("familyContact").value.trim(),
-        family_phone: $("familyPhone").value.trim(),
-        note: $("note").value.trim(),
-        status: "待媒合"
-      };
-    }
+function getFormData() {
+  return {
+    case_id: $("caseId").value.trim(),
+    referral_time: $("referralTime").value,
+    hospital: $("hospital").value.trim(),
+    staff_name: $("staffName").value.trim(),
+    gender: $("gender").value,
+    age: $("age").value.trim(),
+    diagnosis: $("diagnosis").value.trim(),
+
+    adl: $("adl").value,
+    mobility: $("mobility").value,
+    consciousness: $("consciousness").value,
+    oxygen: $("oxygen").value,
+    feeding: $("feeding").value,
+    excretion: $("excretion").value,
+    special_care: getSpecialCareList(),
+
+    // 🔥 新增長照欄位
+    service_type: $("serviceType").value,
+    cms_level: $("cmsLevel").value,
+    height: $("height").value,
+    weight: $("weight").value,
+    address: $("address").value,
+    service_time: $("serviceTime").value,
+    service_codes: getServiceCodes(),
+    case_summary: $("caseSummary").value,
+    special_need_long: $("specialNeedLong").value,
+    manager_name: $("managerName").value,
+    manager_phone: $("managerPhone").value,
+    manager_tel: $("managerTel").value,
+
+    family_contact: $("familyContact").value.trim(),
+    family_phone: $("familyPhone").value.trim(),
+    note: $("note").value.trim(),
+
+    status: "待媒合"
+  };
+}
+    
 
     function validateForm(data) {
       if (!data.hospital) return "請填寫轉介醫療單位";
@@ -521,25 +626,38 @@
     /* =========================
        通知文字預覽
     ========================= */
-    function buildLineMessage(data) {
-      const specialCareText = data.special_care.length ? data.special_care.join("、") : "無";
-      const acceptUrl = `https://your-domain/facility.html?case_id=${encodeURIComponent(data.case_id)}`;
+function buildLineMessage(data) {
+  return `
+【居家服務轉介】
 
-      return [
-        "【新安置轉介案件】",
-        `案件編號：${data.case_id}`,
-        `起案單位：${data.hospital}`,
-        `個案資訊：${data.age}歲 / ${data.gender}`,
-        `主要診斷：${data.diagnosis || "未填寫"}`,
-        `ADL：${data.adl || "未填寫"}`,
-        `行動能力：${data.mobility || "未填寫"}`,
-        `氧氣需求：${data.oxygen || "未填寫"}`,
-        `特殊照護：${specialCareText}`,
-        "",
-        "可收案請點下方連結回覆：",
-        acceptUrl
-      ].join("\n");
-    }
+■服務類型：
+${data.service_type || "-"}
+
+■個案資訊：
+${data.age}歲 / ${data.gender}
+身高${data.height || "-"} / 體重${data.weight || "-"}
+CMS：${data.cms_level || "-"}級
+地址：${data.address || "-"}
+
+■服務需求：
+${data.service_time || "-"}
+服務碼：${data.service_codes.length ? data.service_codes.join("、") : "-"}
+
+■案況簡述：
+${data.case_summary || data.diagnosis || "-"}
+
+■特殊需求：
+${data.special_need_long || "-"}
+
+■聯絡方式：
+${data.manager_name || "-"}
+📱 ${data.manager_phone || "-"}
+☎ ${data.manager_tel || "-"}
+
+👉 回覆是否可收案：
+https://your-domain/facility.html?case_id=${data.case_id}
+`;
+}
 
     function updatePreview() {
       const data = getFormData();
