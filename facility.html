@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>安置機構回覆｜個案安置轉介平台</title>
+  <style>
+    :root{
+      --primary:#2563eb;
+      --primary-dark:#1d4ed8;
+      --success:#16a34a;
+      --danger:#dc2626;
+      --bg:#eff6ff;
+      --card:#ffffff;
+      --border:#cbd5e1;
+      --text:#0f172a;
+      --muted:#475569;
+      --shadow:0 10px 30px rgba(15,23,42,0.08);
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif;
+      background:linear-gradient(180deg,#eff6ff 0%, #f8fafc 100%);
+      color:var(--text);
+    }
+
+    .wrap{
+      max-width:760px;
+      margin:0 auto;
+      padding:24px 14px 40px;
+    }
+
+    .card{
+      background:#fff;
+      border:1px solid #e2e8f0;
+      border-radius:22px;
+      box-shadow:var(--shadow);
+      padding:22px;
+      margin-bottom:18px;
+    }
+
+    .header{
+      background:linear-gradient(135deg,#2563eb 0%, #60a5fa 100%);
+      color:#fff;
+    }
+
+    h1{
+      margin:0 0 8px;
+      font-size:26px;
+    }
+
+    .desc{
+      margin:0;
+      line-height:1.7;
+      color:rgba(255,255,255,0.92);
+      font-size:15px;
+    }
+
+    .info-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:14px;
+    }
+
+    .info-item{
+      background:#f8fafc;
+      border:1px solid #e2e8f0;
+      border-radius:16px;
+      padding:14px;
+    }
+
+    .info-label{
+      font-size:13px;
+      color:var(--muted);
+      margin-bottom:6px;
+    }
+
+    .info-value{
+      font-size:15px;
+      font-weight:700;
+      line-height:1.6;
+      word-break:break-word;
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      margin-bottom:16px;
+    }
+
+    label{
+      font-size:14px;
+      font-weight:700;
+    }
+
+    input[type="text"],
+    select,
+    textarea{
+      width:100%;
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:13px 14px;
+      font-size:15px;
+      outline:none;
+      transition:all .2s ease;
+    }
+
+    textarea{
+      min-height:100px;
+      resize:vertical;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus{
+      border-color:var(--primary);
+      box-shadow:0 0 0 4px rgba(37,99,235,0.12);
+    }
+
+    .reply-actions{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-top:8px;
+    }
+
+    button{
+      border:none;
+      border-radius:14px;
+      padding:15px 16px;
+      font-size:16px;
+      font-weight:800;
+      cursor:pointer;
+      transition:all .2s ease;
+    }
+
+    .btn-accept{
+      background:var(--success);
+      color:#fff;
+    }
+
+    .btn-accept:hover{
+      transform:translateY(-1px);
+      filter:brightness(0.96);
+    }
+
+    .btn-reject{
+      background:var(--danger);
+      color:#fff;
+    }
+
+    .btn-reject:hover{
+      transform:translateY(-1px);
+      filter:brightness(0.96);
+    }
+
+    .status{
+      display:none;
+      margin-top:14px;
+      padding:14px 16px;
+      border-radius:14px;
+      line-height:1.7;
+      font-size:14px;
+    }
+
+    .status.success{
+      display:block;
+      background:#f0fdf4;
+      border:1px solid #bbf7d0;
+      color:#166534;
+    }
+
+    .status.error{
+      display:block;
+      background:#fef2f2;
+      border:1px solid #fecaca;
+      color:#991b1b;
+    }
+
+    .badge{
+      display:inline-block;
+      background:#dbeafe;
+      color:#1d4ed8;
+      font-size:12px;
+      font-weight:700;
+      padding:6px 10px;
+      border-radius:999px;
+      margin-bottom:10px;
+    }
+
+    @media (max-width:768px){
+      .info-grid,
+      .reply-actions{
+        grid-template-columns:1fr;
+      }
+
+      h1{
+        font-size:22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card header">
+      <div class="badge">安置機構回覆頁面</div>
+      <h1>回覆是否可收案</h1>
+      <p class="desc">
+        請安置機構確認目前是否可收案。此頁可由群組訊息連結直接開啟，
+        不一定要登入，也適合手機操作。
+      </p>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0;">案件資訊</h2>
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-label">案件編號</div>
+          <div class="info-value" id="caseIdView">-</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">個案資訊</div>
+          <div class="info-value" id="basicView">78歲 / 男</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">主要診斷</div>
+          <div class="info-value" id="diagnosisView">肺炎治療後需轉介安置</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">ADL / 行動能力</div>
+          <div class="info-value" id="careView">部分協助 / 輪椅</div>
+        </div>
+        <div class="info-item" style="grid-column:1 / -1;">
+          <div class="info-label">特殊需求</div>
+          <div class="info-value" id="specialView">氧氣 2L、鼻胃管、失智照護</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0;">機構回覆</h2>
+
+      <div class="field">
+        <label for="facilityName">機構名稱</label>
+        <input type="text" id="facilityName" placeholder="例如：安心護理之家" />
+      </div>
+
+      <div class="field">
+        <label for="contactPerson">聯絡窗口</label>
+        <input type="text" id="contactPerson" placeholder="例如：林小姐" />
+      </div>
+
+      <div class="field">
+        <label for="contactPhone">聯絡電話</label>
+        <input type="text" id="contactPhone" placeholder="例如：02-1234-5678" />
+      </div>
+
+      <div class="field">
+        <label for="replyNote">補充說明</label>
+        <textarea id="replyNote" placeholder="例如：可安排明日下午入住；需先提供摘要與用藥資訊"></textarea>
+      </div>
+
+      <div class="reply-actions">
+        <button class="btn-accept" id="btnAccept">✅ 可收案</button>
+        <button class="btn-reject" id="btnReject">❌ 無法收案</button>
+      </div>
+
+      <div id="statusBox" class="status"></div>
+    </div>
+  </div>
+
+  <script>
+    /* =========================
+       可改區：你的後端 Webhook URL
+    ========================= */
+    const FACILITY_REPLY_WEBHOOK_URL = "https://your-n8n-url/webhook/facility-reply";
+
+    const $ = (id) => document.getElementById(id);
+
+    /* =========================
+       讀取網址參數
+       範例：
+       facility.html?case_id=REF-20260318-ABCD&age=78&gender=男&diagnosis=肺炎...
+    ========================= */
+    function getQueryParams() {
+      const params = new URLSearchParams(window.location.search);
+      return {
+        case_id: params.get("case_id") || "REF-DEMO-001",
+        age: params.get("age") || "78",
+        gender: params.get("gender") || "男",
+        diagnosis: params.get("diagnosis") || "肺炎治療後需安置照護",
+        adl: params.get("adl") || "部分協助",
+        mobility: params.get("mobility") || "輪椅",
+        special: params.get("special") || "氧氣需求、鼻胃管"
+      };
+    }
+
+    function renderCaseInfo() {
+      const data = getQueryParams();
+      $("caseIdView").textContent = data.case_id;
+      $("basicView").textContent = `${data.age}歲 / ${data.gender}`;
+      $("diagnosisView").textContent = data.diagnosis;
+      $("careView").textContent = `${data.adl} / ${data.mobility}`;
+      $("specialView").textContent = data.special;
+    }
+
+    function showStatus(type, message) {
+      const box = $("statusBox");
+      box.className = `status ${type}`;
+      box.textContent = message;
+    }
+
+    function getReplyPayload(replyStatus) {
+      const data = getQueryParams();
+
+      return {
+        case_id: data.case_id,
+        facility_name: $("facilityName").value.trim(),
+        contact_person: $("contactPerson").value.trim(),
+        contact_phone: $("contactPhone").value.trim(),
+        reply: replyStatus,
+        reply_note: $("replyNote").value.trim(),
+        reply_time: new Date().toISOString()
+      };
+    }
+
+    async function submitReply(replyStatus) {
+      const payload = getReplyPayload(replyStatus);
+
+      if (!payload.facility_name) {
+        showStatus("error", "請先填寫機構名稱");
+        return;
+      }
+
+      try {
+        showStatus("success", "送出中...");
+
+        const res = await fetch(FACILITY_REPLY_WEBHOOK_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+
+        const result = await res.json().catch(() => ({}));
+
+        showStatus(
+          "success",
+          `已成功回覆：${replyStatus === "accept" ? "可收案" : "無法收案"}\n案件編號：${payload.case_id}`
+        );
+
+        console.log("facility reply result:", result);
+      } catch (err) {
+        showStatus(
+          "error",
+          `目前尚未成功送到後端。\n請先確認 FACILITY_REPLY_WEBHOOK_URL 是否已替換。\n錯誤：${err.message}`
+        );
+      }
+    }
+
+    $("btnAccept").addEventListener("click", () => submitReply("accept"));
+    $("btnReject").addEventListener("click", () => submitReply("reject"));
+
+    renderCaseInfo();
+  </script>
+</body>
+</html>
