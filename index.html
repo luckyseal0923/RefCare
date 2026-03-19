@@ -325,52 +325,59 @@
       自動通知安置中心群組或各機構。
     </p>
   </div>
-
-  <!-- =========================
-       個案基本資料
-  ========================= -->
+<!-- =========================
+     立案基本資料（卡片1）
+========================= -->
 <div class="card">
-  <div class="section-title">個案基本資料</div>
-
+  <div class="section-title">立案基本資料</div>
   <div class="grid">
+
+    <!-- 第一列 -->
     <div class="field">
-      <label for="caseId">案件編號</label>
+      <label>案件編號</label>
       <input type="text" id="caseId" readonly />
-      <div class="helper">系統自動產生，可避免直接顯示姓名。</div>
     </div>
 
     <div class="field">
-      <label for="referralTime">起案時間</label>
+      <label>起案時間</label>
       <input type="datetime-local" id="referralTime" />
     </div>
 
+    <!-- 第二列 -->
     <div class="field">
-      <label for="hospital">轉介醫療單位<span class="required">*</span></label>
-      <input type="text" id="hospital" placeholder="例如：萬芳醫院急診" />
+      <label>個管師姓名<span class="required">*</span></label>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="caseManager" style="flex:1;" />
+        <button type="button" class="btn-secondary" onclick="fillMyInfo()">帶入登入者資訊</button>
+      </div>
     </div>
 
     <div class="field">
-      <label for="caseManager">個管師姓名<span class="required">*</span></label>
-      <input type="text" id="caseManager" placeholder="例如：王小明" />
+      <label>聯絡電話<span class="required">*</span></label>
+      <input type="text" id="caseManagerPhone" />
+    </div>
+
+    <!-- 第三列 -->
+    <div class="field">
+      <label>轉介醫療單位<span class="required">*</span></label>
+      <input type="text" id="hospital" />
     </div>
 
     <div class="field">
-      <label for="caseManagerPhone">聯絡電話<span class="required">*</span></label>
-      <input type="text" id="caseManagerPhone" placeholder="例如：0912345678" />
+      <label>單位分機</label>
+      <input type="text" id="hospitalExt" />
     </div>
+
   </div>
 </div>
 
-  <!-- =========================
-       長照轉介資訊（獨立一張卡）
-  ========================= -->
- 
+<!-- =========================
+     個案基本資料 + 功能評估（卡片2）
+========================= -->
 <div class="card">
-  <div class="section-title">長照轉介資訊</div>
+  <div class="section-title">個案基本資料與功能評估</div>
 
-  <!-- =========================
-       ① 個案基本資訊
-  ========================= -->
+  <!-- 個案基本資訊 -->
   <div class="sub-title">個案基本資訊</div>
   <div class="grid">
 
@@ -421,9 +428,7 @@
 
   </div>
 
-  <!-- =========================
-       ② 功能評估
-  ========================= -->
+  <!-- 功能評估 -->
   <div class="sub-title">功能評估</div>
   <div class="grid-3">
 
@@ -471,6 +476,14 @@
     </div>
 
   </div>
+</div>
+  
+  <!-- =========================
+       長照轉介資訊（獨立一張卡）
+  ========================= -->
+ 
+<div class="card">
+  <div class="section-title">服務項目與照護內容</div>
 
   <!-- =========================
        ③ 服務需求
@@ -514,6 +527,12 @@
     <label>特殊需求（長照）</label>
     <textarea id="specialNeedLong"></textarea>
   </div>
+
+
+
+  </div>
+
+
 
 </div>
   <!-- =========================
@@ -612,7 +631,10 @@ function updateCount(code, delta){
 function confirmService(){
   const selected = Object.entries(serviceCount)
     .filter(([_, v]) => v > 0)
-    .map(([k, v]) => `${k} x${v}`);
+    .map(([k, v]) => {
+  const svc = services.find(s => s.code === k);
+  return `${k} ${svc?.name || ""} x${v}`;
+});
 
   document.getElementById("selectedServices").textContent =
     selected.length ? selected.join("、") : "尚未選擇";
@@ -659,6 +681,7 @@ function initForm() {
 ========================= */
 function getFormData() {
   return {
+    hospital_ext: $("hospitalExt").value,
     case_id: $("caseId").value.trim(),
     referral_time: $("referralTime").value,
     hospital: $("hospital").value.trim(),
@@ -704,6 +727,8 @@ function validateForm(data) {
   if (!data.gender) return "請選擇性別";
   if (!data.age) return "請填寫年齡";
   if (!data.case_summary) return "請填寫案況簡述";
+  if (!data.service_type) return "請選擇服務類型";
+  if (!data.service_codes.length) return "請選擇至少一項服務碼";
   return "";
 }
 
@@ -717,6 +742,9 @@ function buildLineMessage(data) {
 ■服務類型：
 ${data.service_type || "-"}
 
+■轉介單位：
+${data.hospital || "-"}（分機 ${data.hospital_ext || "-"}）
+
 ■個案資訊：
 ${data.age}歲 / ${data.gender}
 身高${data.height || "-"} / 體重${data.weight || "-"}
@@ -727,7 +755,10 @@ CMS：${data.cms_level || "-"}級
 ${data.service_time || "-"}
 服務碼：${
   data.service_codes.length
-    ? data.service_codes.map(s => `${s.code} x${s.count}`).join("、")
+    ? data.service_codes.map(s => {
+        const svc = services.find(x => x.code === s.code);
+        return `${s.code} ${svc?.name || ""} x${s.count}`;
+      }).join("、")
     : "-"
 }
 
@@ -817,13 +848,15 @@ https://your-domain/facility.html?case_id=${data.case_id}
       });
 
       document.querySelectorAll("select").forEach(el => el.value = "");
-      document.querySelectorAll(".special-care").forEach(el => el.checked = false);
-
+      
       $("referralTime").value = getTaiwanDateTimeLocal();
       $("caseId").value = generateCaseId();
       updatePreview();
       $("statusBox").className = "status";
       $("statusBox").textContent = "";
+
+      serviceCount = {};
+      document.getElementById("selectedServices").textContent = "尚未選擇";
     }
 
     /* =========================
@@ -839,6 +872,16 @@ https://your-domain/facility.html?case_id=${data.case_id}
     $("btnReset").addEventListener("click", resetForm);
 
     initForm();
+
+    function fillMyInfo() {
+  // mock（未來接登入系統）
+  document.getElementById("caseManager").value = "王小明";
+  document.getElementById("caseManagerPhone").value = "0912345678";
+  document.getElementById("hospital").value = "萬芳醫院急診";
+  document.getElementById("hospitalExt").value = "1234";
+
+  updatePreview();
+}
   </script>
 </body>
 </html>
