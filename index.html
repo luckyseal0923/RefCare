@@ -268,6 +268,47 @@
         padding:18px;
       }
     }
+    .modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.4);
+  z-index:999;
+}
+
+.modal-content{
+  background:#fff;
+  width:95%;
+  max-width:900px;
+  margin:40px auto;
+  border-radius:18px;
+  padding:20px;
+  max-height:80vh;
+  overflow:auto;
+}
+
+.service-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px;
+  border-bottom:1px solid #eee;
+}
+
+.counter{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
+.counter button{
+  width:30px;
+  height:30px;
+  border:none;
+  border-radius:8px;
+  background:#e2e8f0;
+  cursor:pointer;
+}
   </style>
 </head>
 <body>
@@ -452,15 +493,17 @@
     </div>
 
   </div>
+<div class="sub-title">服務碼別</div>
 
-  <div class="sub-title">服務碼別（可複選）</div>
-  <div class="check-grid">
-    <label class="check-item"><input type="checkbox" value="BA02 基本照顧" class="service-code">BA02 基本照顧</label>
-    <label class="check-item"><input type="checkbox" value="BA11 關節運動" class="service-code">BA11 關節運動</label>
-    <label class="check-item"><input type="checkbox" value="BA13 外出陪同" class="service-code">BA13 外出陪同</label>
-    <label class="check-item"><input type="checkbox" value="BA20 陪伴服務" class="service-code">BA20 陪伴服務</label>
-    <label class="check-item"><input type="checkbox" value="BA15-1 家務協助" class="service-code">BA15-1 家務協助</label>
+<div class="field">
+  <button type="button" class="btn-secondary" onclick="openServiceModal()">
+    選擇服務碼（含次數）
+  </button>
+
+  <div id="selectedServices" class="helper">
+    尚未選擇
   </div>
+</div>
 
   <div class="field">
     <label>案況簡述（長照）</label>
@@ -492,90 +535,165 @@
 
 </div>
 
+  <div id="serviceModal" class="modal">
+  <div class="modal-content">
+
+    <div style="display:flex;justify-content:space-between;">
+      <h3>選擇服務碼</h3>
+      <span onclick="closeServiceModal()" style="cursor:pointer;">✕</span>
+    </div>
+
+    <div id="serviceList"></div>
+
+    <div class="toolbar">
+      <button class="btn-secondary" onclick="closeServiceModal()">取消</button>
+      <button class="btn-primary" onclick="confirmService()">確認</button>
+    </div>
+
+  </div>
+</div>
   <script>
-    function getServiceCodes() {
-  return Array.from(document.querySelectorAll(".service-code:checked"))
-    .map(el => el.value);
+function getSpecialCareList() {
+  return Array.from(document.querySelectorAll(".special-care:checked")).map(item => item.value);
 }
-    /* =========================
-       可改區：你的後端 Webhook URL
-    ========================= */
-    const CREATE_CASE_WEBHOOK_URL = "https://your-n8n-url/webhook/create-referral";
 
     /* =========================
-       初始化
-    ========================= */
-    const $ = (id) => document.getElementById(id);
+   🔥 新增：服務碼 Modal 系統
+========================= */
+const services = [
+  { code: "BA01", name: "基本身體清潔" },
+  { code: "BA02", name: "基本日常照顧" },
+  { code: "BA03", name: "測量生命徵象" },
+  { code: "BA04", name: "協助餵食或灌食" },
+  { code: "BA05", name: "餐食照顧" },
+  { code: "BA07", name: "協助沐浴及洗頭" },
+  { code: "BA08", name: "足部照護" },
+  { code: "BA11", name: "肢體關節活動" },
+  { code: "BA13", name: "陪同外出" },
+  { code: "BA20", name: "陪伴服務" }
+];
 
-    function getTaiwanDateTimeLocal() {
-      const now = new Date();
-      const taiwanTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
-      return taiwanTime.toISOString().slice(0, 16);
-    }
+let serviceCount = {};
 
-    function generateCaseId() {
-      const now = new Date();
-      const y = now.getFullYear();
-      const m = String(now.getMonth() + 1).padStart(2, "0");
-      const d = String(now.getDate()).padStart(2, "0");
-      const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
-      return `REF-${y}${m}${d}-${rand}`;
-    }
+function openServiceModal(){
+  const list = document.getElementById("serviceList");
+  list.innerHTML = "";
 
-    function initForm() {
-      $("caseId").value = generateCaseId();
-      $("referralTime").value = getTaiwanDateTimeLocal();
-      updatePreview();
-    }
+  services.forEach(s => {
+    const count = serviceCount[s.code] || 0;
 
-    /* =========================
-       收集表單資料
-    ========================= */
-    function getSpecialCareList() {
-      return Array.from(document.querySelectorAll(".special-care:checked")).map(item => item.value);
-    }
+    list.innerHTML += `
+      <div class="service-row">
+        <div>${s.code} ${s.name}</div>
+        <div class="counter">
+          <button onclick="updateCount('${s.code}', -1)">-</button>
+          <span id="count-${s.code}">${count}</span>
+          <button onclick="updateCount('${s.code}', 1)">+</button>
+        </div>
+      </div>
+    `;
+  });
 
+  document.getElementById("serviceModal").style.display = "block";
+}
+
+function closeServiceModal(){
+  document.getElementById("serviceModal").style.display = "none";
+}
+
+function updateCount(code, delta){
+  if (!serviceCount[code]) serviceCount[code] = 0;
+  serviceCount[code] += delta;
+  if (serviceCount[code] < 0) serviceCount[code] = 0;
+
+  document.getElementById(`count-${code}`).textContent = serviceCount[code];
+}
+
+function confirmService(){
+  const selected = Object.entries(serviceCount)
+    .filter(([_, v]) => v > 0)
+    .map(([k, v]) => `${k} x${v}`);
+
+  document.getElementById("selectedServices").textContent =
+    selected.length ? selected.join("、") : "尚未選擇";
+
+closeServiceModal();
+updatePreview();
+}
+
+/* =========================
+   原本的 getFormData（不要動位置）
+========================= */
+/* =========================
+   基本設定（要在外面）
+========================= */
+const CREATE_CASE_WEBHOOK_URL = "https://your-n8n-url/webhook/create-referral";
+const $ = (id) => document.getElementById(id);
+
+/* =========================
+   初始化
+========================= */
+function getTaiwanDateTimeLocal() {
+  const now = new Date();
+  const taiwanTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+  return taiwanTime.toISOString().slice(0, 16);
+}
+
+function generateCaseId() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
+  return `REF-${y}${m}${d}-${rand}`;
+}
+
+function initForm() {
+  $("caseId").value = generateCaseId();
+  $("referralTime").value = getTaiwanDateTimeLocal();
+  updatePreview();
+}
+
+/* =========================
+   收集資料（唯一一個 getFormData）
+========================= */
 function getFormData() {
   return {
     case_id: $("caseId").value.trim(),
     referral_time: $("referralTime").value,
     hospital: $("hospital").value.trim(),
 
-    // 個管師
     case_manager: $("caseManager").value.trim(),
     case_manager_phone: $("caseManagerPhone").value.trim(),
 
-    // 🔥 個案基本資訊（你這次新增）
     patient_name: $("patientName").value,
     contact_name: $("contactName").value,
     contact_phone: $("contactPhone").value,
 
     gender: $("gender").value,
     age: $("age").value,
-    diagnosis: $("diagnosis").value,
 
-    // 功能評估
     cms_level: $("cmsLevel").value,
     adl: $("adl").value,
     mobility: $("mobility").value,
     consciousness: $("consciousness").value,
 
-    // 身體資訊
     height: $("height").value,
     weight: $("weight").value,
     address: $("address").value,
 
-    // 服務需求
     service_type: $("serviceType").value,
     service_time: $("serviceTime").value,
-    service_codes: getServiceCodes(),
+
+    service_codes: Object.entries(serviceCount)
+      .filter(([_, v]) => v > 0)
+      .map(([k, v]) => ({ code: k, count: v })),
 
     case_summary: $("caseSummary").value,
     special_need_long: $("specialNeedLong").value,
 
     status: "待媒合"
   };
-}
 }
     
 
@@ -585,7 +703,7 @@ function validateForm(data) {
   if (!data.case_manager_phone) return "請填寫聯絡電話";
   if (!data.gender) return "請選擇性別";
   if (!data.age) return "請填寫年齡";
-  if (!data.diagnosis) return "請填寫主要診斷 / 安置原因";
+  if (!data.case_summary) return "請填寫案況簡述";
   return "";
 }
 
@@ -607,7 +725,11 @@ CMS：${data.cms_level || "-"}級
 
 ■服務需求：
 ${data.service_time || "-"}
-服務碼：${data.service_codes.length ? data.service_codes.join("、") : "-"}
+服務碼：${
+  data.service_codes.length
+    ? data.service_codes.map(s => `${s.code} x${s.count}`).join("、")
+    : "-"
+}
 
 ■案況簡述：
 ${data.case_summary || data.diagnosis || "-"}
