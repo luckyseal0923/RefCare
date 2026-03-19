@@ -288,58 +288,65 @@
   <!-- =========================
        個案基本資料
   ========================= -->
-  <div class="card">
-    <div class="section-title">個案基本資料</div>
+<div class="card">
+  <div class="section-title">個案基本資料</div>
 
-    <div class="grid">
-      <div class="field">
-        <label for="caseId">案件編號</label>
-        <input type="text" id="caseId" readonly />
-        <div class="helper">系統自動產生，可避免直接顯示姓名。</div>
-      </div>
+  <div class="grid">
+    <div class="field">
+      <label for="caseId">案件編號</label>
+      <input type="text" id="caseId" readonly />
+      <div class="helper">系統自動產生，可避免直接顯示姓名。</div>
+    </div>
 
-      <div class="field">
-        <label for="referralTime">起案時間</label>
-        <input type="datetime-local" id="referralTime" />
-      </div>
+    <div class="field">
+      <label for="referralTime">起案時間</label>
+      <input type="datetime-local" id="referralTime" />
+    </div>
 
-      <div class="field">
-        <label for="hospital">轉介醫療單位<span class="required">*</span></label>
-        <input type="text" id="hospital" placeholder="例如：萬芳醫院急診" />
-      </div>
+    <div class="field">
+      <label for="hospital">轉介醫療單位<span class="required">*</span></label>
+      <input type="text" id="hospital" placeholder="例如：萬芳醫院急診" />
+    </div>
 
-      <div class="field">
-        <label for="staffName">起案人<span class="required">*</span></label>
-        <input type="text" id="staffName" placeholder="例如：王小明 NP" />
-      </div>
+    <div class="field">
+      <label for="caseManager">個管師姓名<span class="required">*</span></label>
+      <input type="text" id="caseManager" placeholder="例如：王小明" />
+    </div>
 
-      <div class="field">
-        <label for="gender">性別<span class="required">*</span></label>
-        <select id="gender">
-          <option value="">請選擇</option>
-          <option value="男">男</option>
-          <option value="女">女</option>
-          <option value="其他">其他</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="age">年齡<span class="required">*</span></label>
-        <input type="number" id="age" min="0" max="120" />
-      </div>
-
-      <div class="field full">
-        <label for="diagnosis">主要診斷 / 安置原因<span class="required">*</span></label>
-        <textarea id="diagnosis"></textarea>
-      </div>
+    <div class="field">
+      <label for="caseManagerPhone">聯絡電話<span class="required">*</span></label>
+      <input type="text" id="caseManagerPhone" placeholder="例如：0912345678" />
     </div>
   </div>
+</div>
 
   <!-- =========================
        長照轉介資訊（獨立一張卡）
   ========================= -->
   <div class="card">
     <div class="section-title">長照轉介資訊</div>
+
+    <div class="grid">
+  <div class="field">
+    <label for="gender">性別<span class="required">*</span></label>
+    <select id="gender">
+      <option value="">請選擇</option>
+      <option value="男">男</option>
+      <option value="女">女</option>
+      <option value="其他">其他</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label for="age">年齡<span class="required">*</span></label>
+    <input type="number" id="age" min="0" max="120" />
+  </div>
+
+  <div class="field full">
+    <label for="diagnosis">主要診斷 / 安置原因<span class="required">*</span></label>
+    <textarea id="diagnosis"></textarea>
+  </div>
+</div>
 
     <div class="grid">
       <div class="field">
@@ -511,7 +518,11 @@ function getFormData() {
     case_id: $("caseId").value.trim(),
     referral_time: $("referralTime").value,
     hospital: $("hospital").value.trim(),
-    staff_name: $("staffName").value.trim(),
+
+    // ✅ 新欄位
+    case_manager: $("caseManager").value.trim(),
+    case_manager_phone: $("caseManagerPhone").value.trim(),
+
     gender: $("gender").value,
     age: $("age").value.trim(),
     diagnosis: $("diagnosis").value.trim(),
@@ -519,12 +530,8 @@ function getFormData() {
     adl: $("adl").value,
     mobility: $("mobility").value,
     consciousness: $("consciousness").value,
-    oxygen: $("oxygen").value,
-    feeding: $("feeding").value,
-    excretion: $("excretion").value,
-    special_care: getSpecialCareList(),
 
-    // 🔥 新增長照欄位
+    // 長照
     service_type: $("serviceType").value,
     cms_level: $("cmsLevel").value,
     height: $("height").value,
@@ -534,29 +541,21 @@ function getFormData() {
     service_codes: getServiceCodes(),
     case_summary: $("caseSummary").value,
     special_need_long: $("specialNeedLong").value,
-    manager_name: $("managerName").value,
-    manager_phone: $("managerPhone").value,
-    manager_tel: $("managerTel").value,
-
-    family_contact: $("familyContact").value.trim(),
-    family_phone: $("familyPhone").value.trim(),
-    note: $("note").value.trim(),
 
     status: "待媒合"
   };
 }
     
 
-    function validateForm(data) {
-      if (!data.hospital) return "請填寫轉介醫療單位";
-      if (!data.staff_name) return "請填寫起案人";
-      if (!data.gender) return "請選擇性別";
-      if (!data.age) return "請填寫年齡";
-      if (!data.diagnosis) return "請填寫主要診斷 / 安置原因";
-      if (!data.adl) return "請選擇 ADL 狀態";
-      if (!data.mobility) return "請選擇行動能力";
-      return "";
-    }
+function validateForm(data) {
+  if (!data.hospital) return "請填寫轉介醫療單位";
+  if (!data.case_manager) return "請填寫個管師姓名";
+  if (!data.case_manager_phone) return "請填寫聯絡電話";
+  if (!data.gender) return "請選擇性別";
+  if (!data.age) return "請填寫年齡";
+  if (!data.diagnosis) return "請填寫主要診斷 / 安置原因";
+  return "";
+}
 
     /* =========================
        通知文字預覽
@@ -584,10 +583,9 @@ ${data.case_summary || data.diagnosis || "-"}
 ■特殊需求：
 ${data.special_need_long || "-"}
 
-■聯絡方式：
-${data.manager_name || "-"}
-📱 ${data.manager_phone || "-"}
-☎ ${data.manager_tel || "-"}
+■聯絡人：
+${data.case_manager || "-"}
+📱 ${data.case_manager_phone || "-"}
 
 👉 回覆是否可收案：
 https://your-domain/facility.html?case_id=${data.case_id}
