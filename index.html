@@ -323,134 +323,156 @@
   <!-- =========================
        長照轉介資訊（獨立一張卡）
   ========================= -->
-  <div class="card">
-    <div class="section-title">長照轉介資訊</div>
+ 
+<div class="card">
+  <div class="section-title">長照轉介資訊</div>
 
-    <div class="grid">
-  <div class="field">
-    <label for="gender">性別<span class="required">*</span></label>
-    <select id="gender">
-      <option value="">請選擇</option>
-      <option value="男">男</option>
-      <option value="女">女</option>
-      <option value="其他">其他</option>
-    </select>
-  </div>
+  <!-- =========================
+       ① 個案基本資訊
+  ========================= -->
+  <div class="sub-title">個案基本資訊</div>
+  <div class="grid">
 
-  <div class="field">
-    <label for="age">年齡<span class="required">*</span></label>
-    <input type="number" id="age" min="0" max="120" />
-  </div>
-
-  <div class="field full">
-    <label for="diagnosis">主要診斷 / 安置原因<span class="required">*</span></label>
-    <textarea id="diagnosis"></textarea>
-  </div>
-</div>
-
-    <div class="grid">
-      <div class="field">
-        <label>服務類型</label>
-        <select id="serviceType">
-          <option value="">請選擇</option>
-          <option value="居家服務">居家服務</option>
-          <option value="居家喘息服務">居家喘息服務</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label>CMS 失能等級</label>
-        <select id="cmsLevel">
-          <option value="">請選擇</option>
-          <option value="2">2級</option>
-          <option value="3">3級</option>
-          <option value="4">4級</option>
-          <option value="5">5級</option>
-          <option value="6">6級</option>
-          <option value="7">7級</option>
-          <option value="8">8級</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label>身高(cm)</label>
-        <input type="number" id="height" />
-      </div>
-
-      <div class="field">
-        <label>體重(kg)</label>
-        <input type="number" id="weight" />
-      </div>
-
-      <div class="field full">
-        <label>地址</label>
-        <input type="text" id="address" />
-      </div>
-
-      <div class="field full">
-        <label>服務時段</label>
-        <input type="text" id="serviceTime" />
-      </div>
-    </div>
-
-    <div class="sub-title">服務碼別</div>
-    <div class="check-grid">
-      <label class="check-item"><input type="checkbox" value="BA02 基本照顧" class="service-code">BA02 基本照顧</label>
-      <label class="check-item"><input type="checkbox" value="BA11 關節運動" class="service-code">BA11 關節運動</label>
-      <label class="check-item"><input type="checkbox" value="BA13 外出陪同" class="service-code">BA13 外出陪同</label>
-      <label class="check-item"><input type="checkbox" value="BA20 陪伴服務" class="service-code">BA20 陪伴服務</label>
-      <label class="check-item"><input type="checkbox" value="BA15-1 家務協助" class="service-code">BA15-1 家務協助</label>
+    <div class="field">
+      <label>個案姓名</label>
+      <input type="text" id="patientName" />
     </div>
 
     <div class="field">
-      <label>案況簡述（長照）</label>
-      <textarea id="caseSummary"></textarea>
+      <label>性別<span class="required">*</span></label>
+      <select id="gender">
+        <option value="">請選擇</option>
+        <option value="男">男</option>
+        <option value="女">女</option>
+        <option value="其他">其他</option>
+      </select>
     </div>
 
     <div class="field">
-      <label>特殊需求（長照）</label>
-      <textarea id="specialNeedLong"></textarea>
+      <label>年齡<span class="required">*</span></label>
+      <input type="number" id="age" />
     </div>
+
+    <div class="field">
+      <label>身高(cm)</label>
+      <input type="number" id="height" />
+    </div>
+
+    <div class="field">
+      <label>體重(kg)</label>
+      <input type="number" id="weight" />
+    </div>
+
+    <div class="field full">
+      <label>地址</label>
+      <input type="text" id="address" />
+    </div>
+
+    <div class="field">
+      <label>緊急聯絡人</label>
+      <input type="text" id="contactName" />
+    </div>
+
+    <div class="field">
+      <label>聯絡人電話</label>
+      <input type="text" id="contactPhone" />
+    </div>
+
   </div>
 
   <!-- =========================
-       照護條件評估
+       ② 功能評估
   ========================= -->
-  <div class="card">
-    <div class="section-title">照護條件評估</div>
+  <div class="sub-title">功能評估</div>
+  <div class="grid-3">
 
-    <div class="grid-3">
-      <div class="field">
-        <label>ADL</label>
-        <select id="adl">
-          <option value="">請選擇</option>
-          <option value="可自理">可自理</option>
-          <option value="部分協助">部分協助</option>
-          <option value="完全依賴">完全依賴</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label>行動能力</label>
-        <select id="mobility">
-          <option value="">請選擇</option>
-          <option value="可自行行走">可自行行走</option>
-          <option value="輪椅">輪椅</option>
-          <option value="臥床">臥床</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label>意識</label>
-        <select id="consciousness">
-          <option value="">請選擇</option>
-          <option value="清楚">清楚</option>
-          <option value="混亂">混亂</option>
-        </select>
-      </div>
+    <div class="field">
+      <label>CMS 失能等級</label>
+      <select id="cmsLevel">
+        <option value="">請選擇</option>
+        <option value="2">2級</option>
+        <option value="3">3級</option>
+        <option value="4">4級</option>
+        <option value="5">5級</option>
+        <option value="6">6級</option>
+        <option value="7">7級</option>
+        <option value="8">8級</option>
+      </select>
     </div>
+
+    <div class="field">
+      <label>ADL</label>
+      <select id="adl">
+        <option value="">請選擇</option>
+        <option value="可自理">可自理</option>
+        <option value="部分協助">部分協助</option>
+        <option value="完全依賴">完全依賴</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>行動能力</label>
+      <select id="mobility">
+        <option value="">請選擇</option>
+        <option value="可自行行走">可自行行走</option>
+        <option value="輪椅">輪椅</option>
+        <option value="臥床">臥床</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>意識</label>
+      <select id="consciousness">
+        <option value="">請選擇</option>
+        <option value="清楚">清楚</option>
+        <option value="混亂">混亂</option>
+      </select>
+    </div>
+
   </div>
 
+  <!-- =========================
+       ③ 服務需求
+  ========================= -->
+  <div class="sub-title">服務需求</div>
+  <div class="grid">
+
+    <div class="field">
+      <label>服務類型</label>
+      <select id="serviceType">
+        <option value="">請選擇</option>
+        <option value="居家服務">居家服務</option>
+        <option value="居家喘息服務">居家喘息服務</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>服務時段</label>
+      <input type="text" id="serviceTime" />
+    </div>
+
+  </div>
+
+  <div class="sub-title">服務碼別（可複選）</div>
+  <div class="check-grid">
+    <label class="check-item"><input type="checkbox" value="BA02 基本照顧" class="service-code">BA02 基本照顧</label>
+    <label class="check-item"><input type="checkbox" value="BA11 關節運動" class="service-code">BA11 關節運動</label>
+    <label class="check-item"><input type="checkbox" value="BA13 外出陪同" class="service-code">BA13 外出陪同</label>
+    <label class="check-item"><input type="checkbox" value="BA20 陪伴服務" class="service-code">BA20 陪伴服務</label>
+    <label class="check-item"><input type="checkbox" value="BA15-1 家務協助" class="service-code">BA15-1 家務協助</label>
+  </div>
+
+  <div class="field">
+    <label>案況簡述（長照）</label>
+    <textarea id="caseSummary"></textarea>
+  </div>
+
+  <div class="field">
+    <label>特殊需求（長照）</label>
+    <textarea id="specialNeedLong"></textarea>
+  </div>
+
+</div>
   <!-- =========================
        通知預覽
   ========================= -->
@@ -519,31 +541,41 @@ function getFormData() {
     referral_time: $("referralTime").value,
     hospital: $("hospital").value.trim(),
 
-    // ✅ 新欄位
+    // 個管師
     case_manager: $("caseManager").value.trim(),
     case_manager_phone: $("caseManagerPhone").value.trim(),
 
-    gender: $("gender").value,
-    age: $("age").value.trim(),
-    diagnosis: $("diagnosis").value.trim(),
+    // 🔥 個案基本資訊（你這次新增）
+    patient_name: $("patientName").value,
+    contact_name: $("contactName").value,
+    contact_phone: $("contactPhone").value,
 
+    gender: $("gender").value,
+    age: $("age").value,
+    diagnosis: $("diagnosis").value,
+
+    // 功能評估
+    cms_level: $("cmsLevel").value,
     adl: $("adl").value,
     mobility: $("mobility").value,
     consciousness: $("consciousness").value,
 
-    // 長照
-    service_type: $("serviceType").value,
-    cms_level: $("cmsLevel").value,
+    // 身體資訊
     height: $("height").value,
     weight: $("weight").value,
     address: $("address").value,
+
+    // 服務需求
+    service_type: $("serviceType").value,
     service_time: $("serviceTime").value,
     service_codes: getServiceCodes(),
+
     case_summary: $("caseSummary").value,
     special_need_long: $("specialNeedLong").value,
 
     status: "待媒合"
   };
+}
 }
     
 
