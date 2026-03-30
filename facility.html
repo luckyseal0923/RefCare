@@ -65,11 +65,29 @@
       gap:14px;
     }
 
+    .info-grid-compact{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:12px;
+    }
+
+    .info-grid-3{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:14px;
+    }
+
     .info-item{
       background:#f8fafc;
       border:1px solid #e2e8f0;
       border-radius:16px;
       padding:14px;
+      min-height:88px;
+    }
+
+    .info-item.compact{
+      min-height:auto;
+      padding:12px;
     }
 
     .info-label{
@@ -83,6 +101,27 @@
       font-weight:700;
       line-height:1.6;
       word-break:break-word;
+      white-space:pre-wrap;
+    }
+
+    .sub-section-title{
+      margin:0 0 12px;
+      font-size:16px;
+      font-weight:800;
+      color:#1d4ed8;
+    }
+
+    .summary-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:#eff6ff;
+      color:#1d4ed8;
+      font-size:12px;
+      font-weight:800;
+      margin:0 8px 8px 0;
     }
 
     .field{
@@ -90,6 +129,7 @@
       flex-direction:column;
       gap:8px;
       margin-bottom:16px;
+      position:relative;
     }
 
     label{
@@ -107,6 +147,7 @@
       font-size:15px;
       outline:none;
       transition:all .2s ease;
+      background:#fff;
     }
 
     textarea{
@@ -119,6 +160,59 @@
     textarea:focus{
       border-color:var(--primary);
       box-shadow:0 0 0 4px rgba(37,99,235,0.12);
+    }
+
+    .facility-dropdown{
+      position:absolute;
+      top:100%;
+      left:0;
+      right:0;
+      margin-top:6px;
+      background:#fff;
+      border:1px solid #dbe4f0;
+      border-radius:16px;
+      box-shadow:0 16px 32px rgba(15,23,42,0.12);
+      max-height:280px;
+      overflow:auto;
+      z-index:20;
+      display:none;
+    }
+
+    .facility-option{
+      padding:12px 14px;
+      border-bottom:1px solid #eef2f7;
+      cursor:pointer;
+    }
+
+    .facility-option:last-child{
+      border-bottom:none;
+    }
+
+    .facility-option:hover{
+      background:#eff6ff;
+    }
+
+    .facility-option-title{
+      font-size:14px;
+      font-weight:800;
+      color:#0f172a;
+      margin-bottom:4px;
+    }
+
+    .facility-option-meta{
+      font-size:12px;
+      color:#64748b;
+      line-height:1.5;
+    }
+
+    .helper-text{
+      font-size:12px;
+      color:#64748b;
+      line-height:1.6;
+    }
+
+    .hidden{
+      display:none;
     }
 
     .reply-actions{
@@ -194,6 +288,8 @@
 
     @media (max-width:768px){
       .info-grid,
+      .info-grid-compact,
+      .info-grid-3,
       .reply-actions{
         grid-template-columns:1fr;
       }
@@ -217,26 +313,75 @@
 
     <div class="card">
       <h2 style="margin-top:0;">案件資訊</h2>
+
+      <div style="margin-bottom:14px;">
+        <span class="summary-pill">案件編號：<span id="caseIdPill">REF-20260330-WF79</span></span>
+        <span class="summary-pill">起案單位：<span id="hospitalPill">萬芳醫院急診</span></span>
+        <span class="summary-pill">服務類型：<span id="serviceTypePill">居家服務</span></span>
+      </div>
+
+      <div class="sub-section-title">個案摘要</div>
+      <div class="info-grid-compact">
+        <div class="info-item compact">
+          <div class="info-label">姓名</div>
+          <div class="info-value" id="patientNameView">王阿滿</div>
+        </div>
+        <div class="info-item compact">
+          <div class="info-label">年齡 / 性別</div>
+          <div class="info-value" id="basicView">82歲 / 女</div>
+        </div>
+        <div class="info-item compact">
+          <div class="info-label">身高 / 體重</div>
+          <div class="info-value" id="bodyView">155 cm / 48 kg</div>
+        </div>
+        <div class="info-item compact">
+          <div class="info-label">意識</div>
+          <div class="info-value" id="consciousnessView">清楚</div>
+        </div>
+      </div>
+
+      <div class="info-grid" style="margin-top:12px;">
+        <div class="info-item">
+          <div class="info-label">主要診斷 / 轉介原因</div>
+          <div class="info-value" id="diagnosisView">肺炎治療後病況穩定，因反覆跌倒與生活功能下降，出院後需持續居家照護與日常生活協助。</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">地址 / 聯絡人</div>
+          <div class="info-value" id="contactSummaryView">文山區興隆路三段 88 號 5 樓
+女兒林小姐 / 0912-345-678</div>
+        </div>
+      </div>
+
+      <div class="sub-section-title" style="margin-top:18px;">功能評估</div>
+      <div class="info-grid-compact">
+        <div class="info-item compact">
+          <div class="info-label">CMS</div>
+          <div class="info-value" id="cmsView">第 6 級</div>
+        </div>
+        <div class="info-item compact">
+          <div class="info-label">ADL</div>
+          <div class="info-value" id="adlView">部分協助</div>
+        </div>
+        <div class="info-item compact">
+          <div class="info-label">行動能力</div>
+          <div class="info-value" id="careView">輪椅移位</div>
+        </div>
+        <div class="info-item compact">
+          <div class="info-label">特殊照護</div>
+          <div class="info-value" id="specialView">高跌倒風險、夜間需陪伴</div>
+        </div>
+      </div>
+
+      <div class="sub-section-title" style="margin-top:18px;">服務需求</div>
       <div class="info-grid">
         <div class="info-item">
-          <div class="info-label">案件編號</div>
-          <div class="info-value" id="caseIdView">-</div>
+          <div class="info-label">服務時段 / 服務碼別</div>
+          <div class="info-value" id="serviceNeedView">週一至週五白天
+BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
         </div>
         <div class="info-item">
-          <div class="info-label">個案資訊</div>
-          <div class="info-value" id="basicView">78歲 / 男</div>
-        </div>
-        <div class="info-item">
-          <div class="info-label">主要診斷</div>
-          <div class="info-value" id="diagnosisView">肺炎治療後需轉介安置</div>
-        </div>
-        <div class="info-item">
-          <div class="info-label">ADL / 行動能力</div>
-          <div class="info-value" id="careView">部分協助 / 輪椅</div>
-        </div>
-        <div class="info-item" style="grid-column:1 / -1;">
-          <div class="info-label">特殊需求</div>
-          <div class="info-value" id="specialView">氧氣 2L、鼻胃管、失智照護</div>
+          <div class="info-label">案況簡述</div>
+          <div class="info-value" id="caseSummaryView">個案與女兒同住，主要照顧者白天需上班，返家前希望先銜接居家服務，協助清潔、移位與進食照顧。</div>
         </div>
       </div>
     </div>
@@ -245,8 +390,15 @@
       <h2 style="margin-top:0;">機構回覆</h2>
 
       <div class="field">
-        <label for="facilityName">機構名稱</label>
-        <input type="text" id="facilityName" placeholder="例如：安心護理之家" />
+        <label for="facilitySearch">機構名稱</label>
+        <input type="text" id="facilitySearch" placeholder="請輸入機構名稱或簡稱搜尋" autocomplete="off" />
+        <div id="facilityDropdown" class="facility-dropdown"></div>
+        <div class="helper-text">可直接搜尋機構簡稱或完整名稱，最後一項提供「其他（自行輸入）」。</div>
+      </div>
+
+      <div class="field hidden" id="facilityOtherWrap">
+        <label for="facilityOther">其他機構名稱</label>
+        <input type="text" id="facilityOther" placeholder="請輸入其他機構全名" />
       </div>
 
       <div class="field">
@@ -279,7 +431,489 @@
     ========================= */
     const FACILITY_REPLY_WEBHOOK_URL = "https://your-n8n-url/webhook/facility-reply";
 
+    /* =========================
+       Demo 用：前端機構名單
+    ========================= */
+    const FACILITIES = [
+      {
+            "short_name": "慈濟",
+            "name": "財團法⼈中華⺠國佛教慈濟慈善事業基⾦會臺北市私立慈濟居家⻑照機構",
+            "phone": "02-2302-3479",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "大心",
+            "name": "臺北市私立⼤⼼居家⻑照機構",
+            "phone": "02-2339-0179",
+            "area": "文山、中正、萬華、大同"
+      },
+      {
+            "short_name": "愛吾愛",
+            "name": "私立愛吾愛居家⻑照機構",
+            "phone": "02-2308-7286",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "普眾",
+            "name": "普眾股份有限公司附設臺北市私立普眾居家⻑照機構",
+            "phone": "02-27887966",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "福⽥",
+            "name": "福⽥居家有限公司私立福⽥居家⻑照機構",
+            "phone": "02-2727-0065",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "愛關懷",
+            "name": "智慧⻑照有限公司附設臺北市私立愛關懷居家⻑照機構",
+            "phone": "02-7729-7769",
+            "area": "松山、大安、信義、文山、士林、內湖、南港"
+      },
+      {
+            "short_name": "東和",
+            "name": "東和居家有限公司附設臺北市私立東和居家⻑照機構",
+            "phone": "02-6605-0630",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "佳醫",
+            "name": "財團法⼈佳醫健康基⾦會附設臺北市私立佳醫居家⻑照機構",
+            "phone": "02-25280502",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "愛馨",
+            "name": "愛馨居服有限公司附設臺北市私立愛馨居家⻑照機構",
+            "phone": "02-2341-5924",
+            "area": "信義、松山、大安、文山、中正、萬華"
+      },
+      {
+            "short_name": "大愛",
+            "name": "臺北市私立大愛居家⻑照機構",
+            "phone": "02-2742-0335",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "好厝邊",
+            "name": "臺北市私立好厝邊居家⻑照機構",
+            "phone": "02-27201377",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "全能",
+            "name": "臺北市私立全能居家⻑照機構",
+            "phone": "02-2345-8555",
+            "area": "信義、南港、文山、大安、中正、萬華"
+      },
+      {
+            "short_name": "頤安",
+            "name": "頤安商行附設臺北市私立頤安居家⻑照機構",
+            "phone": "02-2557-1918",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "怡和",
+            "name": "怡和居家有限公司附設臺北市私立怡和居家⻑照機構",
+            "phone": "02-8663-8328",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "松禾",
+            "name": "臺北市私立松禾居家⻑照機構",
+            "phone": "02-25470689",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "旭樂",
+            "name": "旭樂有限公司附設臺北市私立旭樂居家⻑照機構",
+            "phone": "02-27490555",
+            "area": "士林、北投"
+      },
+      {
+            "short_name": "青松",
+            "name": "青松健康股份有限公司附設臺北市私立青松居家⻑照機構",
+            "phone": "02-25222075",
+            "area": "信義、松山、南港、中山、大同"
+      },
+      {
+            "short_name": "天愛",
+            "name": "天愛居家有限公司附設臺北市私立天愛居家⻑照機構",
+            "phone": "02-27183539",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "仁暉",
+            "name": "仁暉居家有限公司附設臺北市私立仁暉居家⻑照機構",
+            "phone": "02-27118732",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "中化銀髮",
+            "name": "中化銀髮事業股份有限公司附設臺北市私立中化銀髮居家⻑照機構",
+            "phone": "02-27755008",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "佶䕒",
+            "name": "臺北市私立佶䕒居家⻑照機構",
+            "phone": "02-8787-1118",
+            "area": "信義、松山、內湖、南港、文山"
+      },
+      {
+            "short_name": "貴族",
+            "name": "臺北市私立貴族居家⻑照機構",
+            "phone": "02-2821-7805",
+            "area": "信義、中山、大同、士林、北投、內湖、南港、萬華"
+      },
+      {
+            "short_name": "惠福",
+            "name": "惠福股份有限公司附設臺北市私立惠福居家⻑照機構",
+            "phone": "02-2555-9800",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "永佳",
+            "name": "永佳居家股份有限公司附設臺北市私立永佳居家⻑照機構",
+            "phone": "02-2766-7711",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "暘順",
+            "name": "暘順有限公司附設臺北市私立暘順居家⻑照機構",
+            "phone": "02-2377-6590",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "福田",
+            "name": "臺北市私立福田居家⻑照機構",
+            "phone": "02-2891-3229",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "聯承",
+            "name": "臺北市私立聯承居家⻑照機構",
+            "phone": "02-2557-7762",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "越侒",
+            "name": "臺北市私立越侒居家⻑照機構",
+            "phone": "02-2550-9880",
+            "area": "士林、北投"
+      },
+      {
+            "short_name": "維昕",
+            "name": "維昕健康事業有限公司附設臺北市私立維昕居家⻑照機構",
+            "phone": "02-2377-3713",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "享齡",
+            "name": "臺北市私立享齡居家⻑照機構",
+            "phone": "02-2377-2268",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "幸運草",
+            "name": "臺北市私立幸運草居家⻑照機構",
+            "phone": "02-2377-5073",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "佳康",
+            "name": "佳康居家有限公司附設臺北市私立佳康居家⻑照機構",
+            "phone": "02-23680600",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "中華家庭",
+            "name": "財團法人中華家庭暨社區展望協會附設臺北市私立中華家庭居家⻑照機構",
+            "phone": "02-23660640",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "新生命",
+            "name": "臺北市私立新生命居家⻑照機構",
+            "phone": "02-2365-1752",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "永康",
+            "name": "永康居家有限公司附設臺北市私立永康居家⻑照機構",
+            "phone": "02-2307-3397",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "仁欣",
+            "name": "台灣新光保全股份有限公司附設臺北市私立仁欣居家⻑照機構",
+            "phone": "02-25068800",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "開馨",
+            "name": "開馨居家有限公司附設臺北市私立開馨居家⻑照機構",
+            "phone": "02-2303-8815",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "有限責任臺灣第一照顧服務勞動合作社",
+            "name": "有限責任臺灣第一照顧服務勞動合作社附設臺北市私立第一居家⻑照機構",
+            "phone": "02-29655576",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "有愛",
+            "name": "臺北市私立有愛居家⻑照機構",
+            "phone": "02-2826-8686",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "顧得好",
+            "name": "顧得好有限公司附設臺北市私立顧得好居家⻑照機構",
+            "phone": "02-2325-3458",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "我們",
+            "name": "臺北市私立我們居家⻑照機構",
+            "phone": "02-2656-2030",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "唯心",
+            "name": "唯心股份有限公司附設臺北市私立唯心居家⻑照機構",
+            "phone": "02-8787-3880",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "福氣",
+            "name": "福氣長照居家有限公司附設臺北市私立福氣居家⻑照機構",
+            "phone": "02-7728-6588",
+            "area": "中山、大同、士林、北投、內湖、南港"
+      },
+      {
+            "short_name": "未來",
+            "name": "未來⽣技股份有限公司附設臺北市私立未來居家⻑照機構",
+            "phone": "02-27783702",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "惠來",
+            "name": "惠來居家有限公司附設臺北市私立惠來居家⻑照機構",
+            "phone": "02-2560-3699",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "友松",
+            "name": "友松居家長照股份有限公司附設臺北市私立友松居家⻑照機構",
+            "phone": "02-25000201",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "杏保",
+            "name": "杏保醫網股份有限公司附設臺北市私立杏保居家⻑照機構",
+            "phone": "02-2729-3366",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "樂福健康",
+            "name": "樂福健康事業股份有限公司附設臺北市私立樂福健康居家⻑照機構",
+            "phone": "02-27208889",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "祥寶",
+            "name": "祥寶尊榮有限公司附設臺北市私立祥寶居家⻑照機構",
+            "phone": "02-2883-1988",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "萬全",
+            "name": "萬全居家有限公司附設臺北市私立萬全居家⻑照機構",
+            "phone": "02-2518-2257",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "聯新",
+            "name": "聯新國際醫療股份有限公司附設臺北市私立聯新居家⻑照機構",
+            "phone": "02-2552-2507",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "怡樂",
+            "name": "怡樂居家有限公司附設臺北市私立怡樂居家⻑照機構",
+            "phone": "02-2857-8683",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "喜樂心",
+            "name": "喜樂心長照有限公司附設臺北市私立喜樂心居家⻑照機構",
+            "phone": "02-2308-7568",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "祥泰",
+            "name": "祥泰長照社團法人附設臺北市私立祥泰居家⻑照機構",
+            "phone": "02-2506-8058",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "國泰",
+            "name": "臺北市私立國泰居家⻑照機構",
+            "phone": "02-2735-7776",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "安民",
+            "name": "臺北市私立安民居家⻑照機構",
+            "phone": "02-2303-5577",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "知名度",
+            "name": "知名度居家有限公司附設臺北市私立知名度居家⻑照機構",
+            "phone": "02-2306-8558",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "秉榮",
+            "name": "秉榮居家有限公司附設臺北市私立秉榮居家⻑照機構",
+            "phone": "02-2377-4088",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "全康",
+            "name": "全康居家有限公司附設臺北市私立全康居家⻑照機構",
+            "phone": "02-2555-6881",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "康達",
+            "name": "臺北市私立康達居家⻑照機構",
+            "phone": "02-2397-5100",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "康寶",
+            "name": "康寶居家有限公司附設臺北市私立康寶居家⻑照機構",
+            "phone": "02-2369-6611",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "家安",
+            "name": "臺北市私立家安居家⻑照機構",
+            "phone": "02-2874-6811",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "逸心",
+            "name": "臺北市私立逸心居家式服務類⻑期照顧服務機構",
+            "phone": "02-2585-5228",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "蒔樂",
+            "name": "臺北市私立蒔樂居家⻑照機構",
+            "phone": "02-2363-0656",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "同心",
+            "name": "臺北市私立同心居家⻑照機構",
+            "phone": "02-2761-3687",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "晨新",
+            "name": "晨新長照有限公司附設臺北市私立晨新居家⻑照機構",
+            "phone": "02-2558-8168",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "安歆",
+            "name": "安歆長照社團法人附設臺北市私立安歆居家⻑照機構",
+            "phone": "02-2367-7300",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "佳和",
+            "name": "臺北市私立佳和居家⻑照機構",
+            "phone": "02-2550-6696",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "侒心",
+            "name": "侒心長照社團法人附設臺北市私立侒心居家⻑照機構",
+            "phone": "02-2367-9268",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "全⼈",
+            "name": "有限責任新北市全⼈⻑照服務勞動合作社附設新北市私立全⼈居家⻑照機構",
+            "phone": "02-29757512",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "全曜",
+            "name": "新北市私立全曜居家式服務類⻑期照顧服務機構",
+            "phone": "02-2972-2060",
+            "area": "臺北市全區"
+      },
+      {
+            "short_name": "皓仁",
+            "name": "皓仁健康照護事業有限公司附設臺北市私立皓仁居家⻑照機構",
+            "phone": "02-77093866",
+            "area": "大安、信義、文山"
+      },
+      {
+            "short_name": "善誠",
+            "name": "善誠健康事業股份有限公司附設臺北市私立⼤安善誠居家⻑照機構",
+            "phone": "02-27790951",
+            "area": "松山、大安、文山、南港"
+      },
+      {
+            "short_name": "凱安",
+            "name": "凱安居家有限公司附設臺北市私立凱安居家⻑照機構",
+            "phone": "02-27111885",
+            "area": "大安、文山、松山"
+      },
+      {
+            "short_name": "遠曜",
+            "name": "遠曜居家有限公司附設臺北市私立我在居家⻑照機構",
+            "phone": "0926-314-475",
+            "area": "信義區、文山區、大安區"
+      },
+      {
+            "short_name": "專⼼",
+            "name": "滿多多有限公司附設臺北市私立專⼼居家⻑照機構",
+            "phone": "02-2230-6058",
+            "area": "文山區、大安區"
+      },
+      {
+            "short_name": "百佳",
+            "name": "百佳健康事業有限公司附設臺北市私立百佳居家⻑照機構",
+            "phone": "(02)2388-0119",
+            "area": "文山、萬華、大同"
+      },
+      {
+            "short_name": "⽇夏",
+            "name": "翔伶事業有限公司附設臺北市私立⽇夏居家⻑照機構",
+            "phone": "02-27371450",
+            "area": "信義、大安、文山"
+      },
+      {
+            "short_name": "其他",
+            "name": "其他（自行輸入）",
+            "phone": "",
+            "area": ""
+      }
+    ];
+
     const $ = (id) => document.getElementById(id);
+
+    let selectedFacility = null;
 
     /* =========================
        讀取網址參數
@@ -289,23 +923,83 @@
     function getQueryParams() {
       const params = new URLSearchParams(window.location.search);
       return {
-        case_id: params.get("case_id") || "REF-DEMO-001",
-        age: params.get("age") || "78",
-        gender: params.get("gender") || "男",
-        diagnosis: params.get("diagnosis") || "肺炎治療後需安置照護",
+        case_id: params.get("case_id") || "REF-20260330-WF79",
+        hospital: params.get("hospital") || "萬芳醫院急診",
+        patient_name: params.get("patient_name") || "王阿滿",
+        age: params.get("age") || "82",
+        gender: params.get("gender") || "女",
+        height: params.get("height") || "155",
+        weight: params.get("weight") || "48",
+        address: params.get("address") || "台北市文山區興隆路三段 88 號 5 樓",
+        contact_name: params.get("contact_name") || "林小姐（女兒）",
+        contact_phone: params.get("contact_phone") || "0912-345-678",
+        diagnosis: params.get("diagnosis") || params.get("case_summary") || "肺炎治療後病況穩定，因反覆跌倒與生活功能下降，出院後需持續居家照護與日常生活協助。",
+        cms_level: params.get("cms_level") || "第 6 級",
         adl: params.get("adl") || "部分協助",
-        mobility: params.get("mobility") || "輪椅",
-        special: params.get("special") || "氧氣需求、鼻胃管"
+        mobility: params.get("mobility") || "輪椅移位",
+        consciousness: params.get("consciousness") || "清楚",
+        service_type: params.get("service_type") || "居家服務",
+        service_time: params.get("service_time") || "週一至週五白天",
+        service_codes: params.get("service_codes") || encodeURIComponent(JSON.stringify([
+          { code: "BA01", count: 1 },
+          { code: "BA04", count: 1 },
+          { code: "BA11", count: 1 }
+        ])),
+        case_summary: params.get("case_summary") || "個案與女兒同住，主要照顧者白天需上班，返家前希望先銜接居家服務，協助清潔、移位與進食照顧。",
+        special: params.get("special") || params.get("special_need_long") || "高跌倒風險、夜間需陪伴、返家初期需密切觀察進食與活動狀況"
       };
     }
 
     function renderCaseInfo() {
       const data = getQueryParams();
-      $("caseIdView").textContent = data.case_id;
+      const bodyText = `${data.height} cm / ${data.weight} kg`;
+      const contactSummary = `${data.address}
+${data.contact_name} / ${data.contact_phone}`;
+      const serviceNeed = `${data.service_time}
+${formatServiceCodes(data.service_codes)}`;
+
+      $("caseIdPill").textContent = data.case_id;
+      $("hospitalPill").textContent = data.hospital;
+      $("serviceTypePill").textContent = data.service_type;
+      $("patientNameView").textContent = data.patient_name;
       $("basicView").textContent = `${data.age}歲 / ${data.gender}`;
+      $("bodyView").textContent = bodyText;
+      $("consciousnessView").textContent = data.consciousness;
       $("diagnosisView").textContent = data.diagnosis;
-      $("careView").textContent = `${data.adl} / ${data.mobility}`;
+      $("contactSummaryView").textContent = contactSummary;
+      $("cmsView").textContent = data.cms_level;
+      $("adlView").textContent = data.adl;
+      $("careView").textContent = data.mobility;
       $("specialView").textContent = data.special;
+      $("serviceNeedView").textContent = serviceNeed;
+      $("caseSummaryView").textContent = data.case_summary;
+    }
+
+    function formatServiceCodes(value) {
+      if (!value) return "BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動";
+
+      try {
+        const parsed = JSON.parse(decodeURIComponent(value));
+        if (Array.isArray(parsed) && parsed.length) {
+          const codeNameMap = {
+            BA01: "基本身體清潔",
+            BA04: "協助餵食",
+            BA11: "肢體關節活動"
+          };
+
+          return parsed.map(item => {
+            if (typeof item === "string") return item;
+            if (item.code && item.count) {
+              return `${item.code} ${codeNameMap[item.code] || ""} x${item.count}`.trim();
+            }
+            if (item.code) return `${item.code} ${codeNameMap[item.code] || ""}`.trim();
+            return JSON.stringify(item);
+          }).join("、");
+        }
+      } catch (err) {
+      }
+
+      return decodeURIComponent(value);
     }
 
     function showStatus(type, message) {
@@ -314,12 +1008,86 @@
       box.textContent = message;
     }
 
+    function normalizeText(text) {
+      return (text || "").toString().trim().toLowerCase();
+    }
+
+    function filterFacilities(keyword) {
+      const q = normalizeText(keyword);
+      if (!q) return FACILITIES;
+
+      return FACILITIES.filter(item => {
+        return normalizeText(item.short_name).includes(q) || normalizeText(item.name).includes(q);
+      });
+    }
+
+    function renderFacilityDropdown(keyword = "") {
+      const dropdown = $("facilityDropdown");
+      const matched = filterFacilities(keyword).slice(0, 20);
+
+      if (!matched.length) {
+        dropdown.innerHTML = `
+          <div class="facility-option" data-other="true">
+            <div class="facility-option-title">找不到符合的機構</div>
+            <div class="facility-option-meta">點這裡改用其他（自行輸入）</div>
+          </div>
+        `;
+        dropdown.style.display = "block";
+        return;
+      }
+
+      dropdown.innerHTML = matched.map(item => `
+        <div class="facility-option" data-name="${item.name}" data-short-name="${item.short_name}">
+          <div class="facility-option-title">${item.short_name}｜${item.name}</div>
+          <div class="facility-option-meta">服務區域：${item.area || "-"}${item.phone ? ` ｜電話：${item.phone}` : ""}</div>
+        </div>
+      `).join("");
+
+      dropdown.style.display = "block";
+    }
+
+    function hideFacilityDropdown() {
+      $("facilityDropdown").style.display = "none";
+    }
+
+    function selectFacility(item) {
+      selectedFacility = item;
+      $("facilitySearch").value = item.name;
+
+      if (item.short_name === "其他") {
+        $("facilityOtherWrap").classList.remove("hidden");
+        $("facilityOther").focus();
+      } else {
+        $("facilityOtherWrap").classList.add("hidden");
+        $("facilityOther").value = "";
+      }
+
+      hideFacilityDropdown();
+    }
+
+    function getResolvedFacilityName() {
+      if (selectedFacility && selectedFacility.short_name === "其他") {
+        return $("facilityOther").value.trim();
+      }
+
+      if (selectedFacility) {
+        return selectedFacility.name;
+      }
+
+      return $("facilitySearch").value.trim();
+    }
+
     function getReplyPayload(replyStatus) {
       const data = getQueryParams();
+      const resolvedFacilityName = getResolvedFacilityName();
 
       return {
         case_id: data.case_id,
-        facility_name: $("facilityName").value.trim(),
+        facility_name: resolvedFacilityName,
+        facility_selected_name: selectedFacility ? selectedFacility.name : "",
+        facility_custom_name: selectedFacility && selectedFacility.short_name === "其他"
+          ? $("facilityOther").value.trim()
+          : "",
         contact_person: $("contactPerson").value.trim(),
         contact_phone: $("contactPhone").value.trim(),
         reply: replyStatus,
@@ -332,7 +1100,7 @@
       const payload = getReplyPayload(replyStatus);
 
       if (!payload.facility_name) {
-        showStatus("error", "請先填寫機構名稱");
+        showStatus("error", "請先選擇或填寫機構名稱");
         return;
       }
 
@@ -366,6 +1134,39 @@
         );
       }
     }
+
+    $("facilitySearch").addEventListener("focus", () => {
+      renderFacilityDropdown($("facilitySearch").value);
+    });
+
+    $("facilitySearch").addEventListener("input", (e) => {
+      selectedFacility = null;
+      $("facilityOtherWrap").classList.add("hidden");
+      $("facilityOther").value = "";
+      renderFacilityDropdown(e.target.value);
+    });
+
+    $("facilityDropdown").addEventListener("click", (e) => {
+      const option = e.target.closest(".facility-option");
+      if (!option) return;
+
+      if (option.dataset.other === "true") {
+        selectFacility({ short_name: "其他", name: "其他（自行輸入）", phone: "", area: "" });
+        return;
+      }
+
+      const found = FACILITIES.find(item => item.name === option.dataset.name && item.short_name === option.dataset.shortName);
+      if (found) {
+        selectFacility(found);
+      }
+    });
+
+    document.addEventListener("click", (e) => {
+      const isInside = e.target.closest("#facilitySearch") || e.target.closest("#facilityDropdown");
+      if (!isInside) {
+        hideFacilityDropdown();
+      }
+    });
 
     $("btnAccept").addEventListener("click", () => submitReply("accept"));
     $("btnReject").addEventListener("click", () => submitReply("reject"));
