@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>個案轉介後臺管理系統</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div class="hero-top">
+        <div>
+          <h1>個案轉介後臺管理系統</h1>
+          <p>模組化版本。使用單一 admin.html 頁面，並拆分樣式、虛擬資料與互動邏輯。</p>
+        </div>
+        <div class="hero-badge">Admin Demo</div>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">累計案件數</div>
+        <div class="kpi-value" id="kpiTotal">0</div>
+        <div class="kpi-sub">目前清單中的全部案件</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">一輪媒合中</div>
+        <div class="kpi-value" id="kpiPending">0</div>
+        <div class="kpi-sub">第一輪媒合進行中案件</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">二輪 / 三輪媒合中</div>
+        <div class="kpi-value" id="kpiMatching">0</div>
+        <div class="kpi-sub">第二輪與第三輪持續媒合案件</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">案件結案</div>
+        <div class="kpi-value" id="kpiDone">0</div>
+        <div class="kpi-sub">媒合完成或已結束案件</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">篩選與搜尋</div>
+      <div class="toolbar">
+        <div class="field">
+          <label for="searchInput">關鍵字搜尋</label>
+          <input type="text" id="searchInput" placeholder="搜尋案件編號 / 個案姓名 / 診斷 / 單位" />
+        </div>
+
+        <div class="field">
+          <label for="statusFilter">案件狀態</label>
+          <select id="statusFilter">
+            <option value="all">全部狀態</option>
+            <option value="一輪媒合中">一輪媒合中</option>
+            <option value="二輪媒合中">二輪媒合中</option>
+            <option value="三輪媒合中">三輪媒合中</option>
+            <option value="案件結案">案件結案</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="hospitalFilter">轉介單位</label>
+          <select id="hospitalFilter">
+            <option value="all">全部單位</option>
+            <option value="萬芳醫院急診">萬芳醫院急診</option>
+            <option value="萬芳醫院住院">萬芳醫院住院</option>
+            <option value="雙和醫院">雙和醫院</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="sortFilter">排序方式</label>
+          <select id="sortFilter">
+            <option value="newest">起案時間：新到舊</option>
+            <option value="oldest">起案時間：舊到新</option>
+          </select>
+        </div>
+
+        <button class="btn btn-primary" id="btnReload" type="button">重新整理</button>
+        <button class="btn btn-secondary" id="btnReset" type="button">清空條件</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">案件清單</div>
+      <div id="loadedHint" class="sub-text" style="margin-bottom:10px;">目前載入 0 筆虛擬案件</div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>起單時間</th>
+              <th>姓名</th>
+              <th>轉介單位</th>
+              <th>個案摘要</th>
+              <th>狀態</th>
+              <th>回覆進度</th>
+              <th>管理操作</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+
+      <div id="emptyState" class="empty" style="display:none; margin-top:14px;">目前沒有符合條件的案件</div>
+    </div>
+  </div>
+
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+
+  <aside class="detail-drawer" id="detailDrawer" aria-hidden="true">
+    <div class="drawer-header">
+      <div class="drawer-top">
+        <div>
+          <h3 class="drawer-title" id="drawerPatientName">案件詳情</h3>
+          <div class="drawer-sub" id="drawerMeta">請從左側清單選擇案件</div>
+        </div>
+        <button class="drawer-close" id="drawerClose" type="button" aria-label="關閉">×</button>
+      </div>
+    </div>
+
+    <div class="drawer-body">
+      <div class="detail-grid" id="drawerContent"></div>
+    </div>
+  </aside>
+
+  <script src="mock-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
