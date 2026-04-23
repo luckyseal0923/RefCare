@@ -608,16 +608,22 @@ function openServiceModal(){
   list.innerHTML = "";
 
   services.forEach(cat => {
-    list.innerHTML += `<div class="category-header" style="margin-top:15px; font-weight:bold; color:#1d4ed8; background:#f0f7ff; padding:8px 12px; border-radius:8px;">${cat.category}</div>`;
+    list.innerHTML += `<div class="category-header" style="margin-top:15px; font-weight:bold; color:#1d4ed8; background:#f0f7ff; padding:8px 12px; border-radius:8px; grid-column: 1 / -1;">${cat.category}</div>`;
+    
+    // 使用 grid 容器包裹項目
+    list.innerHTML += `<div class="service-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; padding: 10px 0;">`;
     
     cat.items.forEach(s => {
-      list.innerHTML += `
-        <div class="service-row" onclick="toggleService('${s.code}')" style="cursor:pointer; padding:10px 12px; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; gap:12px;">
-          <input type="checkbox" id="check-${s.code}" ${serviceCount[s.code] ? 'checked' : ''} style="width:18px;height:18px;" onclick="event.stopPropagation(); toggleService('${s.code}')">
-          <span>${s.code} ${s.name}</span>
+      const rowHtml = `
+        <div class="service-row" onclick="toggleService('${s.code}')" style="cursor:pointer; padding:8px 12px; border:1px solid #f1f5f9; border-radius:8px; display:flex; align-items:center; gap:10px; background:#fff;">
+          <input type="checkbox" id="check-${s.code}" ${serviceCount[s.code] ? 'checked' : ''} style="width:16px;height:16px;" onclick="event.stopPropagation(); toggleService('${s.code}')">
+          <span style="font-size:14px;">${s.code} ${s.name}</span>
         </div>
       `;
+      list.lastElementChild.innerHTML += rowHtml;
     });
+    
+    list.innerHTML += `</div>`;
   });
 
   document.getElementById("serviceModal").style.display = "block";

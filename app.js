@@ -186,9 +186,11 @@ function createDrawerContent(item) {
 
 function createEditForm(item, index) {
   const statusOptions = ["一輪媒合中", "二輪媒合中", "三輪媒合中", "案件結案"];
-  const statusHtml = statusOptions.map(status => `
-    <option value="${escapeHtml(status)}" ${item.status === status ? "selected" : ""}>${escapeHtml(status)}</option>
-  `).join("");
+  const statusHtml = statusOptions.map(status => `<option value="${escapeHtml(status)}" ${item.status === status ? "selected" : ""}>${escapeHtml(status)}</option>`).join("");
+  const consciousnessOptions = ["清楚", "混亂", "木僵"];
+  const consciousnessHtml = consciousnessOptions.map(c => `<option value="${escapeHtml(c)}" ${item.consciousness === c ? "selected" : ""}>${escapeHtml(c)}</option>`).join("");
+  const mobilityOptions = ["可自行行走", "可使用輔具行走(手杖、助行器等)", "使用輔具並扶持下行走", "無法行走，但可站立", "無法行走及站立，需全移位", "長期臥床，均於床上照顧"];
+  const mobilityHtml = mobilityOptions.map(m => `<option value="${escapeHtml(m)}" ${item.mobility === m ? "selected" : ""}>${escapeHtml(m)}</option>`).join("");
 
   return [
     '<div class="detail-card full">',
@@ -216,12 +218,10 @@ function createEditForm(item, index) {
     `      <textarea name="case_summary">${escapeHtml(item.case_summary)}</textarea></div>`,
     '    <div class="edit-field"><label>CMS</label>',
     `      <input name="cms_level" value="${escapeHtml(item.cms_level || "")}" /></div>`,
-    '    <div class="edit-field"><label>ADL</label>',
-    `      <input name="adl" value="${escapeHtml(item.adl)}" /></div>`,
-    '    <div class="edit-field"><label>行動能力</label>',
-    `      <input name="mobility" value="${escapeHtml(item.mobility)}" /></div>`,
     '    <div class="edit-field"><label>意識狀態</label>',
-    `      <input name="consciousness" value="${escapeHtml(item.consciousness || "")}" /></div>`,
+    `      <select name="consciousness">${consciousnessHtml}</select></div>`,
+    '    <div class="edit-field"><label>行動能力</label>',
+    `      <select name="mobility">${mobilityHtml}</select></div>`,
     '    <div class="edit-field"><label>氧氣需求</label>',
     `      <input name="oxygen" value="${escapeHtml(item.oxygen || "")}" /></div>`,
     '    <div class="edit-field"><label>聯絡人</label>',
@@ -400,7 +400,6 @@ function saveEditForm() {
   target.diagnosis = String(formData.get("diagnosis") || "").trim();
   target.case_summary = String(formData.get("case_summary") || "").trim();
   target.cms_level = String(formData.get("cms_level") || "").trim();
-  target.adl = String(formData.get("adl") || "").trim();
   target.mobility = String(formData.get("mobility") || "").trim();
   target.consciousness = String(formData.get("consciousness") || "").trim();
   target.oxygen = String(formData.get("oxygen") || "").trim();

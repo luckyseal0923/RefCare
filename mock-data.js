@@ -6,8 +6,7 @@ const mockCases = [
     age: 82,
     gender: "女",
     diagnosis: "肺炎治療後病況穩定，需返家後銜接居家照護",
-    adl: "部分協助",
-    mobility: "輪椅移位",
+    mobility: "無法行走，但可站立",
     oxygen: "無",
     status: "一輪媒合中",
     created_at: "2026/03/30 10:58",
@@ -20,8 +19,8 @@ const mockCases = [
     consciousness: "清楚",
     service_type: "居家服務",
     service_time: "週一至週五白天",
-    service_codes: ["BA01 基本身體清潔", "BA04 協助餵食", "BA11 肢體關節活動"],
-    special_need: "高跌倒風險、夜間需陪伴",
+    service_codes: ["BA01 基本身體清潔", "BA04 餵食/灌食", "BA11 關節活動"],
+    special_need: "高跌倒風險、需女性居服員",
     case_manager: "張護理師",
     replies: [],
     round_status: {
@@ -36,8 +35,7 @@ const mockCases = [
         { name: "愛吾愛居家長照機構", status: "pending", time: "", note: "尚未回覆" }
       ],
       round2: [
-        { name: "聯承居家長照機構", status: "pending", time: "", note: "第二輪尚未啟動" },
-        { name: "佳醫居家長照機構", status: "pending", time: "", note: "第二輪尚未啟動" }
+        { name: "聯承居家長照機構", status: "pending", time: "", note: "第二輪尚未啟動" }
       ],
       round3: []
     }
@@ -49,8 +47,7 @@ const mockCases = [
     age: 79,
     gender: "女",
     diagnosis: "腦中風後失能，需長期照護與移位協助",
-    adl: "完全依賴",
-    mobility: "臥床",
+    mobility: "長期臥床，均於床上照顧",
     oxygen: "鼻導管 2L",
     status: "二輪媒合中",
     created_at: "2026/03/29 15:20",
@@ -60,11 +57,11 @@ const mockCases = [
     contact_phone: "0933-111-222",
     address: "台北市中正區南海路 120 號 3 樓",
     cms_level: "第7級",
-    consciousness: "可簡單應答",
+    consciousness: "清楚",
     service_type: "居家服務",
     service_time: "每日白天",
-    service_codes: ["BA02 基本日常照顧", "BA11 肢體關節活動", "BA15 家務協助"],
-    special_need: "需鼻導管氧氣、移位協助",
+    service_codes: ["BA02 基本日常照顧", "BA11 關節活動", "BA15-1 家務（自用）"],
+    special_need: "需鼻導管氧氣、需女性居服員",
     case_manager: "李個管師",
     replies: [
       { facility_name: "安心護理之家", reply: "accept", time: "16:10", note: "可先評估，需病摘與用藥清單" },
@@ -78,8 +75,7 @@ const mockCases = [
     round_facilities: {
       round1: [
         { name: "安心護理之家", status: "accept", time: "16:10", note: "可先評估，需病摘與用藥清單" },
-        { name: "福安長照中心", status: "reject", time: "16:35", note: "目前滿床" },
-        { name: "松禾居家長照機構", status: "pending", time: "", note: "尚未回覆" }
+        { name: "福安長照中心", status: "reject", time: "16:35", note: "目前滿床" }
       ],
       round2: [
         { name: "國泰居家長照機構", status: "reject", time: "09:20", note: "目前排班已滿" },
@@ -95,8 +91,7 @@ const mockCases = [
     age: 88,
     gender: "男",
     diagnosis: "失智合併反覆感染，需安置照護",
-    adl: "完全依賴",
-    mobility: "臥床",
+    mobility: "長期臥床，均於床上照顧",
     oxygen: "面罩氧氣",
     status: "案件結案",
     created_at: "2026/03/28 09:05",
@@ -106,11 +101,11 @@ const mockCases = [
     contact_phone: "0928-888-321",
     address: "新北市永和區中正路 66 號 8 樓",
     cms_level: "第8級",
-    consciousness: "失智，需陪伴",
+    consciousness: "混亂",
     service_type: "機構安置",
     service_time: "儘速入住",
     service_codes: ["24小時住宿照護", "失智照護", "協助灌食"],
-    special_need: "感染控制、全面照護、家屬希望盡快入住",
+    special_need: "感染控制、全面照護、需男性居服員",
     case_manager: "王社工師",
     replies: [
       { facility_name: "仁愛安養中心", reply: "accept", time: "10:20", note: "已確認收案，請提供出院摘要" }
@@ -122,13 +117,10 @@ const mockCases = [
     },
     round_facilities: {
       round1: [
-        { name: "仁愛安養中心", status: "accept", time: "10:20", note: "已確認收案，請提供出院摘要" },
-        { name: "福田居家長照機構", status: "reject", time: "10:45", note: "不收失智重度個案" },
-        { name: "愛關懷居家長照機構", status: "pending", time: "", note: "尚未回覆" }
+        { name: "仁愛安養中心", status: "accept", time: "10:20", note: "已確認收案，請提供出院摘要" }
       ],
       round2: [
-        { name: "維昕居家長照機構", status: "reject", time: "14:05", note: "暫無空床" },
-        { name: "享齡居家長照機構", status: "pending", time: "", note: "尚未回覆" }
+        { name: "維昕居家長照機構", status: "reject", time: "14:05", note: "暫無空床" }
       ],
       round3: []
     }
@@ -140,8 +132,7 @@ const mockCases = [
     age: 76,
     gender: "女",
     diagnosis: "髖部骨折術後，返家需短期照護與復能協助",
-    adl: "部分協助",
-    mobility: "助行器",
+    mobility: "可使用輔具行走(手杖、助行器等)",
     oxygen: "無",
     status: "三輪媒合中",
     created_at: "2026/03/27 11:40",
@@ -154,8 +145,8 @@ const mockCases = [
     consciousness: "清楚",
     service_type: "居家復能",
     service_time: "週一、三、五上午",
-    service_codes: ["BA11 肢體關節活動", "BA13 陪同外出", "BA20 陪伴服務"],
-    special_need: "術後復能、上下樓需協助",
+    service_codes: ["BA11 關節活動", "BA13 陪同外出", "BA20 陪伴服務"],
+    special_need: "術後復能、需女性居服員",
     case_manager: "陳護理師",
     replies: [
       { facility_name: "同心居家長照機構", reply: "accept", time: "12:05", note: "可收案，最快明日家訪" }
@@ -167,12 +158,10 @@ const mockCases = [
     },
     round_facilities: {
       round1: [
-        { name: "大愛居家長照機構", status: "reject", time: "08:55", note: "距離過遠" },
-        { name: "好厝邊居家長照機構", status: "reject", time: "09:30", note: "目前時段無法配合" }
+        { name: "大愛居家長照機構", status: "reject", time: "08:55", note: "距離過遠" }
       ],
       round2: [
-        { name: "同心居家長照機構", status: "accept", time: "12:05", note: "可收案，最快明日家訪" },
-        { name: "怡和居家長照機構", status: "reject", time: "13:20", note: "目前無法排班" }
+        { name: "同心居家長照機構", status: "accept", time: "12:05", note: "可收案，最快明日家訪" }
       ],
       round3: [
         { name: "百佳居家長照機構", status: "reject", time: "15:12", note: "服務區域不符" },
@@ -188,8 +177,7 @@ const mockCases = [
     age: 90,
     gender: "男",
     diagnosis: "慢性心衰竭反覆住院，需出院後照護銜接",
-    adl: "部分協助",
-    mobility: "輪椅",
+    mobility: "無法行走及站立，需全移位",
     oxygen: "鼻導管 1L",
     status: "案件結案",
     created_at: "2026/03/26 14:12",
@@ -202,7 +190,7 @@ const mockCases = [
     consciousness: "清楚但易喘",
     service_type: "居家服務",
     service_time: "每日下午",
-    service_codes: ["BA02 基本日常照顧", "BA04 協助餵食", "生命徵象觀察"],
+    service_codes: ["BA02 基本日常照顧", "BA04 餵食/灌食", "生命徵象觀察"],
     special_need: "慢性心衰竭、需密切觀察呼吸狀況",
     case_manager: "周個管師",
     replies: [
@@ -215,12 +203,10 @@ const mockCases = [
     },
     round_facilities: {
       round1: [
-        { name: "青松居家長照機構", status: "reject", time: "15:20", note: "目前人力不足" },
-        { name: "永康居家長照機構", status: "pending", time: "", note: "尚未回覆" }
+        { name: "青松居家長照機構", status: "reject", time: "15:20", note: "目前人力不足" }
       ],
       round2: [
-        { name: "杏保居家長照機構", status: "reject", time: "17:20", note: "量能不足" },
-        { name: "聯新居家長照機構", status: "pending", time: "", note: "尚未回覆" }
+        { name: "杏保居家長照機構", status: "reject", time: "17:20", note: "量能不足" }
       ],
       round3: [
         { name: "善誠居家長照機構", status: "reject", time: "09:10", note: "無法配合時段" },
