@@ -359,15 +359,15 @@
           <div class="info-value" id="cmsView">第 6 級</div>
         </div>
         <div class="info-item compact">
-          <div class="info-label">ADL</div>
-          <div class="info-value" id="adlView">部分協助</div>
+          <div class="info-label">意識</div>
+          <div class="info-value" id="consciousnessView">清楚</div>
         </div>
         <div class="info-item compact">
           <div class="info-label">行動能力</div>
-          <div class="info-value" id="careView">輪椅移位</div>
+          <div class="info-value" id="mobilityView">輪椅移位</div>
         </div>
         <div class="info-item compact">
-          <div class="info-label">特殊照護</div>
+          <div class="info-label">特殊需求</div>
           <div class="info-value" id="specialView">高跌倒風險、夜間需陪伴</div>
         </div>
       </div>
@@ -935,18 +935,17 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
         contact_phone: params.get("contact_phone") || "0912-345-678",
         diagnosis: params.get("diagnosis") || params.get("case_summary") || "肺炎治療後病況穩定，因反覆跌倒與生活功能下降，出院後需持續居家照護與日常生活協助。",
         cms_level: params.get("cms_level") || "第 6 級",
-        adl: params.get("adl") || "部分協助",
-        mobility: params.get("mobility") || "輪椅移位",
+        mobility: params.get("mobility") || "無法行走，但可站立",
         consciousness: params.get("consciousness") || "清楚",
         service_type: params.get("service_type") || "居家服務",
         service_time: params.get("service_time") || "週一至週五白天",
         service_codes: params.get("service_codes") || encodeURIComponent(JSON.stringify([
-          { code: "BA01", count: 1 },
-          { code: "BA04", count: 1 },
-          { code: "BA11", count: 1 }
+          "BA01 基本身體清潔",
+          "BA04 協助餵食或灌食",
+          "BA11 肢體關節活動"
         ])),
         case_summary: params.get("case_summary") || "個案與女兒同住，主要照顧者白天需上班，返家前希望先銜接居家服務，協助清潔、移位與進食照顧。",
-        special: params.get("special") || params.get("special_need_long") || "高跌倒風險、夜間需陪伴、返家初期需密切觀察進食與活動狀況"
+        special: params.get("special") || params.get("special_need_long") || "高跌倒風險、需女性居服員"
       };
     }
 
@@ -968,31 +967,40 @@ ${formatServiceCodes(data.service_codes)}`;
       $("diagnosisView").textContent = data.diagnosis;
       $("contactSummaryView").textContent = contactSummary;
       $("cmsView").textContent = data.cms_level;
-      $("adlView").textContent = data.adl;
-      $("careView").textContent = data.mobility;
+      $("mobilityView").textContent = data.mobility;
       $("specialView").textContent = data.special;
       $("serviceNeedView").textContent = serviceNeed;
       $("caseSummaryView").textContent = data.case_summary;
     }
 
     function formatServiceCodes(value) {
-      if (!value) return "BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動";
+      if (!value) return "BA01 基本身體清潔、BA04 餵食/灌食、BA11 關節活動";
 
       try {
-        const parsed = JSON.parse(decodeURIComponent(value));
+        const decoded = decodeURIComponent(value);
+        let parsed = null;
+        try {
+          parsed = JSON.parse(decoded);
+        } catch(e) {
+          // If not JSON, use as is
+          return decoded;
+        }
+
         if (Array.isArray(parsed) && parsed.length) {
           const codeNameMap = {
-            BA01: "基本身體清潔",
-            BA04: "協助餵食",
-            BA11: "肢體關節活動"
+            "BA01": "基本身體清潔", "BA02": "基本日常照顧", "BA04": "餵食/灌食", "BA05": "餐食照顧", "BA07": "沐浴洗頭", "BA23": "協助洗頭", "BA24": "協助排泄", "BA10": "翻身拍背", "BA11": "關節活動",
+            "BA12": "上下樓", "BA13": "陪同外出", "BA14": "陪同就醫", "BA15-1": "家務（自用）", "BA15-2": "家務（共用）", "BA16": "代購/代送", "BA18": "安全看視", "BA20": "陪伴服務", "BA22": "巡視服務",
+            "BA03": "生命徵象", "BA17a": "氣道抽吸", "BA17b": "口鼻抽吸", "BA17c": "管路清潔", "BA17d": "血糖/通便", "BA17e": "藥盒管理", "BA08": "足部照護", "BA09": "沐浴車"
           };
 
           return parsed.map(item => {
-            if (typeof item === "string") return item;
-            if (item.code && item.count) {
-              return `${item.code} ${codeNameMap[item.code] || ""} x${item.count}`.trim();
+            if (typeof item === "string") {
+              const code = item.split(' ')[0];
+              return codeNameMap[code] ? `${code} ${codeNameMap[code]}` : item;
             }
-            if (item.code) return `${item.code} ${codeNameMap[item.code] || ""}`.trim();
+            if (item.code) {
+              return `${item.code} ${codeNameMap[item.code] || ""}`.trim();
+            }
             return JSON.stringify(item);
           }).join("、");
         }

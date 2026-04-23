@@ -296,18 +296,7 @@
 }
 
 .counter{
-  display:flex;
-  gap:8px;
-  align-items:center;
-}
-
-.counter button{
-  width:30px;
-  height:30px;
-  border:none;
-  border-radius:8px;
-  background:#e2e8f0;
-  cursor:pointer;
+  display:none;
 }
   </style>
 </head>
@@ -359,7 +348,7 @@
 
     <!-- 第三列 -->
     <div class="field">
-      <label>轉介醫療單位<span class="required">*</span></label>
+      <label>轉介單位<span class="required">*</span></label>
       <input type="text" id="hospital" />
     </div>
 
@@ -416,16 +405,6 @@
       <input type="text" id="address" />
     </div>
 
-    <div class="field">
-      <label>緊急聯絡人</label>
-      <input type="text" id="contactName" />
-    </div>
-
-    <div class="field">
-      <label>聯絡人電話</label>
-      <input type="text" id="contactPhone" />
-    </div>
-
   </div>
 
   <!-- 功能評估 -->
@@ -447,22 +426,15 @@
     </div>
 
     <div class="field">
-      <label>ADL</label>
-      <select id="adl">
-        <option value="">請選擇</option>
-        <option value="可自理">可自理</option>
-        <option value="部分協助">部分協助</option>
-        <option value="完全依賴">完全依賴</option>
-      </select>
-    </div>
-
-    <div class="field">
       <label>行動能力</label>
       <select id="mobility">
         <option value="">請選擇</option>
         <option value="可自行行走">可自行行走</option>
-        <option value="輪椅">輪椅</option>
-        <option value="臥床">臥床</option>
+        <option value="可使用輔具行走(手杖、助行器等)">可使用輔具行走(手杖、助行器等)</option>
+        <option value="使用輔具並扶持下行走">使用輔具並扶持下行走</option>
+        <option value="無法行走，但可站立">無法行走，但可站立</option>
+        <option value="無法行走及站立，需全移位">無法行走及站立，需全移位</option>
+        <option value="長期臥床，均於床上照顧">長期臥床，均於床上照顧</option>
       </select>
     </div>
 
@@ -472,6 +444,7 @@
         <option value="">請選擇</option>
         <option value="清楚">清楚</option>
         <option value="混亂">混亂</option>
+        <option value="木僵">木僵</option>
       </select>
     </div>
 
@@ -525,7 +498,11 @@
 
   <div class="field">
     <label>特殊需求（長照）</label>
-    <textarea id="specialNeedLong"></textarea>
+    <div class="check-grid" style="margin-top:8px;">
+      <label class="check-item"><input type="checkbox" class="special-need-check" value="需女性居服員"> 需女性居服員</label>
+      <label class="check-item"><input type="checkbox" class="special-need-check" value="需男性居服員"> 需男性居服員</label>
+    </div>
+    <input type="text" id="specialNeedOther" placeholder="其他需求..." style="margin-top:10px;">
   </div>
 
 
@@ -540,6 +517,16 @@
   ========================= -->
   <div class="card">
     <div class="section-title">LINE 通知預覽</div>
+
+    <div class="field" style="margin-bottom:16px; border:1px solid #bfdbfe; background:#eff6ff; padding:16px; border-radius:14px;">
+      <label style="color:#1d4ed8; display:block; margin-bottom:10px;">📋 功能需求：送出案件前，請選擇要送出的機構群組</label>
+      <div class="check-grid">
+        <label class="check-item"><input type="radio" name="targetGroup" value="指定機構" checked> 指定機構</label>
+        <label class="check-item"><input type="radio" name="targetGroup" value="合作機構(一輪)"> 合作機構(一輪)</label>
+        <label class="check-item"><input type="radio" name="targetGroup" value="全區機構(二輪)"> 全區機構(二輪)</label>
+        <label class="check-item"><input type="radio" name="targetGroup" value="困難派案(三輪)"> 困難派案(三輪)</label>
+      </div>
+    </div>
 
     <div id="messagePreview" class="preview-box"></div>
 
@@ -580,16 +567,38 @@ function getSpecialCareList() {
    🔥 新增：服務碼 Modal 系統
 ========================= */
 const services = [
-  { code: "BA01", name: "基本身體清潔" },
-  { code: "BA02", name: "基本日常照顧" },
-  { code: "BA03", name: "測量生命徵象" },
-  { code: "BA04", name: "協助餵食或灌食" },
-  { code: "BA05", name: "餐食照顧" },
-  { code: "BA07", name: "協助沐浴及洗頭" },
-  { code: "BA08", name: "足部照護" },
-  { code: "BA11", name: "肢體關節活動" },
-  { code: "BA13", name: "陪同外出" },
-  { code: "BA20", name: "陪伴服務" }
+  { category: "🔹 1. 生活照護（ADL）", items: [
+    { code: "BA01", name: "基本身體清潔" },
+    { code: "BA02", name: "基本日常照顧" },
+    { code: "BA04", name: "餵食/灌食" },
+    { code: "BA05", name: "餐食照顧" },
+    { code: "BA07", name: "沐浴洗頭" },
+    { code: "BA23", name: "協助洗頭" },
+    { code: "BA24", name: "協助排泄" },
+    { code: "BA10", name: "翻身拍背" },
+    { code: "BA11", name: "關節活動" }
+  ]},
+  { category: "🔹 2. 支持性服務（整合 2 + 3 + 5）", items: [
+    { code: "BA12", name: "上下樓" },
+    { code: "BA13", name: "陪同外出" },
+    { code: "BA14", name: "陪同就醫" },
+    { code: "BA15-1", name: "家務（自用）" },
+    { code: "BA15-2", name: "家務（共用）" },
+    { code: "BA16", name: "代購/代送" },
+    { code: "BA18", name: "安全看視" },
+    { code: "BA20", name: "陪伴服務" },
+    { code: "BA22", name: "巡視服務" }
+  ]},
+  { category: "🔹 3. 醫療與專業照護", items: [
+    { code: "BA03", name: "生命徵象" },
+    { code: "BA17a", name: "氣道抽吸" },
+    { code: "BA17b", name: "口鼻抽吸" },
+    { code: "BA17c", name: "管路清潔" },
+    { code: "BA17d", name: "血糖/通便" },
+    { code: "BA17e", name: "藥盒管理" },
+    { code: "BA08", name: "足部照護" },
+    { code: "BA09", name: "沐浴車" }
+  ]}
 ];
 
 let serviceCount = {};
@@ -598,19 +607,17 @@ function openServiceModal(){
   const list = document.getElementById("serviceList");
   list.innerHTML = "";
 
-  services.forEach(s => {
-    const count = serviceCount[s.code] || 0;
-
-    list.innerHTML += `
-      <div class="service-row">
-        <div>${s.code} ${s.name}</div>
-        <div class="counter">
-          <button onclick="updateCount('${s.code}', -1)">-</button>
-          <span id="count-${s.code}">${count}</span>
-          <button onclick="updateCount('${s.code}', 1)">+</button>
+  services.forEach(cat => {
+    list.innerHTML += `<div class="category-header" style="margin-top:15px; font-weight:bold; color:#1d4ed8; background:#f0f7ff; padding:8px 12px; border-radius:8px;">${cat.category}</div>`;
+    
+    cat.items.forEach(s => {
+      list.innerHTML += `
+        <div class="service-row" onclick="toggleService('${s.code}')" style="cursor:pointer; padding:10px 12px; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; gap:12px;">
+          <input type="checkbox" id="check-${s.code}" ${serviceCount[s.code] ? 'checked' : ''} style="width:18px;height:18px;" onclick="event.stopPropagation(); toggleService('${s.code}')">
+          <span>${s.code} ${s.name}</span>
         </div>
-      </div>
-    `;
+      `;
+    });
   });
 
   document.getElementById("serviceModal").style.display = "block";
@@ -620,41 +627,41 @@ function closeServiceModal(){
   document.getElementById("serviceModal").style.display = "none";
 }
 
-function updateCount(code, delta){
-  if (!serviceCount[code]) serviceCount[code] = 0;
-  serviceCount[code] += delta;
-  if (serviceCount[code] < 0) serviceCount[code] = 0;
+function toggleService(code){
+  if (serviceCount[code]) {
+    delete serviceCount[code];
+    document.getElementById(`check-${code}`).checked = false;
+  } else {
+    serviceCount[code] = 1;
+    document.getElementById(`check-${code}`).checked = true;
+  }
+  updatePreview();
+}
 
-  document.getElementById(`count-${code}`).textContent = serviceCount[code];
+function updateCount(code, delta){
+  // 保持空函式避免舊程式報錯，或可移除
 }
 
 function confirmService(){
-  const selected = Object.entries(serviceCount)
-    .filter(([_, v]) => v > 0)
-    .map(([k, v]) => {
-  const svc = services.find(s => s.code === k);
-  return `${k} ${svc?.name || ""} x${v}`;
-});
+  const selected = [];
+  services.forEach(cat => {
+    cat.items.forEach(s => {
+      if (serviceCount[s.code]) {
+        selected.push(`${s.code} ${s.name}`);
+      }
+    });
+  });
 
   document.getElementById("selectedServices").textContent =
     selected.length ? selected.join("、") : "尚未選擇";
 
-closeServiceModal();
-updatePreview();
+  closeServiceModal();
+  updatePreview();
 }
 
-/* =========================
-   原本的 getFormData（不要動位置）
-========================= */
-/* =========================
-   基本設定（要在外面）
-========================= */
 const CREATE_CASE_WEBHOOK_URL = "https://your-n8n-url/webhook/create-referral";
 const $ = (id) => document.getElementById(id);
 
-/* =========================
-   初始化
-========================= */
 function getTaiwanDateTimeLocal() {
   const now = new Date();
   const taiwanTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
@@ -676,103 +683,80 @@ function initForm() {
   updatePreview();
 }
 
-/* =========================
-   收集資料（唯一一個 getFormData）
-========================= */
 function getFormData() {
   return {
     hospital_ext: $("hospitalExt").value,
     case_id: $("caseId").value.trim(),
     referral_time: $("referralTime").value,
     hospital: $("hospital").value.trim(),
-
     case_manager: $("caseManager").value.trim(),
     case_manager_phone: $("caseManagerPhone").value.trim(),
-
     patient_name: $("patientName").value,
-    contact_name: $("contactName").value,
-    contact_phone: $("contactPhone").value,
-
     gender: $("gender").value,
     age: $("age").value,
-
     cms_level: $("cmsLevel").value,
-    adl: $("adl").value,
     mobility: $("mobility").value,
     consciousness: $("consciousness").value,
-
     height: $("height").value,
     weight: $("weight").value,
     address: $("address").value,
-
-    service_type: $("serviceType").value,
     service_time: $("serviceTime").value,
-
-    service_codes: Object.entries(serviceCount)
-      .filter(([_, v]) => v > 0)
-      .map(([k, v]) => ({ code: k, count: v })),
-
+    service_codes: Object.keys(serviceCount),
     case_summary: $("caseSummary").value,
-    special_need_long: $("specialNeedLong").value,
-
+    special_needs: Array.from(document.querySelectorAll('.special-need-check:checked')).map(el => el.value),
+    special_need_other: $("specialNeedOther").value,
+    target_group: document.querySelector('input[name="targetGroup"]:checked')?.value || "未指定",
     status: "待媒合"
   };
 }
-    
 
 function validateForm(data) {
-  if (!data.hospital) return "請填寫轉介醫療單位";
+  if (!data.hospital) return "請填寫轉介單位";
   if (!data.case_manager) return "請填寫個管師姓名";
   if (!data.case_manager_phone) return "請填寫聯絡電話";
   if (!data.gender) return "請選擇性別";
   if (!data.age) return "請填寫年齡";
-  if (!data.case_summary) return "請填寫案況簡述";
-  if (!data.service_type) return "請選擇服務類型";
-  if (!data.service_codes.length) return "請選擇至少一項服務碼";
   return "";
 }
 
-    /* =========================
-       通知文字預覽
-    ========================= */
 function buildLineMessage(data) {
+  const specialStr = [...data.special_needs, data.special_need_other].filter(x => x).join('、');
+  
   return `
-【居家服務轉介】
-
-■服務類型：
-${data.service_type || "-"}
-
-■轉介單位：
-${data.hospital || "-"}（分機 ${data.hospital_ext || "-"}）
-
 ■個案資訊：
-${data.age}歲 / ${data.gender}
-身高${data.height || "-"} / 體重${data.weight || "-"}
-CMS：${data.cms_level || "-"}級
-地址：${data.address || "-"}
+${data.patient_name || "未填姓名"} / ${data.gender} / ${data.age}歲
+身高：${data.height || "-"}cm / 體重：${data.weight || "-"}kg
+居住地址：${data.address || "-"}
+CMS 等級：${data.cms_level || "-"} 級
+意識：${data.consciousness || "-"}
+行動能力：${data.mobility || "-"}
 
 ■服務需求：
-${data.service_time || "-"}
-服務碼：${
+服務時段：${data.service_time || "-"}
+服務碼別：${
   data.service_codes.length
-    ? data.service_codes.map(s => {
-        const svc = services.find(x => x.code === s.code);
-        return `${s.code} ${svc?.name || ""} x${s.count}`;
+    ? data.service_codes.map(code => {
+        let foundName = "";
+        services.forEach(cat => {
+          const item = cat.items.find(x => x.code === code);
+          if (item) foundName = item.name;
+        });
+        return `${code} ${foundName}`;
       }).join("、")
     : "-"
 }
 
 ■案況簡述：
-${data.case_summary || data.diagnosis || "-"}
+${data.case_summary || "-"}
 
 ■特殊需求：
-${data.special_need_long || "-"}
+${specialStr || "-"}
 
-■聯絡人：
-${data.case_manager || "-"}
-📱 ${data.case_manager_phone || "-"}
+■轉介單位：
+${data.hospital || "-"}
+${data.case_manager || "-"} / ${data.case_manager_phone || "-"} (分機 ${data.hospital_ext || "-"})
 
-👉 回覆是否可收案：
+👉 請點選連結回覆是否可收案：
 https://your-domain/facility.html?case_id=${data.case_id}
 `;
 }
