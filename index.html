@@ -892,11 +892,11 @@ https://your-domain/facility.html?case_id=${data.case_id}
     initForm();
 
     function fillMyInfo() {
-  // mock（未來接登入系統）
-  document.getElementById("caseManager").value = "王小明";
-  document.getElementById("caseManagerPhone").value = "0912345678";
-  document.getElementById("hospital").value = "萬芳醫院急診";
-  document.getElementById("hospitalExt").value = "1234";
+  // 移除虛擬資料，未來將對接實際登入系統
+  document.getElementById("caseManager").value = "";
+  document.getElementById("caseManagerPhone").value = "";
+  document.getElementById("hospital").value = "";
+  document.getElementById("hospitalExt").value = "";
 
   updatePreview();
 }
