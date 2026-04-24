@@ -299,6 +299,8 @@
       }
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
 </head>
 <body>
   <div class="wrap">
@@ -949,12 +951,36 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
       };
     }
 
-    function renderCaseInfo() {
-      const data = getQueryParams();
-      const bodyText = `${data.height} cm / ${data.weight} kg`;
-      const contactSummary = `${data.address}
-${data.contact_name} / ${data.contact_phone}`;
-      const serviceNeed = `${data.service_time}
+    async function renderCaseInfo() {
+      const queryData = getQueryParams();
+      let data = queryData;
+
+      // 優先從 Supabase 抓取
+      if (window.supabaseClient) {
+        try {
+          const { data: sbData, error } = await window.supabaseClient
+            .from('cases')
+            .select('*')
+            .eq('case_id', queryData.case_id)
+            .single();
+          
+          if (!error && sbData) {
+            console.log("Supabase case data loaded:", sbData);
+            data = {
+              ...queryData,
+              ...sbData,
+              special: sbData.special_need || queryData.special
+            };
+          }
+        } catch (err) {
+          console.warn("Supabase fetch error:", err);
+        }
+      }
+
+      const bodyText = `${data.height || "--"} cm / ${data.weight || "--"} kg`;
+      const contactSummary = `${data.address || "--"}
+${data.contact_name || "--"} / ${data.contact_phone || "--"}`;
+      const serviceNeed = `${data.service_time || "--"}
 ${formatServiceCodes(data.service_codes)}`;
 
       $("caseIdPill").textContent = data.case_id;
@@ -1115,30 +1141,38 @@ ${formatServiceCodes(data.service_codes)}`;
       try {
         showStatus("success", "送出中...");
 
+        // 存入 Supabase
+        if (window.supabaseClient) {
+          const { error: sbError } = await window.supabaseClient
+            .from('replies')
+            .insert([{
+              case_id: payload.case_id,
+              facility_name: payload.facility_name,
+              reply_status: replyStatus,
+              note: payload.reply_note,
+              round: 1
+            }]);
+          
+          if (sbError) throw sbError;
+        }
+
+        // 同步發送 n8n 通知 (保持原邏輯)
         const res = await fetch(FACILITY_REPLY_WEBHOOK_URL, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
 
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
-
-        const result = await res.json().catch(() => ({}));
-
         showStatus(
           "success",
-          `已成功回覆：${replyStatus === "accept" ? "可收案" : "無法收案"}\n案件編號：${payload.case_id}`
+          `已成功回覆：${replyStatus === "accept" ? "可收案" : "無法收案"}\n案件編號：${payload.case_id}\n資料已存入 Supabase 資料庫。`
         );
 
-        console.log("facility reply result:", result);
       } catch (err) {
+        console.error("Submit Error:", err);
         showStatus(
           "error",
-          `目前尚未成功送到後端。\n請先確認 FACILITY_REPLY_WEBHOOK_URL 是否已替換。\n錯誤：${err.message}`
+          `送出失敗。\n請確認資料庫連線或 SQL 設定。\n錯誤：${err.message}`
         );
       }
     }

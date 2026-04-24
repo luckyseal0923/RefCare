@@ -299,6 +299,8 @@
   display:none;
 }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -793,38 +795,64 @@ https://your-domain/facility.html?case_id=${data.case_id}
         return;
       }
 
-      const payload = {
-        ...data,
-        line_message_preview: buildLineMessage(data)
+      // 映射到 Supabase 資料表欄位
+      const caseData = {
+        case_id: data.case_id,
+        patient_name: data.patient_name,
+        hospital: data.hospital,
+        age: parseInt(data.age) || 0,
+        gender: data.gender,
+        diagnosis: data.case_summary, // 暫時對應到診斷
+        case_summary: data.case_summary,
+        mobility: data.mobility,
+        consciousness: data.consciousness,
+        oxygen: "無", // 預設
+        status: "一輪媒合中",
+        created_at: new Date().toISOString(),
+        contact_name: data.patient_name, // 簡化處理
+        contact_phone: data.case_manager_phone,
+        address: data.address,
+        cms_level: data.cms_level,
+        service_type: "長照服務",
+        service_time: data.service_time,
+        service_codes: data.service_codes,
+        special_need: data.special_needs.join('、') + (data.special_need_other ? ` (${data.special_need_other})` : ""),
+        case_manager: data.case_manager,
+        total_targets: 35
       };
 
       try {
-        showStatus("success", "送出中...");
+        showStatus("success", "儲存至資料庫中...");
 
-        const res = await fetch(CREATE_CASE_WEBHOOK_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(payload)
-        });
+        const { error: sbError } = await window.supabaseClient
+          .from('cases')
+          .insert([caseData]);
 
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
-
-        const result = await res.json().catch(() => ({}));
+        if (sbError) throw sbError;
 
         showStatus(
           "success",
-          `案件已成功送出。\n案件編號：${data.case_id}\n你之後可串接 LINE 群組通知、資料庫寫入與案件看板。`
+          `案件已成功建立！\n案件編號：${data.case_id}\n資料已存入 Supabase 並自動啟動媒合程序。`
         );
 
-        console.log("create case result:", result);
+        // 串接 n8n 通知 (可選)
+        if (typeof CREATE_CASE_WEBHOOK_URL !== 'undefined' && CREATE_CASE_WEBHOOK_URL.includes("http")) {
+          fetch(CREATE_CASE_WEBHOOK_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(caseData)
+          }).catch(e => console.warn("n8n notify error:", e));
+        }
+
+        setTimeout(() => {
+          if (confirm("建立成功！是否重新整理頁面？")) location.reload();
+        }, 1500);
+
       } catch (err) {
+        console.error("Supabase Error:", err);
         showStatus(
           "error",
-          `目前尚未成功送到後端。\n請先確認 CREATE_CASE_WEBHOOK_URL 是否已替換為你的 n8n webhook。\n錯誤：${err.message}`
+          `儲存至 Supabase 失敗。\n請確認 SQL Table 已建立且 RLS 已開啟。\n錯誤：${err.message}`
         );
       }
     }
