@@ -686,6 +686,8 @@ function initForm() {
   $("caseId").value = generateCaseId();
   $("referralTime").value = getTaiwanDateTimeLocal();
   updatePreview();
+  // 頁面載入時自動抓取個管師名單（延遲確保 loadCaseManagers 已定義）
+  setTimeout(() => loadCaseManagers(), 200);
 }
 
 function getFormData() {
