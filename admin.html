@@ -574,7 +574,7 @@
             <td>${escapeHtml(m.phone)}</td>
             <td>${escapeHtml(m.hospital)}</td>
             <td>${escapeHtml(m.ext || '-')}</td>
-            <td><button class="btn btn-secondary" onclick="deleteManager('${m.id}')" style="padding:4px 8px; font-size:12px;">刪除</button></td>
+            <td><button class="mgr-delete-btn" onclick="deleteManager('${m.id}')">刪除</button></td>
           </tr>`).join('')
         : '<tr><td colspan="5" style="text-align:center;color:#9ca3af;padding:20px;">尚無個管師資料</td></tr>';
     }
