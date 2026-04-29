@@ -154,27 +154,6 @@
     @media (max-width: 640px){ .kpi-grid,.toolbar{ grid-template-columns:1fr; } .wrap{ padding:16px 12px 40px; } .hero h1{ font-size:24px; } }
   </style>
   
-<div class="drawer-overlay" id="managerOverlay"></div>
-<div class="drawer" id="managerDrawer" style="width: 700px; max-width: 90vw;">
-  <div class="drawer-header" style="display:flex; justify-content:space-between; align-items:center;">
-    <h2 style="margin:0;">個管師名單維護</h2>
-    <button class="btn btn-secondary" onclick="closeManagerListModal()">關閉</button>
-  </div>
-  <div class="drawer-content" style="padding:20px;">
-    <form id="addManagerForm" style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap:10px; margin-bottom: 20px; align-items:end; background:#f8fafc; padding:12px; border-radius:8px;">
-      <div class="field" style="margin:0;"><label>姓名</label><input type="text" id="addMName" required></div>
-      <div class="field" style="margin:0;"><label>電話</label><input type="text" id="addMPhone" required></div>
-      <div class="field" style="margin:0;"><label>單位</label><input type="text" id="addMHospital" required></div>
-      <div class="field" style="margin:0;"><label>分機</label><input type="text" id="addMExt"></div>
-      <button class="btn btn-primary" type="button" onclick="addManager()">新增</button>
-    </form>
-    <div class="facility-table-wrap">
-      <table class="facility-table">
-        <thead><tr><th>姓名</th><th>電話</th><th>單位</th><th>分機</th><th>操作</th></tr></thead>
-        <tbody id="managerTableBody"></tbody>
-      </table>
-    </div>
-  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -751,5 +730,27 @@
     runSelfTests();
     renderTable();
   </script>
+<div class="drawer-overlay" id="managerOverlay"></div>
+<div class="detail-drawer" id="managerDrawer" style="width: 700px; max-width: 90vw;">
+  <div class="drawer-header" style="display:flex; justify-content:space-between; align-items:center;">
+    <h2 style="margin:0;">個管師名單維護</h2>
+    <button class="btn btn-secondary" onclick="closeManagerListModal()">關閉</button>
+  </div>
+  <div class="drawer-body" style="padding:20px;">
+    <form id="addManagerForm" style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap:10px; margin-bottom: 20px; align-items:end; background:#f8fafc; padding:12px; border-radius:8px;">
+      <div class="field" style="margin:0;"><label>姓名</label><input type="text" id="addMName" required></div>
+      <div class="field" style="margin:0;"><label>電話</label><input type="text" id="addMPhone" required></div>
+      <div class="field" style="margin:0;"><label>單位</label><input type="text" id="addMHospital" required></div>
+      <div class="field" style="margin:0;"><label>分機</label><input type="text" id="addMExt"></div>
+      <button class="btn btn-primary" type="button" onclick="addManager()">新增</button>
+    </form>
+    <div class="facility-table-wrap">
+      <table class="facility-table">
+        <thead><tr><th>姓名</th><th>電話</th><th>單位</th><th>分機</th><th>操作</th></tr></thead>
+        <tbody id="managerTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
 </body>
 </html>
