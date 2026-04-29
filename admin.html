@@ -622,7 +622,7 @@
       `).join('');
     }
     function openManagerListModal() {
-      document.getElementById('managerOverlay').classList.add('show');
+      console.log('Opening Manager Modal'); document.getElementById('managerOverlay').classList.add('show');
       document.getElementById('managerDrawer').classList.add('show');
       loadManagers();
     }
@@ -752,5 +752,22 @@
     </div>
   </div>
 </div>
+
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <aside class="detail-drawer" id="detailDrawer" aria-hidden="true">
+    <div class="drawer-header">
+      <div class="drawer-top">
+        <div>
+          <h2 class="drawer-title" id="drawerPatientName">載入中...</h2>
+          <div class="drawer-sub" id="drawerMeta"></div>
+        </div>
+        <button class="drawer-close" id="drawerClose" aria-label="關閉">&times;</button>
+      </div>
+    </div>
+    <div class="drawer-body" id="drawerContent">
+      <div style="padding: 20px; text-align: center; color: #6b7280;">載入中...</div>
+    </div>
+  </aside>
+
 </body>
 </html>
