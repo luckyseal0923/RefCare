@@ -846,15 +846,24 @@ function validateForm(data) {
     initForm();
 
     let caseManagers = [];
-    async function loadCaseManagers() {
-      if (window.supabaseClient) {
-        const { data, error } = await window.supabaseClient.from('case_managers').select('*').order('name');
-        if (!error && data) {
-          caseManagers = data;
-          const sel = document.getElementById("caseManagerSelect");
-          sel.innerHTML = '<option value="">快速帶入名單...</option>' + 
-            data.map(m => `<option value="${m.id}">${m.name} (${m.hospital})</option>`).join('');
+    async function loadCaseManagers(retries = 5) {
+      const client = window.supabaseClient;
+      if (!client) {
+        if (retries > 0) {
+          setTimeout(() => loadCaseManagers(retries - 1), 500);
         }
+        return;
+      }
+      try {
+        const { data, error } = await client.from('case_managers').select('*').order('name');
+        if (error) { console.error('loadCaseManagers error:', error); return; }
+        caseManagers = data || [];
+        const sel = document.getElementById("caseManagerSelect");
+        if (!sel) return;
+        sel.innerHTML = '<option value="">快速帶入名單...</option>' +
+          caseManagers.map(m => `<option value="${m.id}">${m.name}（${m.hospital}）</option>`).join('');
+      } catch(e) {
+        console.error('loadCaseManagers exception:', e);
       }
     }
 
