@@ -504,7 +504,7 @@
       <label class="check-item"><input type="checkbox" class="special-need-check" value="需女性居服員"> 需女性居服員</label>
       <label class="check-item"><input type="checkbox" class="special-need-check" value="需男性居服員"> 需男性居服員</label>
     </div>
-    <input type="text" id="specialNeedOther" placeholder="其他需求..." style="margin-top:10px;">
+    <textarea id="specialNeedOther" placeholder="其他需求..." style="margin-top:10px;"></textarea>
   </div>
 
 
@@ -515,10 +515,10 @@
 
 </div>
   <!-- =========================
-       通知預覽
+       送出案件
   ========================= -->
   <div class="card">
-    <div class="section-title">LINE 通知預覽</div>
+    <div class="section-title">派案設定與送出</div>
 
     <div class="field" style="margin-bottom:16px; border:1px solid #bfdbfe; background:#eff6ff; padding:16px; border-radius:14px;">
       <label style="color:#1d4ed8; display:block; margin-bottom:10px;">📋 功能需求：送出案件前，請選擇要送出的機構群組</label>
@@ -530,10 +530,7 @@
       </div>
     </div>
 
-    <div id="messagePreview" class="preview-box"></div>
-
     <div class="toolbar">
-      <button class="btn-secondary" id="btnPreview">更新預覽</button>
       <button class="btn-primary" id="btnSubmit">送出案件</button>
       <button class="btn-secondary" id="btnReset">清空</button>
     </div>
@@ -617,7 +614,7 @@ function openServiceModal(){
     
     cat.items.forEach(s => {
       const rowHtml = `
-        <div class="service-row" onclick="toggleService('${s.code}')" style="cursor:pointer; padding:8px 12px; border:1px solid #f1f5f9; border-radius:8px; display:flex; align-items:center; gap:10px; background:#fff;">
+        <div class="service-row" onclick="toggleService('${s.code}')" style="cursor:pointer; padding:8px 12px; border:1px solid #f1f5f9; border-radius:8px; display:flex; align-items:center; gap:10px; background:#fff; justify-content:flex-start;">
           <input type="checkbox" id="check-${s.code}" ${serviceCount[s.code] ? 'checked' : ''} style="width:16px;height:16px;" onclick="event.stopPropagation(); toggleService('${s.code}')">
           <span style="font-size:14px;">${s.code} ${s.name}</span>
         </div>
@@ -727,51 +724,8 @@ function validateForm(data) {
   return "";
 }
 
-function buildLineMessage(data) {
-  const specialStr = [...data.special_needs, data.special_need_other].filter(x => x).join('、');
-  
-  return `
-■個案資訊：
-${data.patient_name || "未填姓名"} / ${data.gender} / ${data.age}歲
-身高：${data.height || "-"}cm / 體重：${data.weight || "-"}kg
-居住地址：${data.address || "-"}
-CMS 等級：${data.cms_level || "-"} 級
-意識：${data.consciousness || "-"}
-行動能力：${data.mobility || "-"}
-
-■服務需求：
-服務時段：${data.service_time || "-"}
-服務碼別：${
-  data.service_codes.length
-    ? data.service_codes.map(code => {
-        let foundName = "";
-        services.forEach(cat => {
-          const item = cat.items.find(x => x.code === code);
-          if (item) foundName = item.name;
-        });
-        return `${code} ${foundName}`;
-      }).join("、")
-    : "-"
-}
-
-■案況簡述：
-${data.case_summary || "-"}
-
-■特殊需求：
-${specialStr || "-"}
-
-■轉介單位：
-${data.hospital || "-"}
-${data.case_manager || "-"} / ${data.case_manager_phone || "-"} (分機 ${data.hospital_ext || "-"})
-
-👉 請點選連結回覆是否可收案：
-https://your-domain/facility.html?case_id=${data.case_id}
-`;
-}
-
     function updatePreview() {
-      const data = getFormData();
-      $("messagePreview").textContent = buildLineMessage(data);
+      // 預覽功能已移除，保留空函式避免其他綁定的事件報錯
     }
 
     /* =========================
@@ -885,7 +839,6 @@ https://your-domain/facility.html?case_id=${data.case_id}
       el.addEventListener("change", updatePreview);
     });
 
-    $("btnPreview").addEventListener("click", updatePreview);
     $("btnSubmit").addEventListener("click", submitForm);
     $("btnReset").addEventListener("click", resetForm);
 
