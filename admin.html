@@ -654,30 +654,7 @@
       else loadManagers();
     }
 
-  </script>
-();
-      target.age = String(formData.get('age') || '').trim();
-      target.gender = String(formData.get('gender') || '').trim();
-      target.status = String(formData.get('status') || '').trim();
-      target.case_manager = String(formData.get('case_manager') || '').trim();
-      target.diagnosis = String(formData.get('diagnosis') || '').trim();
-      target.case_summary = String(formData.get('case_summary') || '').trim();
-      target.cms_level = String(formData.get('cms_level') || '').trim();
-      target.mobility = String(formData.get('mobility') || '').trim();
-      target.consciousness = String(formData.get('consciousness') || '').trim();
-      target.oxygen = String(formData.get('oxygen') || '').trim();
-      target.contact_name = String(formData.get('contact_name') || '').trim();
-      target.contact_phone = String(formData.get('contact_phone') || '').trim();
-      target.address = String(formData.get('address') || '').trim();
-      target.service_type = String(formData.get('service_type') || '').trim();
-      target.service_time = String(formData.get('service_time') || '').trim();
-      target.special_need = String(formData.get('special_need') || '').trim();
-      target.service_codes = String(formData.get('service_codes') || '').split(/[，,]/).map(item => item.trim()).filter(Boolean);
-      renderTable();
-      openDrawer(currentEditingIndex);
-    }
-
-    function closeDrawer() {
+  function closeDrawer() {
       drawerOverlay.classList.remove('show');
       detailDrawer.classList.remove('show');
       detailDrawer.setAttribute('aria-hidden', 'true');
