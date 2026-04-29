@@ -225,12 +225,10 @@
     const sortFilter = document.getElementById("sortFilter");
     const btnReload = document.getElementById("btnReload");
     const btnReset = document.getElementById("btnReset");
-    const drawerOverlay = document.getElementById("drawerOverlay");
-    const detailDrawer = document.getElementById("detailDrawer");
-    const drawerPatientName = document.getElementById("drawerPatientName");
-    const drawerMeta = document.getElementById("drawerMeta");
-    const drawerContent = document.getElementById("drawerContent");
-    const drawerClose = document.getElementById("drawerClose");
+
+    // NOTE: drawerOverlay, detailDrawer, etc. are AFTER this script in HTML
+    // So we access them via getter functions
+    const $d = (id) => document.getElementById(id);
 
     let allCases = [];
     let currentRenderedList = [];
@@ -253,7 +251,7 @@
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
-        .replace(/\"/g, "&quot;")
+        .replace(/"/g, "&quot;")
         .replace(/'/g, "&#39;");
     }
 
@@ -284,22 +282,13 @@
 
     async function fetchData() {
       try {
-        // 抓取案件
         const { data: cases, error: caseError } = await sb
-          .from('cases')
-          .select('*')
-          .order('created_at', { ascending: false });
-
+          .from('cases').select('*').order('created_at', { ascending: false });
         if (caseError) throw caseError;
 
-        // 抓取所有回覆
-        const { data: replies, error: replyError } = await sb
-          .from('replies')
-          .select('*');
-
+        const { data: replies, error: replyError } = await sb.from('replies').select('*');
         if (replyError) throw replyError;
 
-        // 組合資料
         allCases = cases.map(c => ({
           ...c,
           replies: replies.filter(r => r.case_id === c.case_id)
@@ -318,38 +307,26 @@
       const filterHospital = hospitalFilter.value;
       const sortValue = sortFilter.value;
 
-      let filtered = [...allCases];
-
-      filtered = filtered.filter(item => {
-        const haystack = [
-          item.case_id, 
-          item.patient_name, 
-          item.hospital, 
-          item.diagnosis, 
-          item.case_summary
-        ].join(' ').toLowerCase();
-        
-        const matchKeyword = haystack.includes(keyword);
-        const matchStatus = filterStatus === 'all' ? true : item.status === filterStatus;
-        const matchHospital = filterHospital === 'all' ? true : item.hospital === filterHospital;
-        return matchKeyword && matchStatus && matchHospital;
+      let filtered = [...allCases].filter(item => {
+        const haystack = [item.case_id, item.patient_name, item.hospital, item.diagnosis, item.case_summary].join(' ').toLowerCase();
+        return haystack.includes(keyword)
+          && (filterStatus === 'all' || item.status === filterStatus)
+          && (filterHospital === 'all' || item.hospital === filterHospital);
       });
 
       filtered.sort((a, b) => {
-        const aTime = parseCreatedAt(a.created_at);
-        const bTime = parseCreatedAt(b.created_at);
-        return sortValue === 'newest' ? bTime - aTime : aTime - bTime;
+        const aT = parseCreatedAt(a.created_at), bT = parseCreatedAt(b.created_at);
+        return sortValue === 'newest' ? bT - aT : aT - bT;
       });
 
       currentRenderedList = filtered;
       
       if (!filtered.length) {
         tableBody.innerHTML = '';
-        emptyState.style.display = 'block';
+        if (emptyState) emptyState.style.display = 'block';
         return;
       }
-
-      emptyState.style.display = 'none';
+      if (emptyState) emptyState.style.display = 'none';
       tableBody.innerHTML = filtered.map((item, index) => createTableRows(item, index)).join('');
     }
 
@@ -396,8 +373,7 @@
       const replyHtml = replies.length ? replies.map(r => `
         <div style="margin-bottom:10px; padding-bottom:10px; border-bottom:1px dashed #e5e7eb;">
           <strong>${escapeHtml(r.facility_name)}</strong>｜${escapeHtml(replyText(r.reply_status))}｜${new Date(r.created_at).toLocaleString()}
-          <br>
-          ${escapeHtml(r.note || '無補充說明')}
+          <br>${escapeHtml(r.note || '無補充說明')}
         </div>`).join('') : '<div>目前尚無機構回覆。</div>';
 
       const serviceCodes = Array.isArray(item.service_codes) ? item.service_codes : [];
@@ -440,7 +416,7 @@
 
     function createEditForm(item, index) {
       const statusOptions = ['一輪媒合中', '二輪媒合中', '三輪媒合中', '指定機構', '案件結案'];
-      const statusHtml = statusOptions.map(status => `<option value="${escapeHtml(status)}" ${item.status === status ? 'selected' : ''}>${escapeHtml(status)}</option>`).join('');
+      const statusHtml = statusOptions.map(s => `<option value="${escapeHtml(s)}" ${item.status === s ? 'selected' : ''}>${escapeHtml(s)}</option>`).join('');
       const consciousnessOptions = ['清楚', '混亂', '木僵'];
       const consciousnessHtml = consciousnessOptions.map(c => `<option value="${escapeHtml(c)}" ${item.consciousness === c ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('');
       const mobilityOptions = ['可自行行走', '可使用輔具行走(手杖、助行器等)', '使用輔具並扶持下行走', '無法行走，但可站立', '無法行走及站立，需全移位', '長期臥床，均於床上照顧'];
@@ -450,38 +426,22 @@
         <div class="detail-card full">
           <h4>編輯案件資料</h4>
           <form class="edit-form" id="editCaseForm" data-index="${index}">
-            <div class="edit-field"><label>案件標號</label>
-              <input name="case_id" value="${escapeHtml(item.case_id)}" readonly /></div>
-            <div class="edit-field"><label>病患姓名</label>
-              <input name="patient_name" value="${escapeHtml(item.patient_name)}" /></div>
-            <div class="edit-field"><label>轉介單位</label>
-              <input name="hospital" value="${escapeHtml(item.hospital)}" /></div>
-            <div class="edit-field"><label>年齡</label>
-              <input name="age" value="${escapeHtml(item.age)}" /></div>
-            <div class="edit-field"><label>性別</label>
-              <input name="gender" value="${escapeHtml(item.gender)}" /></div>
-            <div class="edit-field"><label>案件狀態</label>
-              <select name="status">${statusHtml}</select></div>
-            <div class="edit-field"><label>個管人員</label>
-              <input name="case_manager" value="${escapeHtml(item.case_manager || '')}" /></div>
-            <div class="edit-field full"><label>主要診斷</label>
-              <textarea name="diagnosis">${escapeHtml(item.diagnosis)}</textarea></div>
-            <div class="edit-field full"><label>案況簡述</label>
-              <textarea name="case_summary">${escapeHtml(item.case_summary)}</textarea></div>
-            <div class="edit-field"><label>CMS</label>
-              <input name="cms_level" value="${escapeHtml(item.cms_level || '')}" /></div>
-            <div class="edit-field"><label>意識狀態</label>
-              <select name="consciousness">${consciousnessHtml}</select></div>
-            <div class="edit-field"><label>行動能力</label>
-              <select name="mobility">${mobilityHtml}</select></div>
-            <div class="edit-field"><label>氧氣需求</label>
-              <input name="oxygen" value="${escapeHtml(item.oxygen || '')}" /></div>
-            <div class="edit-field"><label>聯絡人</label>
-              <input name="contact_name" value="${escapeHtml(item.contact_name || '')}" /></div>
-            <div class="edit-field"><label>聯絡電話</label>
-              <input name="contact_phone" value="${escapeHtml(item.contact_phone || '')}" /></div>
-            <div class="edit-field full"><label>地址</label>
-              <textarea name="address">${escapeHtml(item.address || '')}</textarea></div>
+            <div class="edit-field"><label>案件標號</label><input name="case_id" value="${escapeHtml(item.case_id)}" readonly /></div>
+            <div class="edit-field"><label>病患姓名</label><input name="patient_name" value="${escapeHtml(item.patient_name)}" /></div>
+            <div class="edit-field"><label>轉介單位</label><input name="hospital" value="${escapeHtml(item.hospital)}" /></div>
+            <div class="edit-field"><label>年齡</label><input name="age" value="${escapeHtml(item.age)}" /></div>
+            <div class="edit-field"><label>性別</label><input name="gender" value="${escapeHtml(item.gender)}" /></div>
+            <div class="edit-field"><label>案件狀態</label><select name="status">${statusHtml}</select></div>
+            <div class="edit-field"><label>個管人員</label><input name="case_manager" value="${escapeHtml(item.case_manager || '')}" /></div>
+            <div class="edit-field full"><label>主要診斷</label><textarea name="diagnosis">${escapeHtml(item.diagnosis)}</textarea></div>
+            <div class="edit-field full"><label>案況簡述</label><textarea name="case_summary">${escapeHtml(item.case_summary)}</textarea></div>
+            <div class="edit-field"><label>CMS</label><input name="cms_level" value="${escapeHtml(item.cms_level || '')}" /></div>
+            <div class="edit-field"><label>意識狀態</label><select name="consciousness">${consciousnessHtml}</select></div>
+            <div class="edit-field"><label>行動能力</label><select name="mobility">${mobilityHtml}</select></div>
+            <div class="edit-field"><label>氧氣需求</label><input name="oxygen" value="${escapeHtml(item.oxygen || '')}" /></div>
+            <div class="edit-field"><label>聯絡人</label><input name="contact_name" value="${escapeHtml(item.contact_name || '')}" /></div>
+            <div class="edit-field"><label>聯絡電話</label><input name="contact_phone" value="${escapeHtml(item.contact_phone || '')}" /></div>
+            <div class="edit-field full"><label>地址</label><textarea name="address">${escapeHtml(item.address || '')}</textarea></div>
           </form>
           <div class="drawer-actions">
             <button class="btn btn-primary" type="button" id="saveEditBtn">儲存修改</button>
@@ -495,7 +455,6 @@
       if (!form || currentEditingIndex === null) return;
       const formData = new FormData(form);
       const caseId = formData.get('case_id');
-
       const updates = {
         patient_name: formData.get('patient_name'),
         hospital: formData.get('hospital'),
@@ -513,13 +472,8 @@
         contact_phone: formData.get('contact_phone'),
         address: formData.get('address')
       };
-
       try {
-        const { error } = await sb
-          .from('cases')
-          .update(updates)
-          .eq('case_id', caseId);
-
+        const { error } = await sb.from('cases').update(updates).eq('case_id', caseId);
         if (error) throw error;
         alert("修改成功！");
         await fetchData();
@@ -532,10 +486,7 @@
     async function closeCase(caseId) {
       if (!confirm("確定要將此案件結案嗎？")) return;
       try {
-        const { error } = await sb
-          .from('cases')
-          .update({ status: '案件結案' })
-          .eq('case_id', caseId);
+        const { error } = await sb.from('cases').update({ status: '案件結案' }).eq('case_id', caseId);
         if (error) throw error;
         await fetchData();
       } catch (err) {
@@ -547,12 +498,16 @@
       const item = currentRenderedList[index];
       if (!item) return;
       currentEditingIndex = index;
-      drawerPatientName.textContent = item.patient_name;
-      drawerMeta.textContent = `${item.case_id}｜${new Date(item.created_at).toLocaleString()}｜${item.hospital}`;
-      drawerContent.innerHTML = createDrawerContent(item);
-      drawerOverlay.classList.add('show');
-      detailDrawer.classList.add('show');
-      detailDrawer.setAttribute('aria-hidden', 'false');
+      const pName = $d('drawerPatientName');
+      const pMeta = $d('drawerMeta');
+      const pContent = $d('drawerContent');
+      const overlay = $d('drawerOverlay');
+      const drawer = $d('detailDrawer');
+      if (pName) pName.textContent = item.patient_name;
+      if (pMeta) pMeta.textContent = `${item.case_id}｜${new Date(item.created_at).toLocaleString()}｜${item.hospital}`;
+      if (pContent) pContent.innerHTML = createDrawerContent(item);
+      if (overlay) overlay.classList.add('show');
+      if (drawer) { drawer.classList.add('show'); drawer.setAttribute('aria-hidden', 'false'); }
       document.body.style.overflow = 'hidden';
     }
 
@@ -560,26 +515,41 @@
       const item = currentRenderedList[index];
       if (!item) return;
       currentEditingIndex = index;
-      drawerPatientName.textContent = `${item.patient_name}｜編輯模式`;
-      drawerMeta.textContent = `${item.case_id}｜${new Date(item.created_at).toLocaleString()}｜${item.hospital}`;
-      drawerContent.innerHTML = createEditForm(item, index);
-      drawerOverlay.classList.add('show');
-      detailDrawer.classList.add('show');
-      detailDrawer.setAttribute('aria-hidden', 'false');
+      const pName = $d('drawerPatientName');
+      const pMeta = $d('drawerMeta');
+      const pContent = $d('drawerContent');
+      const overlay = $d('drawerOverlay');
+      const drawer = $d('detailDrawer');
+      if (pName) pName.textContent = `${item.patient_name}｜編輯模式`;
+      if (pMeta) pMeta.textContent = `${item.case_id}｜${new Date(item.created_at).toLocaleString()}｜${item.hospital}`;
+      if (pContent) pContent.innerHTML = createEditForm(item, index);
+      if (overlay) overlay.classList.add('show');
+      if (drawer) { drawer.classList.add('show'); drawer.setAttribute('aria-hidden', 'false'); }
       document.body.style.overflow = 'hidden';
-      
-      document.getElementById('saveEditBtn').onclick = saveEditForm;
-      document.getElementById('cancelEditBtn').onclick = () => openDrawer(index);
+      setTimeout(() => {
+        const saveBtn = document.getElementById('saveEditBtn');
+        const cancelBtn = document.getElementById('cancelEditBtn');
+        if (saveBtn) saveBtn.onclick = saveEditForm;
+        if (cancelBtn) cancelBtn.onclick = () => openDrawer(index);
+      }, 0);
     }
 
     function closeDrawer() {
-      drawerOverlay.classList.remove('show');
-      detailDrawer.classList.remove('show');
-      detailDrawer.setAttribute('aria-hidden', 'true');
+      const overlay = $d('drawerOverlay');
+      const drawer = $d('detailDrawer');
+      if (overlay) overlay.classList.remove('show');
+      if (drawer) { drawer.classList.remove('show'); drawer.setAttribute('aria-hidden', 'true'); }
       document.body.style.overflow = '';
     }
 
-    // 即時監聽
+    function resetFilters() {
+      searchInput.value = '';
+      statusFilter.value = 'all';
+      hospitalFilter.value = 'all';
+      sortFilter.value = 'newest';
+      renderTable();
+    }
+
     function setupRealtime() {
       sb.channel('db_changes')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'cases' }, fetchData)
@@ -587,7 +557,58 @@
         .subscribe();
     }
 
-    // 事件綁定
+    // ===== 個管師名單 =====
+    let managersList = [];
+    async function loadManagers() {
+      const { data } = await sb.from('case_managers').select('*').order('name');
+      managersList = data || [];
+      renderManagers();
+    }
+    function renderManagers() {
+      const tbody = $d('managerTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = managersList.length
+        ? managersList.map(m => `
+          <tr>
+            <td>${escapeHtml(m.name)}</td>
+            <td>${escapeHtml(m.phone)}</td>
+            <td>${escapeHtml(m.hospital)}</td>
+            <td>${escapeHtml(m.ext || '-')}</td>
+            <td><button class="btn btn-secondary" onclick="deleteManager('${m.id}')" style="padding:4px 8px; font-size:12px;">刪除</button></td>
+          </tr>`).join('')
+        : '<tr><td colspan="5" style="text-align:center;color:#9ca3af;padding:20px;">尚無個管師資料</td></tr>';
+    }
+    function openManagerModal() {
+      const el = $d('mgrOverlay');
+      if (el) el.classList.add('show');
+      loadManagers();
+    }
+    function closeMgrModal() {
+      const el = $d('mgrOverlay');
+      if (el) el.classList.remove('show');
+    }
+    async function addManager() {
+      const name = ($d('addMName').value || '').trim();
+      const phone = ($d('addMPhone').value || '').trim();
+      const hospital = ($d('addMHospital').value || '').trim();
+      const ext = ($d('addMExt').value || '').trim();
+      if (!name || !phone || !hospital) return alert("姓名、電話、單位為必填");
+      const { error } = await sb.from('case_managers').insert([{ name, phone, hospital, ext }]);
+      if (error) { alert("新增失敗：" + error.message); return; }
+      $d('addMName').value = '';
+      $d('addMPhone').value = '';
+      $d('addMHospital').value = '';
+      $d('addMExt').value = '';
+      loadManagers();
+    }
+    async function deleteManager(id) {
+      if (!confirm("確定刪除此個管師？")) return;
+      const { error } = await sb.from('case_managers').delete().eq('id', id);
+      if (error) alert("刪除失敗：" + error.message);
+      else loadManagers();
+    }
+
+    // ===== 事件綁定 & 初始化 =====
     tableBody.addEventListener('click', (event) => {
       const btn = event.target.closest('button[data-action]');
       if (!btn) return;
@@ -601,125 +622,19 @@
     hospitalFilter.addEventListener('change', renderTable);
     sortFilter.addEventListener('change', renderTable);
     btnReload.addEventListener('click', fetchData);
-    btnReset.addEventListener('click', () => {
-      searchInput.value = '';
-      statusFilter.value = 'all';
-      hospitalFilter.value = 'all';
-      sortFilter.value = 'newest';
-      renderTable();
-    });
-    drawerOverlay.addEventListener('click', closeDrawer);
-    drawerClose.addEventListener('click', closeDrawer);
+    btnReset.addEventListener('click', resetFilters);
 
-    // 初始化
+    // Drawer overlay & close button - accessed after DOM is fully parsed
+    document.addEventListener('DOMContentLoaded', () => {
+      const ov = $d('drawerOverlay');
+      const dc = $d('drawerClose');
+      if (ov) ov.addEventListener('click', closeDrawer);
+      if (dc) dc.addEventListener('click', closeDrawer);
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeDrawer(); closeMgrModal(); } });
+    });
+
     fetchData();
     setupRealtime();
-
-    let managersList = [];
-    async function loadManagers() {
-      const { data } = await sb.from('case_managers').select('*').order('name');
-      managersList = data || [];
-      renderManagers();
-    }
-    function renderManagers() {
-      const tbody = document.getElementById('managerTableBody');
-      if(!tbody) return;
-      tbody.innerHTML = managersList.map(m => `
-        <tr>
-          <td>${escapeHtml(m.name)}</td>
-          <td>${escapeHtml(m.phone)}</td>
-          <td>${escapeHtml(m.hospital)}</td>
-          <td>${escapeHtml(m.ext || '-')}</td>
-          <td><button class="btn btn-secondary" onclick="deleteManager('${m.id}')" style="padding:4px 8px; font-size:12px;">刪除</button></td>
-        </tr>
-      `).join('');
-    }
-    function openManagerModal() {
-      document.getElementById('mgrOverlay').classList.add('show');
-      loadManagers();
-    }
-    function closeMgrModal() {
-      document.getElementById('mgrOverlay').classList.remove('show');
-    }
-    // legacy alias
-    function openManagerListModal() { openManagerModal(); }
-    function closeManagerListModal() { closeMgrModal(); }
-    async function addManager() {
-      const name = document.getElementById('addMName').value.trim();
-      const phone = document.getElementById('addMPhone').value.trim();
-      const hospital = document.getElementById('addMHospital').value.trim();
-      const ext = document.getElementById('addMExt').value.trim();
-      if(!name || !phone || !hospital) return alert("姓名、電話、單位為必填");
-      
-      const { error } = await sb.from('case_managers').insert([{ name, phone, hospital, ext }]);
-      if(error) alert("新增失敗");
-      else {
-        document.getElementById('addMName').value = "";
-        document.getElementById('addMPhone').value = "";
-        document.getElementById('addMHospital').value = "";
-        document.getElementById('addMExt').value = "";
-        loadManagers();
-      }
-    }
-    async function deleteManager(id) {
-      if(!confirm("確定刪除此個管師？")) return;
-      const { error } = await sb.from('case_managers').delete().eq('id', id);
-      if(error) alert("刪除失敗");
-      else loadManagers();
-    }
-
-  function closeDrawer() {
-      drawerOverlay.classList.remove('show');
-      detailDrawer.classList.remove('show');
-      detailDrawer.setAttribute('aria-hidden', 'true');
-      document.body.style.overflow = '';
-    }
-
-    function resetFilters() {
-      searchInput.value = '';
-      statusFilter.value = 'all';
-      hospitalFilter.value = 'all';
-      sortFilter.value = 'newest';
-      renderTable();
-    }
-
-    function runSelfTests() {
-      console.assert(Array.isArray(mockCases) && mockCases.length >= 5, '虛擬個案數量不足 5 位');
-      console.assert(parseCreatedAt('2026/03/30 10:58') > 0, '日期解析失敗');
-      const progress = getReplyProgress(mockCases[0]);
-      console.assert(progress.total === 35, '回覆進度計算失敗');
-      const drawerHtml = createDrawerContent(mockCases[0]);
-      console.assert(drawerHtml.includes('機構名稱'), '詳情視窗內容生成失敗');
-      const editHtml = createEditForm(mockCases[0], 0);
-      console.assert(editHtml.includes('編輯案件資料') && editHtml.includes('儲存修改'), '編輯表單未生成');
-    }
-
-    tableBody.addEventListener('click', (event) => {
-      const detailButton = event.target.closest('button[data-action="detail"]');
-      if (detailButton) {
-        const index = Number(detailButton.dataset.index);
-        if (!Number.isNaN(index)) openDrawer(index);
-        return;
-      }
-      const editButton = event.target.closest('button[data-action="edit"]');
-      if (editButton) {
-        const index = Number(editButton.dataset.index);
-        if (!Number.isNaN(index)) openEditDrawer(index);
-      }
-    });
-
-    searchInput.addEventListener('input', renderTable);
-    statusFilter.addEventListener('change', renderTable);
-    hospitalFilter.addEventListener('change', renderTable);
-    sortFilter.addEventListener('change', renderTable);
-    btnReload.addEventListener('click', renderTable);
-    btnReset.addEventListener('click', resetFilters);
-    drawerOverlay.addEventListener('click', closeDrawer);
-    drawerClose.addEventListener('click', closeDrawer);
-    document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeDrawer(); });
-
-    runSelfTests();
-    renderTable();
   </script>
 
   <div class="drawer-overlay" id="drawerOverlay"></div>
