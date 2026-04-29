@@ -340,8 +340,7 @@
       <div style="display:flex;gap:8px;">
         <input type="text" id="caseManager" style="flex:1;" />
         <button type="button" class="btn-secondary" onclick="fillMyInfo()">帶入登入者資訊</button>
-          <a href="#" onclick="openUserSettingsModal(); return false;" style="font-size: 13px; color: var(--primary); margin-left: 10px; text-decoration: underline;">設定我的資訊</a>
-        </div>
+      </div>
     </div>
 
     <div class="field">
@@ -558,33 +557,6 @@
 
   </div>
 </div>
-  
-  <div id="userSettingsModal" class="modal">
-    <div class="modal-content" style="max-width: 400px; max-height: 90vh; overflow-y: auto;">
-      <h3 style="margin-top:0;">設定我的登入資訊</h3>
-      <div class="field">
-        <label>個管師姓名</label>
-        <input type="text" id="settingManager" placeholder="例如：王小明">
-      </div>
-      <div class="field">
-        <label>聯絡電話</label>
-        <input type="text" id="settingPhone" placeholder="例如：0912-345-678">
-      </div>
-      <div class="field">
-        <label>轉介單位</label>
-        <input type="text" id="settingHospital" placeholder="例如：萬芳醫院">
-      </div>
-      <div class="field">
-        <label>單位分機</label>
-        <input type="text" id="settingExt" placeholder="例如：1234">
-      </div>
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
-        <button class="btn-secondary" onclick="closeUserSettingsModal()">取消</button>
-        <button class="btn-primary" style="background: var(--primary); color: white;" onclick="saveUserSettings()">儲存</button>
-      </div>
-    </div>
-  </div>
-
   <script>
 function getSpecialCareList() {
   return Array.from(document.querySelectorAll(".special-care:checked")).map(item => item.value);
@@ -872,44 +844,15 @@ function validateForm(data) {
 
     initForm();
 
-    function openUserSettingsModal() {
-      const savedInfo = JSON.parse(localStorage.getItem('refcare_user_info') || '{}');
-      document.getElementById("settingManager").value = savedInfo.manager || "";
-      document.getElementById("settingPhone").value = savedInfo.phone || "";
-      document.getElementById("settingHospital").value = savedInfo.hospital || "";
-      document.getElementById("settingExt").value = savedInfo.ext || "";
-      document.getElementById("userSettingsModal").style.display = "flex";
-    }
-
-    function closeUserSettingsModal() {
-      document.getElementById("userSettingsModal").style.display = "none";
-    }
-
-    function saveUserSettings() {
-      const info = {
-        manager: document.getElementById("settingManager").value.trim(),
-        phone: document.getElementById("settingPhone").value.trim(),
-        hospital: document.getElementById("settingHospital").value.trim(),
-        ext: document.getElementById("settingExt").value.trim()
-      };
-      localStorage.setItem('refcare_user_info', JSON.stringify(info));
-      closeUserSettingsModal();
-      alert("設定已儲存！你可以點擊「帶入登入者資訊」來套用。");
-    }
-
     function fillMyInfo() {
-      const savedInfoStr = localStorage.getItem('refcare_user_info');
-      if (!savedInfoStr) {
-        openUserSettingsModal();
-        return;
-      }
-      const savedInfo = JSON.parse(savedInfoStr);
-      document.getElementById("caseManager").value = savedInfo.manager || "";
-      document.getElementById("caseManagerPhone").value = savedInfo.phone || "";
-      document.getElementById("hospital").value = savedInfo.hospital || "";
-      document.getElementById("hospitalExt").value = savedInfo.ext || "";
-      updatePreview();
-    }
+  // 移除虛擬資料，未來將對接實際登入系統
+  document.getElementById("caseManager").value = "";
+  document.getElementById("caseManagerPhone").value = "";
+  document.getElementById("hospital").value = "";
+  document.getElementById("hospitalExt").value = "";
+
+  updatePreview();
+}
   </script>
 </body>
 </html>
