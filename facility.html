@@ -425,6 +425,10 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
                 可接案，最快服務日期
                 <input type="date" id="fastestDate" style="width: auto; padding: 8px 12px; font-size: 14px; border: 1px solid #cbd5e1; border-radius: 8px;">
               </label>
+              <div class="sub-options">
+                <label style="font-size:13px; color:#64748b; margin-bottom:6px; display:block;">說明</label>
+                <textarea id="acceptNote" placeholder="例如：可安排明日下午入住；需先提供摘要與用藥資訊"></textarea>
+              </div>
             </div>
           </div>
 
@@ -734,7 +738,9 @@ ${formatServiceCodes(data.service_codes)}`;
       
       if (replyStatus === "accept") {
         const d = $("fastestDate").value;
-        finalNote = d ? `最快服務日期：${d}` : "";
+        const note = $("acceptNote").value.trim();
+        const dateStr = d ? `最快服務日期：${d}` : "";
+        finalNote = [dateStr, note].filter(Boolean).join("\n說明：");
       } else if (replyStatus === "coordinate") {
         finalNote = $("coordinateNote").value.trim();
       } else if (replyStatus === "reject") {
