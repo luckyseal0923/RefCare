@@ -65,3 +65,19 @@ CREATE TABLE facilities (
 
 ALTER TABLE facilities ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow all for facilities" ON facilities FOR ALL USING (true) WITH CHECK (true);
+
+
+-- 個管師名單
+CREATE TABLE IF NOT EXISTS public.case_managers (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    phone TEXT NOT NULL,
+    hospital TEXT NOT NULL,
+    ext TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+ALTER TABLE public.case_managers ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow anonymous read case_managers" ON public.case_managers FOR SELECT USING (true);
+CREATE POLICY "Allow anonymous insert case_managers" ON public.case_managers FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow anonymous update case_managers" ON public.case_managers FOR UPDATE USING (true);
+CREATE POLICY "Allow anonymous delete case_managers" ON public.case_managers FOR DELETE USING (true);

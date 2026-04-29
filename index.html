@@ -339,7 +339,7 @@
       <label>個管師姓名<span class="required">*</span></label>
       <div style="display:flex;gap:8px;">
         <input type="text" id="caseManager" style="flex:1;" />
-        <button type="button" class="btn-secondary" onclick="fillMyInfo()">帶入登入者資訊</button>
+        <select id="caseManagerSelect" class="btn-secondary" style="width:160px; padding: 6px;" onchange="fillManagerInfo()"><option value="">快速帶入名單...</option></select>
       </div>
     </div>
 
@@ -824,6 +824,7 @@ function validateForm(data) {
       $("referralTime").value = getTaiwanDateTimeLocal();
       $("caseId").value = generateCaseId();
       updatePreview();
+      loadCaseManagers();
       $("statusBox").className = "status";
       $("statusBox").textContent = "";
 
@@ -844,15 +845,31 @@ function validateForm(data) {
 
     initForm();
 
-    function fillMyInfo() {
-  // 移除虛擬資料，未來將對接實際登入系統
-  document.getElementById("caseManager").value = "";
-  document.getElementById("caseManagerPhone").value = "";
-  document.getElementById("hospital").value = "";
-  document.getElementById("hospitalExt").value = "";
+    let caseManagers = [];
+    async function loadCaseManagers() {
+      if (window.supabaseClient) {
+        const { data, error } = await window.supabaseClient.from('case_managers').select('*').order('name');
+        if (!error && data) {
+          caseManagers = data;
+          const sel = document.getElementById("caseManagerSelect");
+          sel.innerHTML = '<option value="">快速帶入名單...</option>' + 
+            data.map(m => `<option value="${m.id}">${m.name} (${m.hospital})</option>`).join('');
+        }
+      }
+    }
 
-  updatePreview();
-}
+    function fillManagerInfo() {
+      const sel = document.getElementById("caseManagerSelect");
+      const m = caseManagers.find(x => x.id === sel.value);
+      if (m) {
+        document.getElementById("caseManager").value = m.name || "";
+        document.getElementById("caseManagerPhone").value = m.phone || "";
+        document.getElementById("hospital").value = m.hospital || "";
+        document.getElementById("hospitalExt").value = m.ext || "";
+        updatePreview();
+      }
+      sel.value = ""; // 重置選單
+    }
   </script>
 </body>
 </html>

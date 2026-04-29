@@ -153,7 +153,31 @@
     @media (max-width: 900px){ .kpi-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } .toolbar{ grid-template-columns:1fr 1fr; } .detail-grid{ grid-template-columns:1fr; } .edit-form{ grid-template-columns:1fr; } }
     @media (max-width: 640px){ .kpi-grid,.toolbar{ grid-template-columns:1fr; } .wrap{ padding:16px 12px 40px; } .hero h1{ font-size:24px; } }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+<div class="drawer-overlay" id="managerOverlay"></div>
+<div class="drawer" id="managerDrawer" style="width: 700px; max-width: 90vw;">
+  <div class="drawer-header" style="display:flex; justify-content:space-between; align-items:center;">
+    <h2 style="margin:0;">個管師名單維護</h2>
+    <button class="btn btn-secondary" onclick="closeManagerListModal()">關閉</button>
+  </div>
+  <div class="drawer-content" style="padding:20px;">
+    <form id="addManagerForm" style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap:10px; margin-bottom: 20px; align-items:end; background:#f8fafc; padding:12px; border-radius:8px;">
+      <div class="field" style="margin:0;"><label>姓名</label><input type="text" id="addMName" required></div>
+      <div class="field" style="margin:0;"><label>電話</label><input type="text" id="addMPhone" required></div>
+      <div class="field" style="margin:0;"><label>單位</label><input type="text" id="addMHospital" required></div>
+      <div class="field" style="margin:0;"><label>分機</label><input type="text" id="addMExt"></div>
+      <button class="btn btn-primary" type="button" onclick="addManager()">新增</button>
+    </form>
+    <div class="facility-table-wrap">
+      <table class="facility-table">
+        <thead><tr><th>姓名</th><th>電話</th><th>單位</th><th>分機</th><th>操作</th></tr></thead>
+        <tbody id="managerTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
 </head>
 <body>
@@ -184,6 +208,7 @@
         <div class="field"><label for="sortFilter">排序方式</label><select id="sortFilter"><option value="newest">起案時間：新到舊</option><option value="oldest">起案時間：舊到新</option></select></div>
         <button class="btn btn-primary" id="btnReload" type="button">重新整理</button>
         <button class="btn btn-secondary" id="btnReset" type="button">清空條件</button>
+<button class="btn btn-secondary" id="btnManageUsers" type="button" onclick="openManagerListModal()">個管師名單</button>
       </div>
     </div>
 
@@ -597,6 +622,59 @@
     // 初始化
     fetchData();
     setupRealtime();
+
+    let managersList = [];
+    async function loadManagers() {
+      const { data } = await sb.from('case_managers').select('*').order('name');
+      managersList = data || [];
+      renderManagers();
+    }
+    function renderManagers() {
+      const tbody = document.getElementById('managerTableBody');
+      if(!tbody) return;
+      tbody.innerHTML = managersList.map(m => `
+        <tr>
+          <td>${escapeHtml(m.name)}</td>
+          <td>${escapeHtml(m.phone)}</td>
+          <td>${escapeHtml(m.hospital)}</td>
+          <td>${escapeHtml(m.ext || '-')}</td>
+          <td><button class="btn btn-secondary" onclick="deleteManager('${m.id}')" style="padding:4px 8px; font-size:12px;">刪除</button></td>
+        </tr>
+      `).join('');
+    }
+    function openManagerListModal() {
+      document.getElementById('managerOverlay').classList.add('show');
+      document.getElementById('managerDrawer').classList.add('show');
+      loadManagers();
+    }
+    function closeManagerListModal() {
+      document.getElementById('managerOverlay').classList.remove('show');
+      document.getElementById('managerDrawer').classList.remove('show');
+    }
+    async function addManager() {
+      const name = document.getElementById('addMName').value.trim();
+      const phone = document.getElementById('addMPhone').value.trim();
+      const hospital = document.getElementById('addMHospital').value.trim();
+      const ext = document.getElementById('addMExt').value.trim();
+      if(!name || !phone || !hospital) return alert("姓名、電話、單位為必填");
+      
+      const { error } = await sb.from('case_managers').insert([{ name, phone, hospital, ext }]);
+      if(error) alert("新增失敗");
+      else {
+        document.getElementById('addMName').value = "";
+        document.getElementById('addMPhone').value = "";
+        document.getElementById('addMHospital').value = "";
+        document.getElementById('addMExt').value = "";
+        loadManagers();
+      }
+    }
+    async function deleteManager(id) {
+      if(!confirm("確定刪除此個管師？")) return;
+      const { error } = await sb.from('case_managers').delete().eq('id', id);
+      if(error) alert("刪除失敗");
+      else loadManagers();
+    }
+
   </script>
 ();
       target.age = String(formData.get('age') || '').trim();
