@@ -286,6 +286,17 @@
       margin-bottom:10px;
     }
 
+    .radio-group { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; }
+    .radio-item { display: flex; align-items: flex-start; gap: 10px; }
+    .radio-item input[type="radio"].main-radio { margin-top: 2px; accent-color: var(--primary); width: 20px; height: 20px; flex-shrink: 0; cursor: pointer; }
+    .radio-content { flex: 1; }
+    .radio-label { font-size: 16px; font-weight: 700; color: #1e293b; cursor: pointer; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .sub-options { margin-top: 12px; display: none; }
+    input[type="radio"].main-radio:checked ~ .radio-content .sub-options { display: block; }
+    .reject-reasons { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; padding-left: 8px; }
+    .reject-reasons label { font-size: 15px; font-weight: 400; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    .reject-reasons input[type="radio"] { accent-color: var(--danger); width: 16px; height: 16px; cursor: pointer; }
+
     @media (max-width:768px){
       .info-grid,
       .info-grid-compact,
@@ -403,24 +414,54 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
         <input type="text" id="facilityOther" placeholder="請輸入其他機構全名" />
       </div>
 
-      <div class="field">
-        <label for="contactPerson">聯絡窗口</label>
-        <input type="text" id="contactPerson" placeholder="例如：林小姐" />
+      <div class="field" style="margin-top: 24px; padding-top: 20px; border-top: 1px dashed #cbd5e1;">
+        <label style="font-size: 18px; color: var(--primary-dark);">回覆結果</label>
+        <div class="radio-group">
+          <!-- 選項 1: 可接案 -->
+          <div class="radio-item">
+            <input type="radio" id="statusAccept" name="replyStatus" value="accept" class="main-radio">
+            <div class="radio-content">
+              <label class="radio-label" for="statusAccept" style="color: var(--success);">
+                可接案，最快服務日期
+                <input type="date" id="fastestDate" style="width: auto; padding: 8px 12px; font-size: 14px; border: 1px solid #cbd5e1; border-radius: 8px;">
+              </label>
+            </div>
+          </div>
+
+          <!-- 選項 2: 有其他時段人力 -->
+          <div class="radio-item">
+            <input type="radio" id="statusCoordinate" name="replyStatus" value="coordinate" class="main-radio">
+            <div class="radio-content">
+              <label class="radio-label" for="statusCoordinate" style="color: #ea580c;">有其他時段人力，請個管協調與確認</label>
+              <div class="sub-options">
+                <label style="font-size:13px; color:#64748b; margin-bottom:6px; display:block;">說明</label>
+                <textarea id="coordinateNote" placeholder="例如：可安排明日下午入住..."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- 選項 3: 無法接案 -->
+          <div class="radio-item">
+            <input type="radio" id="statusReject" name="replyStatus" value="reject" class="main-radio">
+            <div class="radio-content">
+              <label class="radio-label" for="statusReject" style="color: var(--danger);">無法接案：原因</label>
+              <div class="sub-options">
+                <div class="reject-reasons">
+                  <label><input type="radio" name="rejectReason" value="人力皆在上線服務"> 人力皆在上線服務</label>
+                  <label><input type="radio" name="rejectReason" value="無適合的人力"> 無適合的人力</label>
+                  <label><input type="radio" name="rejectReason" value="特約服務項目限制"> 特約服務項目限制</label>
+                  <label><input type="radio" name="rejectReason" value="其他原因"> 其他原因</label>
+                </div>
+                <label style="font-size:13px; color:#64748b; margin-bottom:6px; display:block;">說明</label>
+                <textarea id="rejectNote" placeholder="例如：可安排明日下午入住；需先提供摘要與用藥資訊"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="field">
-        <label for="contactPhone">聯絡電話</label>
-        <input type="text" id="contactPhone" placeholder="例如：02-1234-5678" />
-      </div>
-
-      <div class="field">
-        <label for="replyNote">補充說明</label>
-        <textarea id="replyNote" placeholder="例如：可安排明日下午入住；需先提供摘要與用藥資訊"></textarea>
-      </div>
-
-      <div class="reply-actions">
-        <button class="btn-accept" id="btnAccept">✅ 可收案</button>
-        <button class="btn-reject" id="btnReject">❌ 無法收案</button>
+      <div class="reply-actions" style="grid-template-columns: 1fr;">
+        <button class="btn-accept" id="btnSubmitReply" style="font-size: 18px; padding: 18px; background: var(--primary);">送出回覆</button>
       </div>
 
       <div id="statusBox" class="status"></div>
@@ -664,7 +705,7 @@ ${formatServiceCodes(data.service_codes)}`;
       return $("facilitySearch").value.trim();
     }
 
-    function getReplyPayload(replyStatus) {
+    function getReplyPayload(replyStatus, finalNote) {
       const data = getQueryParams();
       const resolvedFacilityName = getResolvedFacilityName();
 
@@ -675,16 +716,35 @@ ${formatServiceCodes(data.service_codes)}`;
         facility_custom_name: selectedFacility && selectedFacility.short_name === "其他"
           ? $("facilityOther").value.trim()
           : "",
-        contact_person: $("contactPerson").value.trim(),
-        contact_phone: $("contactPhone").value.trim(),
         reply: replyStatus,
-        reply_note: $("replyNote").value.trim(),
+        reply_note: finalNote,
         reply_time: new Date().toISOString()
       };
     }
 
-    async function submitReply(replyStatus) {
-      const payload = getReplyPayload(replyStatus);
+    async function submitReply() {
+      const statusRadio = document.querySelector('input[name="replyStatus"]:checked');
+      if (!statusRadio) {
+        showStatus("error", "請選擇回覆結果（可接案 / 有其他時段人力 / 無法接案）");
+        return;
+      }
+      
+      const replyStatus = statusRadio.value;
+      let finalNote = "";
+      
+      if (replyStatus === "accept") {
+        const d = $("fastestDate").value;
+        finalNote = d ? `最快服務日期：${d}` : "";
+      } else if (replyStatus === "coordinate") {
+        finalNote = $("coordinateNote").value.trim();
+      } else if (replyStatus === "reject") {
+        const reasonRadio = document.querySelector('input[name="rejectReason"]:checked');
+        const reason = reasonRadio ? reasonRadio.value : "";
+        const text = $("rejectNote").value.trim();
+        finalNote = [reason, text].filter(Boolean).join(" - ");
+      }
+
+      const payload = getReplyPayload(replyStatus, finalNote);
 
       if (!payload.facility_name) {
         showStatus("error", "請先選擇或填寫機構名稱");
@@ -710,15 +770,23 @@ ${formatServiceCodes(data.service_codes)}`;
         }
 
         // 同步發送 n8n 通知 (保持原邏輯)
-        const res = await fetch(FACILITY_REPLY_WEBHOOK_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
+        if (typeof FACILITY_REPLY_WEBHOOK_URL !== 'undefined' && FACILITY_REPLY_WEBHOOK_URL.includes("http")) {
+          fetch(FACILITY_REPLY_WEBHOOK_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          }).catch(e => console.warn("Webhook Error:", e));
+        }
+
+        const statusMap = {
+          "accept": "可收案",
+          "coordinate": "需協調",
+          "reject": "無法收案"
+        };
 
         showStatus(
           "success",
-          `已成功回覆：${replyStatus === "accept" ? "可收案" : "無法收案"}\n案件編號：${payload.case_id}\n資料已存入 Supabase 資料庫。`
+          `已成功回覆：${statusMap[replyStatus]}\n案件編號：${payload.case_id}\n資料已存入 Supabase 資料庫。`
         );
 
       } catch (err) {
@@ -763,8 +831,7 @@ ${formatServiceCodes(data.service_codes)}`;
       }
     });
 
-    $("btnAccept").addEventListener("click", () => submitReply("accept"));
-    $("btnReject").addEventListener("click", () => submitReply("reject"));
+    $("btnSubmitReply").addEventListener("click", submitReply);
 
     // 初始化：載入機構清單與案件資訊
     loadFacilities().then(() => {
