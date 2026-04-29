@@ -44,3 +44,24 @@ ALTER TABLE replies ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Allow all for cases" ON cases FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all for replies" ON replies FOR ALL USING (true) WITH CHECK (true);
+
+-- 4. 機構基本資料表
+CREATE TABLE facilities (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  seq_no INTEGER,
+  short_name TEXT,
+  facility_name TEXT,
+  address TEXT,
+  establishment_date TEXT,
+  license_number TEXT,
+  responsible_person TEXT,
+  phone TEXT,
+  fax TEXT,
+  self_pay_services TEXT,
+  evaluation_result TEXT,
+  service_area TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE facilities ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all for facilities" ON facilities FOR ALL USING (true) WITH CHECK (true);
