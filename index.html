@@ -298,6 +298,41 @@
 .counter{
   display:none;
 }
+
+/* ===== 機構選擇 Modal ===== */
+.fac-modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;}
+.fac-modal-overlay.show{display:flex;}
+.fac-modal{background:#fff;border-radius:20px;width:100%;max-width:680px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(15,23,42,0.2);overflow:hidden;}
+.fac-modal-head{padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#0f766e,#14b8a6);flex-shrink:0;}
+.fac-modal-head h3{margin:0;font-size:17px;font-weight:900;color:#fff;}
+.fac-modal-close{border:none;background:rgba(255,255,255,0.25);border-radius:10px;width:32px;height:32px;font-size:18px;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center;}
+.fac-search-bar{padding:14px 16px;border-bottom:1px solid #f1f5f9;flex-shrink:0;}
+.fac-search-input{width:100%;border:1px solid #d1d5db;border-radius:12px;padding:10px 14px;font-size:15px;outline:none;transition:border-color .2s;}
+.fac-search-input:focus{border-color:#0f766e;box-shadow:0 0 0 4px rgba(20,184,166,0.12);}
+.fac-stats-bar{padding:8px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex-shrink:0;background:#f8fafc;border-bottom:1px solid #f1f5f9;}
+.fac-stat-chip{font-size:12px;font-weight:700;color:#475569;}
+.fac-action-btns{display:flex;gap:8px;margin-left:auto;}
+.fac-action-btn{border:1px solid #d1d5db;background:#fff;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;color:#374151;}
+.fac-action-btn:hover{background:#f3f4f6;}
+.fac-list-wrap{overflow-y:auto;flex:1;padding:8px 0;}
+.fac-area-title{padding:8px 16px 4px;font-size:11px;font-weight:900;color:#94a3b8;text-transform:uppercase;position:sticky;top:0;background:#fff;z-index:1;}
+.fac-item{display:flex;align-items:center;gap:12px;padding:10px 16px;cursor:pointer;transition:background .12s;border-bottom:1px solid #f8fafc;}
+.fac-item:hover{background:#f0fdf9;}
+.fac-item.selected{background:#ecfdf5;}
+.fac-item-check{width:20px;height:20px;border-radius:6px;border:2px solid #d1d5db;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;font-size:13px;color:transparent;}
+.fac-item.selected .fac-item-check{background:#0f766e;border-color:#0f766e;color:#fff;}
+.fac-item-info{flex:1;min-width:0;}
+.fac-item-name{font-size:14px;font-weight:700;color:#0f172a;}
+.fac-item-sub{font-size:12px;color:#94a3b8;margin-top:2px;}
+.fac-no-result{text-align:center;padding:32px;color:#94a3b8;font-size:14px;}
+.fac-modal-foot{padding:14px 20px;border-top:1px solid #e5e7eb;flex-shrink:0;display:flex;gap:10px;justify-content:flex-end;align-items:center;}
+.fac-selected-count{font-size:13px;color:#0f766e;font-weight:700;margin-right:auto;}
+.fac-tags-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;min-height:20px;}
+.fac-tag{display:inline-flex;align-items:center;gap:6px;background:#ccfbf1;color:#115e59;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:700;}
+.fac-tag-del{cursor:pointer;font-size:14px;color:#0f766e;background:none;border:none;padding:0;}
+.fac-trigger-btn{display:flex;align-items:center;justify-content:space-between;width:100%;border:2px dashed #a7f3d0;background:#f0fdf9;border-radius:14px;padding:14px 16px;cursor:pointer;font-size:15px;font-weight:700;color:#0f766e;transition:all .2s;}
+.fac-trigger-btn:hover{background:#ecfdf5;border-color:#0f766e;}
+.fac-trigger-badge{background:#0f766e;color:#fff;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:900;min-width:24px;text-align:center;}
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
@@ -520,14 +555,40 @@
   <div class="card">
     <div class="section-title">派案設定與送出</div>
 
-    <div class="field" style="margin-bottom:16px; border:1px solid #bfdbfe; background:#eff6ff; padding:16px; border-radius:14px;">
-      <label style="color:#1d4ed8; display:block; margin-bottom:10px;">📋 功能需求：送出案件前，請選擇要送出的機構群組</label>
+    <!-- 派案模式 -->
+    <div class="field" style="margin-bottom:20px;">
+      <label style="font-size:14px; font-weight:700; color:#1e293b; margin-bottom:10px; display:block;">派案模式</label>
       <div class="check-grid">
-        <label class="check-item"><input type="radio" name="targetGroup" value="指定機構" checked> 指定機構</label>
-        <label class="check-item"><input type="radio" name="targetGroup" value="合作機構(一輪)"> 合作機構(一輪)</label>
-        <label class="check-item"><input type="radio" name="targetGroup" value="全區機構(二輪)"> 全區機構(二輪)</label>
-        <label class="check-item"><input type="radio" name="targetGroup" value="困難派案(三輪)"> 困難派案(三輪)</label>
+        <label class="check-item">
+          <input type="radio" name="targetGroup" value="指定機構" onchange="handleModeChange()" checked>
+          <span>🎯 指定機構</span>
+        </label>
+        <label class="check-item">
+          <input type="radio" name="targetGroup" value="合作機構(一輪)" onchange="handleModeChange()">
+          <span>🔵 合作機構（一輪）</span>
+        </label>
+        <label class="check-item">
+          <input type="radio" name="targetGroup" value="全區機構(二輪)" onchange="handleModeChange()">
+          <span>🟡 全區機構（二輪）</span>
+        </label>
+        <label class="check-item">
+          <input type="radio" name="targetGroup" value="困難派案(三輪)" onchange="handleModeChange()">
+          <span>🔴 困難派案（三輪）</span>
+        </label>
       </div>
+    </div>
+
+    <!-- 指定機構選擇器（僅在指定機構模式顯示） -->
+    <div id="facilityPickerWrap" style="margin-bottom:20px;">
+      <label style="font-size:14px; font-weight:700; color:#1e293b; margin-bottom:10px; display:block;">
+        選擇派案機構
+        <span style="font-size:12px; font-weight:400; color:#64748b;">（可多選，支援搜尋）</span>
+      </label>
+      <button type="button" class="fac-trigger-btn" id="facTriggerBtn" onclick="openFacModal()">
+        <span id="facTriggerLabel">點此選擇機構...</span>
+        <span class="fac-trigger-badge" id="facBadge" style="display:none;">0</span>
+      </button>
+      <div class="fac-tags-wrap" id="facTagsWrap"></div>
     </div>
 
     <div class="toolbar">
@@ -555,6 +616,34 @@
       <button class="btn-primary" onclick="confirmService()">確認</button>
     </div>
 
+  </div>
+</div>
+
+<!-- ===== 機構選擇 Modal ===== -->
+<div class="fac-modal-overlay" id="facModalOverlay" onclick="if(event.target===this)closeFacModal()">
+  <div class="fac-modal">
+    <div class="fac-modal-head">
+      <h3>🏥 選擇派案機構</h3>
+      <button class="fac-modal-close" onclick="closeFacModal()">×</button>
+    </div>
+    <div class="fac-search-bar">
+      <input type="text" class="fac-search-input" id="facSearchInput"
+        placeholder="搜尋機構名稱、地區..." oninput="renderFacList()" autocomplete="off" />
+    </div>
+    <div class="fac-stats-bar">
+      <span class="fac-stat-chip" id="facStatTotal">共 0 間</span>
+      <span class="fac-stat-chip" id="facStatFiltered"></span>
+      <div class="fac-action-btns">
+        <button class="fac-action-btn" onclick="selectAllVisible()">全選篩選結果</button>
+        <button class="fac-action-btn" onclick="clearAllFac()">清空全部</button>
+      </div>
+    </div>
+    <div class="fac-list-wrap" id="facListWrap"></div>
+    <div class="fac-modal-foot">
+      <span class="fac-selected-count" id="facSelectedCount">已選 0 間</span>
+      <button class="btn-secondary" style="padding:10px 18px;font-size:14px;" onclick="closeFacModal()">取消</button>
+      <button class="btn-primary" style="padding:10px 18px;font-size:14px;background:#0f766e;" onclick="confirmFacModal()">確認選擇</button>
+    </div>
   </div>
 </div>
   <script>
@@ -858,6 +947,146 @@ function validateForm(data) {
     $("btnReset").addEventListener("click", resetForm);
 
     initForm();
+    loadFacilities();
+
+    function handleModeChange() {
+      var mode = document.querySelector('input[name="targetGroup"]:checked');
+      var wrap = document.getElementById('facilityPickerWrap');
+      if (!wrap) return;
+      wrap.style.display = (mode && mode.value === '指定機構') ? 'block' : 'none';
+    }
+    handleModeChange();
+
+    /* ===== 機構選擇器 ===== */
+    var allFacilities = [];
+    var selectedFacIds = new Set();
+    var pendingFacIds  = new Set();
+
+    async function loadFacilities() {
+      try {
+        if (window.supabaseClient) {
+          var res = await window.supabaseClient.from('facilities').select('*').order('service_area');
+          if (!res.error && res.data && res.data.length > 0) {
+            allFacilities = res.data.map(function(f) {
+              return { id: f.id || f.facility_name, name: f.facility_name || '', short: f.short_name || '', area: f.service_area || '其他', phone: f.phone || '' };
+            });
+            var el = document.getElementById('facStatTotal');
+            if (el) el.textContent = '共 ' + allFacilities.length + ' 間';
+            return;
+          }
+        }
+        var resp = await fetch('facilities.json');
+        if (resp.ok) {
+          var json = await resp.json();
+          var arr = Array.isArray(json) ? json : (json.facilities || []);
+          allFacilities = arr.map(function(f, i) {
+            return { id: f.id || f.facility_name || i, name: f.facility_name || f.name || '', short: f.short_name || '', area: f.service_area || f.area || '其他', phone: f.phone || '' };
+          });
+          var el = document.getElementById('facStatTotal');
+          if (el) el.textContent = '共 ' + allFacilities.length + ' 間';
+        }
+      } catch(e) { console.warn('loadFacilities:', e); }
+    }
+
+    function openFacModal() {
+      pendingFacIds = new Set(selectedFacIds);
+      renderFacList();
+      document.getElementById('facModalOverlay').classList.add('show');
+      setTimeout(function() { var inp = document.getElementById('facSearchInput'); if (inp) inp.focus(); }, 80);
+    }
+    function closeFacModal() {
+      document.getElementById('facModalOverlay').classList.remove('show');
+      var inp = document.getElementById('facSearchInput'); if (inp) inp.value = '';
+    }
+    function confirmFacModal() {
+      selectedFacIds = new Set(pendingFacIds);
+      renderFacTags();
+      closeFacModal();
+    }
+
+    function renderFacList() {
+      var inp = document.getElementById('facSearchInput');
+      var q = inp ? inp.value.trim().toLowerCase() : '';
+      var filtered = allFacilities.filter(function(f) {
+        return !q || f.name.toLowerCase().indexOf(q) >= 0 || f.short.toLowerCase().indexOf(q) >= 0 || f.area.toLowerCase().indexOf(q) >= 0;
+      });
+      var statEl = document.getElementById('facStatFiltered');
+      if (statEl) statEl.textContent = q ? ('篩選結果 ' + filtered.length + ' 間') : '';
+      var grouped = {};
+      filtered.forEach(function(f) { if (!grouped[f.area]) grouped[f.area] = []; grouped[f.area].push(f); });
+      var wrap = document.getElementById('facListWrap');
+      if (!filtered.length) { wrap.innerHTML = '<div class="fac-no-result">😶 找不到符合的機構</div>'; updateFacCount(); return; }
+      var listHtml = '';
+      Object.keys(grouped).forEach(function(area) {
+        listHtml += '<div class="fac-area-title">' + area + '</div>';
+        grouped[area].forEach(function(f) {
+          var sid = String(f.id);
+          var sel = pendingFacIds.has(f.id) || pendingFacIds.has(sid);
+          var safeId = sid.replace(/[^a-zA-Z0-9]/g, '_');
+          var shortHtml = (f.short && f.short !== f.name) ? ' <span style="font-weight:400;color:#94a3b8;font-size:12px;">' + f.short + '</span>' : '';
+          var phoneHtml = f.phone ? '<div class="fac-item-sub">📞 ' + f.phone + '</div>' : '';
+          listHtml += '<div class="fac-item' + (sel ? ' selected' : '') + '" onclick="toggleFac('' + safeId + '')">'
+            + '<div class="fac-item-check">' + (sel ? '✓' : '') + '</div>'
+            + '<div class="fac-item-info"><div class="fac-item-name">' + f.name + shortHtml + '</div>' + phoneHtml + '</div>'
+            + '</div>';
+        });
+      });
+      wrap.innerHTML = listHtml;
+      updateFacCount();
+    }
+
+    function toggleFac(safeId) {
+      var fac = allFacilities.find(function(f) { return String(f.id).replace(/[^a-zA-Z0-9]/g, '_') === safeId; });
+      if (!fac) return;
+      var id = fac.id; var sid = String(id);
+      if (pendingFacIds.has(id) || pendingFacIds.has(sid)) { pendingFacIds.delete(id); pendingFacIds.delete(sid); }
+      else { pendingFacIds.add(id); }
+      renderFacList();
+    }
+
+    function selectAllVisible() {
+      var inp = document.getElementById('facSearchInput');
+      var q = inp ? inp.value.trim().toLowerCase() : '';
+      allFacilities.filter(function(f) {
+        return !q || f.name.toLowerCase().indexOf(q) >= 0 || f.short.toLowerCase().indexOf(q) >= 0 || f.area.toLowerCase().indexOf(q) >= 0;
+      }).forEach(function(f) { pendingFacIds.add(f.id); });
+      renderFacList();
+    }
+
+    function clearAllFac() { pendingFacIds.clear(); renderFacList(); }
+
+    function updateFacCount() {
+      var el = document.getElementById('facSelectedCount');
+      if (el) el.textContent = '已選 ' + pendingFacIds.size + ' 間';
+    }
+
+    function renderFacTags() {
+      var count = selectedFacIds.size;
+      var badge = document.getElementById('facBadge');
+      var label = document.getElementById('facTriggerLabel');
+      var tagWrap = document.getElementById('facTagsWrap');
+      if (!badge || !label || !tagWrap) return;
+      if (count === 0) { badge.style.display = 'none'; label.textContent = '點此選擇機構...'; tagWrap.innerHTML = ''; return; }
+      badge.style.display = 'inline-block'; badge.textContent = count;
+      label.textContent = '已選擇機構：';
+      var sel = allFacilities.filter(function(f) { return selectedFacIds.has(f.id) || selectedFacIds.has(String(f.id)); });
+      tagWrap.innerHTML = sel.map(function(f) {
+        var safeId = String(f.id).replace(/[^a-zA-Z0-9]/g, '_');
+        return '<span class="fac-tag">' + (f.short || f.name)
+          + '<button class="fac-tag-del" onclick="removeFac(event,'' + safeId + '')" title="移除">×</button></span>';
+      }).join('');
+    }
+
+    function removeFac(event, safeId) {
+      event.stopPropagation();
+      var fac = allFacilities.find(function(f) { return String(f.id).replace(/[^a-zA-Z0-9]/g, '_') === safeId; });
+      if (fac) { selectedFacIds.delete(fac.id); selectedFacIds.delete(String(fac.id)); }
+      renderFacTags();
+    }
+
+    function getSelectedFacilities() {
+      return allFacilities.filter(function(f) { return selectedFacIds.has(f.id) || selectedFacIds.has(String(f.id)); });
+    }
 
     let caseManagers = [];
     async function loadCaseManagers(retries = 5) {
