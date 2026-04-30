@@ -358,6 +358,27 @@
         </table>
       </div>
       <div id="emptyState" class="empty" style="display:none; margin-top:14px;">目前�  <script>
+    // =============================================
+    // 🔔 N8N Webhook 設定區（串接 LINE 通知用）
+    // 取得 N8N webhook URL 後，填入對應常數即可
+    // =============================================
+    const N8N_WEBHOOKS = {
+      // 案件結案時通知個管師 / LINE 群組
+      closeCase:  "https://your-n8n-url/webhook/close-case",
+      // 案件狀態被管理員更新時通知
+      updateCase: "https://your-n8n-url/webhook/update-case",
+    };
+
+    /** 通用 Webhook 發送（靜默失敗，不阻斷主流程） */
+    function notifyN8N(url, payload) {
+      if (!url || !url.startsWith('http')) return;
+      fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(e => console.warn('[N8N Webhook Error]', e));
+    }
+
     // 從 supabase-config.js 取得 supabaseClient
     const sb = window.supabaseClient;
 
@@ -619,6 +640,15 @@
       try {
         const { error } = await sb.from('cases').update(updates).eq('case_id', caseId);
         if (error) throw error;
+
+        // 🔔 N8N：案件更新通知
+        notifyN8N(N8N_WEBHOOKS.updateCase, {
+          event: 'case_updated',
+          case_id: caseId,
+          ...updates,
+          updated_at: new Date().toISOString()
+        });
+
         alert("修改成功！");
         await fetchData();
         openDrawer(currentEditingIndex);
@@ -632,6 +662,18 @@
       try {
         const { error } = await sb.from('cases').update({ status: '案件結案' }).eq('case_id', caseId);
         if (error) throw error;
+
+        // 🔔 N8N：結案通知
+        const closedCase = allCases.find(c => c.case_id === caseId);
+        notifyN8N(N8N_WEBHOOKS.closeCase, {
+          event: 'case_closed',
+          case_id: caseId,
+          patient_name: closedCase?.patient_name || '',
+          hospital: closedCase?.hospital || '',
+          case_manager: closedCase?.case_manager || '',
+          closed_at: new Date().toISOString()
+        });
+
         await fetchData();
       } catch (err) {
         alert("結案失敗：" + err.message);

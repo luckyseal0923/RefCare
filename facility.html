@@ -473,10 +473,25 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
   </div>
 
   <script>
-    /* =========================
-       可改區：你的後端 Webhook URL
-    ========================= */
-    const FACILITY_REPLY_WEBHOOK_URL = "https://your-n8n-url/webhook/facility-reply";
+    // =============================================
+    // 🔔 N8N Webhook 設定區（串接 LINE 通知用）
+    // 取得 N8N webhook URL 後，填入對應常數即可
+    // =============================================
+    const N8N_WEBHOOKS = {
+      // 機構回覆時，通知個管師 / LINE 群組
+      facilityReply: "https://your-n8n-url/webhook/facility-reply",
+    };
+
+    /** 通用 Webhook 發送（靜默失敗，不阻斷主流程） */
+    function notifyN8N(url, payload) {
+      if (!url || !url.startsWith('http')) return;
+      fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(e => console.warn('[N8N Webhook Error]', e));
+    }
+
 
     /* =========================
        Demo 用：前端機構名單
@@ -775,14 +790,8 @@ ${formatServiceCodes(data.service_codes)}`;
           if (sbError) throw sbError;
         }
 
-        // 同步發送 n8n 通知 (保持原邏輯)
-        if (typeof FACILITY_REPLY_WEBHOOK_URL !== 'undefined' && FACILITY_REPLY_WEBHOOK_URL.includes("http")) {
-          fetch(FACILITY_REPLY_WEBHOOK_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-          }).catch(e => console.warn("Webhook Error:", e));
-        }
+        // 🔔 N8N：機構回覆通知
+        notifyN8N(N8N_WEBHOOKS.facilityReply, payload);
 
         const statusMap = {
           "accept": "可收案",

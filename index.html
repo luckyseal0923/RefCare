@@ -664,7 +664,25 @@ function confirmService(){
   updatePreview();
 }
 
-const CREATE_CASE_WEBHOOK_URL = "https://your-n8n-url/webhook/create-referral";
+// =============================================
+// 🔔 N8N Webhook 設定區（串接 LINE 通知用）
+// 取得 N8N webhook URL 後，填入對應常數即可
+// =============================================
+const N8N_WEBHOOKS = {
+  // 新案件送出時，通知個管師 / LINE 群組
+  createCase: "https://your-n8n-url/webhook/create-referral",
+};
+
+/** 通用 Webhook 發送（靜默失敗，不阻斷主流程） */
+function notifyN8N(url, payload) {
+  if (!url || !url.startsWith('http')) return;
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).catch(e => console.warn('[N8N Webhook Error]', e));
+}
+
 const $ = (id) => document.getElementById(id);
 
 function getTaiwanDateTimeLocal() {
@@ -791,14 +809,8 @@ function validateForm(data) {
           `案件已成功建立！\n案件編號：${data.case_id}\n資料已存入 Supabase 並自動啟動媒合程序。`
         );
 
-        // 串接 n8n 通知 (可選)
-        if (typeof CREATE_CASE_WEBHOOK_URL !== 'undefined' && CREATE_CASE_WEBHOOK_URL.includes("http")) {
-          fetch(CREATE_CASE_WEBHOOK_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(caseData)
-          }).catch(e => console.warn("n8n notify error:", e));
-        }
+        // 🔔 N8N：新案件建立通知
+        notifyN8N(N8N_WEBHOOKS.createCase, { event: 'case_created', ...caseData });
 
         setTimeout(() => {
           if (confirm("建立成功！是否重新整理頁面？")) location.reload();
