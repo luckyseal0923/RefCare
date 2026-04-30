@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
@@ -334,30 +334,18 @@
 .fac-trigger-btn:hover{background:#ecfdf5;border-color:#0f766e;}
 .fac-trigger-badge{background:#0f766e;color:#fff;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:900;min-width:24px;text-align:center;}
 /* ===== 群組功能 ===== */
-.fac-tabs{display:flex;border-bottom:2px solid #e5e7eb;flex-shrink:0;background:#fff;}
-.fac-tab{flex:1;padding:12px 8px;font-size:13px;font-weight:700;color:#6b7280;cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;}
-.fac-tab.active{color:#0f766e;border-bottom-color:#0f766e;}
-.fac-tab:hover:not(.active){background:#f8fafc;color:#374151;}
-.fac-pane{display:none;flex-direction:column;flex:1;overflow:hidden;}
-.fac-pane.active{display:flex;}
-/* 群組卡片 */
-.grp-list{padding:12px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;flex:1;}
-.grp-card{border:1.5px solid #d1fae5;border-radius:14px;padding:14px;cursor:pointer;transition:all .15s;background:#fff;}
-.grp-card:hover{background:#f0fdf9;border-color:#0f766e;}
-.grp-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
-.grp-card-name{font-size:15px;font-weight:800;color:#0f172a;}
-.grp-card-count{font-size:12px;background:#ccfbf1;color:#115e59;border-radius:999px;padding:3px 10px;font-weight:700;}
-.grp-card-preview{font-size:12px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.grp-card-actions{display:flex;gap:6px;margin-top:10px;}
-.grp-card-btn{font-size:12px;font-weight:700;border-radius:8px;padding:5px 10px;border:none;cursor:pointer;}
-.grp-card-btn.select{background:#0f766e;color:#fff;}
-.grp-card-btn.edit{background:#f1f5f9;color:#374151;}
-.grp-card-btn.del{background:#fee2e2;color:#dc2626;}
-.grp-empty{text-align:center;padding:40px 20px;color:#94a3b8;font-size:14px;}
-.grp-add-bar{padding:12px 16px;border-top:1px solid #f1f5f9;flex-shrink:0;display:flex;gap:8px;}
-.grp-add-input{flex:1;border:1px solid #d1d5db;border-radius:10px;padding:9px 12px;font-size:14px;outline:none;}
-.grp-add-input:focus{border-color:#0f766e;}
-.grp-add-btn{background:#0f766e;color:#fff;border:none;border-radius:10px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer;}
+/* 群組快選列 */
+.grp-bar{padding:10px 16px;border-bottom:1px solid #e5e7eb;flex-shrink:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#f8fafc;}
+.grp-bar-label{font-size:12px;font-weight:700;color:#64748b;white-space:nowrap;}
+.grp-chip{display:inline-flex;align-items:center;gap:5px;border:1.5px solid #a7f3d0;background:#ecfdf5;border-radius:999px;padding:5px 12px;font-size:12px;font-weight:700;color:#065f46;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.grp-chip:hover{background:#d1fae5;border-color:#0f766e;}
+.grp-chip.flash{background:#0f766e;color:#fff;border-color:#0f766e;}
+.grp-chip-count{background:rgba(0,0,0,0.12);border-radius:999px;padding:1px 7px;font-size:11px;}
+.grp-chip-add{border:1.5px dashed #a7f3d0;background:#fff;border-radius:999px;padding:5px 12px;font-size:12px;font-weight:700;color:#0f766e;cursor:pointer;white-space:nowrap;}
+.grp-chip-add:hover{background:#ecfdf5;}
+.grp-manage-btn{margin-left:auto;font-size:12px;font-weight:700;color:#0f766e;background:none;border:1px solid #a7f3d0;border-radius:8px;padding:4px 10px;cursor:pointer;white-space:nowrap;}
+.grp-manage-btn:hover{background:#ecfdf5;}
+.grp-empty-bar{font-size:12px;color:#94a3b8;padding:2px 0;}
 /* 群組編輯 Sub-Modal */
 .grp-edit-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.6);z-index:1100;align-items:center;justify-content:center;padding:16px;}
 .grp-edit-overlay.show{display:flex;}
@@ -671,36 +659,27 @@
       <h3>🏥 選擇派案機構</h3>
       <button class="fac-modal-close" onclick="closeFacModal()">×</button>
     </div>
-    <!-- 頁籤 -->
-    <div class="fac-tabs">
-      <button class="fac-tab active" id="tabList" onclick="switchFacTab('list')">📋 機構列表</button>
-      <button class="fac-tab" id="tabGroup" onclick="switchFacTab('group')">🏷️ 群組快選</button>
+    <!-- 群組快選列（常駐） -->
+    <div class="grp-bar" id="grpBar">
+      <span class="grp-bar-label">🏷️ 群組：</span>
+      <span class="grp-empty-bar" id="grpBarEmpty">尚無群組</span>
+      <button class="grp-chip-add" onclick="openGrpAdd()">＋ 新增群組</button>
+      <button class="grp-manage-btn" onclick="openGrpManage()">⚙️ 管理</button>
     </div>
-    <!-- 機構列表頁 -->
-    <div class="fac-pane active" id="paneList" style="flex-direction:column;">
-      <div class="fac-search-bar">
-        <input type="text" class="fac-search-input" id="facSearchInput"
-          placeholder="搜尋機構名稱、地區..." oninput="renderFacList()" autocomplete="off" />
-      </div>
-      <div class="fac-stats-bar">
-        <span class="fac-stat-chip" id="facStatTotal">共 0 間</span>
-        <span class="fac-stat-chip" id="facStatFiltered"></span>
-        <div class="fac-action-btns">
-          <button class="fac-action-btn" onclick="selectAllVisible()">全選篩選結果</button>
-          <button class="fac-action-btn" onclick="clearAllFac()">清空全部</button>
-        </div>
-      </div>
-      <div class="fac-list-wrap" id="facListWrap"></div>
+    <!-- 機構搜尋列 -->
+    <div class="fac-search-bar">
+      <input type="text" class="fac-search-input" id="facSearchInput"
+        placeholder="搜尋機構名稱、地區..." oninput="renderFacList()" autocomplete="off" />
     </div>
-    <!-- 群組快選頁 -->
-    <div class="fac-pane" id="paneGroup" style="flex-direction:column;">
-      <div class="grp-list" id="grpList"></div>
-      <div class="grp-add-bar">
-        <input type="text" class="grp-add-input" id="grpNewName" placeholder="輸入新群組名稱..." />
-        <button class="grp-add-btn" onclick="addGroup()">＋ 新增群組</button>
+    <div class="fac-stats-bar">
+      <span class="fac-stat-chip" id="facStatTotal">共 0 間</span>
+      <span class="fac-stat-chip" id="facStatFiltered"></span>
+      <div class="fac-action-btns">
+        <button class="fac-action-btn" onclick="selectAllVisible()">全選篩選結果</button>
+        <button class="fac-action-btn" onclick="clearAllFac()">清空全部</button>
       </div>
     </div>
-    <!-- 底部 -->
+    <div class="fac-list-wrap" id="facListWrap"></div>
     <div class="fac-modal-foot">
       <span class="fac-selected-count" id="facSelectedCount">已選 0 間</span>
       <button class="btn-secondary" style="padding:10px 18px;font-size:14px;" onclick="closeFacModal()">取消</button>
@@ -731,6 +710,19 @@
     </div>
   </div>
 </div>
+<!-- ===== 群組管理 Modal ===== -->
+<div class="grp-edit-overlay" id="grpManageOverlay" onclick="if(event.target===this)closeGrpManage()">
+  <div class="grp-edit-modal">
+    <div class="grp-edit-head" style="background:linear-gradient(135deg,#065f46,#0f766e);">
+      <h3>⚙️ 群組管理</h3>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button onclick="openGrpAdd()" style="border:none;background:rgba(255,255,255,0.25);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;color:#fff;cursor:pointer;">＋ 新增</button>
+        <button class="grp-edit-close" onclick="closeGrpManage()">×</button>
+      </div>
+    </div>
+    <div style="flex:1;overflow-y:auto;" id="grpManageList"></div>
+  </div>
+</div>
   <script>
 // ===== 機構選擇器全域代理（讓 HTML onclick 能呼叫到） =====
 function openFacModal()     { if (window._openFacModal)     window._openFacModal();     }
@@ -746,10 +738,13 @@ function switchFacTab(t) { if (window._switchFacTab) window._switchFacTab(t); }
 function addGroup()      { if (window._addGroup)      window._addGroup();      }
 function editGroup(id)   { if (window._editGroup)      window._editGroup(id);   }
 function deleteGroup(id) { if (window._deleteGroup)    window._deleteGroup(id); }
-function selectGroup(id) { if (window._selectGroup)    window._selectGroup(id); }
+function selectGroup(id,chip){ if (window._selectGroup) window._selectGroup(id,chip); }
 function closeGrpEdit()  { if (window._closeGrpEdit)   window._closeGrpEdit();  }
 function saveGrpEdit()   { if (window._saveGrpEdit)    window._saveGrpEdit();   }
-function renderGrpFacList() { if (window._renderGrpFacList) window._renderGrpFacList(); }
+function renderGrpFacList(){ if (window._renderGrpFacList) window._renderGrpFacList(); }
+function openGrpAdd()    { if (window._addGroup)       window._addGroup();      }
+function openGrpManage() { if (window._openGrpManage)  window._openGrpManage(); }
+function closeGrpManage(){ if (window._closeGrpManage) window._closeGrpManage(); }
 // =======================================================
 function getSpecialCareList() {
   return Array.from(document.querySelectorAll(".special-care:checked")).map(item => item.value);
@@ -1095,6 +1090,7 @@ function validateForm(data) {
 
     function openFacModal() {
       pendingFacIds = new Set(selectedFacIds);
+      renderGrpBar();
       renderFacList();
       document.getElementById('facModalOverlay').classList.add('show');
       setTimeout(function() { var inp = document.getElementById('facSearchInput'); if (inp) inp.focus(); }, 80);
@@ -1147,114 +1143,127 @@ function validateForm(data) {
 
     /* ===== 群組管理邏輯 ===== */
     var GRP_KEY = 'refcare_fac_groups';
-    var facGroups = [];        // [{id, name, facilityIds:[]}]
-    var editingGrpId = null;   // 正在編輯的群組 id
+    var facGroups = [];
+    var editingGrpId = null;
 
     function loadGroups() {
       try { facGroups = JSON.parse(localStorage.getItem(GRP_KEY) || '[]'); } catch(e) { facGroups = []; }
     }
-    function saveGroups() {
-      localStorage.setItem(GRP_KEY, JSON.stringify(facGroups));
-    }
+    function saveGroups() { localStorage.setItem(GRP_KEY, JSON.stringify(facGroups)); }
     function genId() { return 'g' + Date.now() + Math.floor(Math.random()*1000); }
     loadGroups();
 
-    /* 頁籤切換 */
-    function switchFacTab(tab) {
-      var listTab  = document.getElementById('tabList');
-      var groupTab = document.getElementById('tabGroup');
-      var paneList  = document.getElementById('paneList');
-      var paneGroup = document.getElementById('paneGroup');
-      if (tab === 'list') {
-        listTab.classList.add('active'); groupTab.classList.remove('active');
-        paneList.classList.add('active'); paneGroup.classList.remove('active');
-      } else {
-        groupTab.classList.add('active'); listTab.classList.remove('active');
-        paneGroup.classList.add('active'); paneList.classList.remove('active');
-        renderGroupCards();
+    /* 渲染群組快選列（Modal 頂部 chips） */
+    function renderGrpBar() {
+      loadGroups();
+      var bar    = document.getElementById('grpBar');
+      var emptyEl = document.getElementById('grpBarEmpty');
+      if (!bar) return;
+      // 移除舊 chip
+      bar.querySelectorAll('.grp-chip').forEach(function(el){ el.remove(); });
+      if (emptyEl) emptyEl.style.display = facGroups.length ? 'none' : 'inline';
+      var addBtn = bar.querySelector('.grp-chip-add');
+      facGroups.forEach(function(g) {
+        var chip = document.createElement('button');
+        chip.className = 'grp-chip';
+        chip.title = '點擊選入所有成員';
+        chip.innerHTML = g.name + '<span class="grp-chip-count">' + g.facilityIds.length + '間</span>';
+        chip.onclick = function(){ selectGroup(g.id, chip); };
+        bar.insertBefore(chip, addBtn);
+      });
+    }
+
+    /* 點擊 chip 選入群組 */
+    function selectGroup(gid, chipEl) {
+      loadGroups();
+      var g = facGroups.find(function(x){ return x.id === gid; });
+      if (!g) return;
+      g.facilityIds.forEach(function(fid){ pendingFacIds.add(fid); });
+      updateFacCount();
+      renderFacList();
+      if (chipEl) {
+        chipEl.classList.add('flash');
+        setTimeout(function(){ chipEl.classList.remove('flash'); }, 800);
       }
     }
-    window._switchFacTab = switchFacTab;
+    window._selectGroup = selectGroup;
 
-    /* 渲染群組卡片 */
-    function renderGroupCards() {
+    /* 新增群組（快速） */
+    function openGrpAdd() {
+      editingGrpId = null;
+      var nameEl = document.getElementById('grpEditName');
+      if (nameEl) nameEl.value = '';
+      renderGrpFacList();
+      var ov = document.getElementById('grpEditOverlay');
+      if (ov) ov.classList.add('show');
+    }
+    window._addGroup = openGrpAdd;
+
+    /* 管理群組 → 開啟管理 Modal */
+    function openGrpManage() {
+      editingGrpId = null;
+      renderGrpManageList();
+      var ov = document.getElementById('grpManageOverlay');
+      if (ov) ov.classList.add('show');
+    }
+    window._openGrpManage = openGrpManage;
+
+    function closeGrpManage() {
+      var ov = document.getElementById('grpManageOverlay');
+      if (ov) ov.classList.remove('show');
+    }
+    window._closeGrpManage = closeGrpManage;
+
+    function renderGrpManageList() {
       loadGroups();
-      var wrap = document.getElementById('grpList');
+      var wrap = document.getElementById('grpManageList');
       if (!wrap) return;
       if (!facGroups.length) {
-        wrap.innerHTML = '<div class="grp-empty">📭 尚無群組<br><small>請在下方輸入名稱後新增</small></div>';
+        wrap.innerHTML = '<div style="text-align:center;padding:30px;color:#94a3b8;font-size:14px;">尚無群組，請點右上角「＋ 新增」</div>';
         return;
       }
       wrap.innerHTML = facGroups.map(function(g) {
-        var members = allFacilities.filter(function(f) { return g.facilityIds.indexOf(String(f.id)) >= 0 || g.facilityIds.indexOf(f.id) >= 0; });
-        var preview = members.slice(0, 4).map(function(f) { return f.short || f.name; }).join('、');
-        if (members.length > 4) preview += '...';
-        return '<div class="grp-card">'
-          + '<div class="grp-card-head">'
-          + '<span class="grp-card-name">' + g.name + '</span>'
-          + '<span class="grp-card-count">' + members.length + ' 間</span>'
+        var cnt = g.facilityIds.length;
+        var members = allFacilities.filter(function(f){ return g.facilityIds.indexOf(String(f.id)) >= 0 || g.facilityIds.indexOf(f.id) >= 0; });
+        var preview = members.slice(0, 5).map(function(f){ return f.short || f.name; }).join('、') + (members.length > 5 ? '...' : '');
+        return '<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #f1f5f9;">'
+          + '<div style="flex:1;min-width:0;">'
+          + '<div style="font-size:14px;font-weight:800;color:#0f172a;">' + g.name + ' <span style="font-size:12px;font-weight:400;color:#0f766e;">(' + cnt + '間)</span></div>'
+          + '<div style="font-size:12px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (preview || '尚未設定成員') + '</div>'
           + '</div>'
-          + '<div class="grp-card-preview">' + (preview || '（尚未設定成員）') + '</div>'
-          + '<div class="grp-card-actions">'
-          + '<button class="grp-card-btn select" onclick="selectGroup(\'' + g.id + '\')">✔ 選入此群組</button>'
-          + '<button class="grp-card-btn edit" onclick="editGroup(\'' + g.id + '\')">✏️ 編輯</button>'
-          + '<button class="grp-card-btn del" onclick="deleteGroup(\'' + g.id + '\')">🗑</button>'
-          + '</div>'
+          + '<button onclick="editGroup(\'' + g.id + '\')" style="font-size:12px;font-weight:700;border:1px solid #e2e8f0;background:#f8fafc;border-radius:8px;padding:5px 10px;cursor:pointer;">✏️ 編輯</button>'
+          + '<button onclick="deleteGroup(\'' + g.id + '\')" style="font-size:12px;font-weight:700;border:1px solid #fecaca;background:#fee2e2;color:#dc2626;border-radius:8px;padding:5px 10px;cursor:pointer;">🗑</button>'
           + '</div>';
       }).join('');
     }
 
-    /* 新增群組 */
-    function addGroup() {
-      var inp = document.getElementById('grpNewName');
-      var name = inp ? inp.value.trim() : '';
-      if (!name) { alert('請輸入群組名稱'); return; }
-      loadGroups();
-      facGroups.push({ id: genId(), name: name, facilityIds: [] });
-      saveGroups();
-      inp.value = '';
-      renderGroupCards();
-    }
-    window._addGroup = addGroup;
-
-    /* 選入群組所有成員 */
-    function selectGroup(gid) {
-      loadGroups();
-      var g = facGroups.find(function(x) { return x.id === gid; });
-      if (!g) return;
-      g.facilityIds.forEach(function(fid) { pendingFacIds.add(fid); });
-      updateFacCount();
-      var btn = event && event.target;
-      if (btn) { btn.textContent = '✔ 已選入'; btn.style.background = '#0d9488'; }
-      setTimeout(function() { switchFacTab('list'); }, 600);
-    }
-    window._selectGroup = selectGroup;
-
-    /* 刪除群組 */
-    function deleteGroup(gid) {
-      if (!confirm('確定刪除此群組？')) return;
-      loadGroups();
-      facGroups = facGroups.filter(function(g) { return g.id !== gid; });
-      saveGroups();
-      renderGroupCards();
-    }
-    window._deleteGroup = deleteGroup;
-
-    /* 開啟編輯 Sub-Modal */
+    /* 編輯群組 */
     function editGroup(gid) {
       loadGroups();
-      var g = gid ? facGroups.find(function(x) { return x.id === gid; }) : null;
-      editingGrpId = gid || null;
+      editingGrpId = gid;
+      var g = facGroups.find(function(x){ return x.id === gid; });
       var titleEl = document.getElementById('grpEditTitle');
       var nameEl  = document.getElementById('grpEditName');
-      if (titleEl) titleEl.textContent = g ? '✏️ 編輯群組' : '➕ 新增群組';
-      if (nameEl)  nameEl.value = g ? g.name : '';
+      if (titleEl) titleEl.textContent = '✏️ 編輯群組';
+      if (nameEl && g) nameEl.value = g.name;
       renderGrpFacList();
       var ov = document.getElementById('grpEditOverlay');
       if (ov) ov.classList.add('show');
     }
     window._editGroup = editGroup;
 
+    /* 刪除群組 */
+    function deleteGroup(gid) {
+      if (!confirm('確定刪除此群組？')) return;
+      loadGroups();
+      facGroups = facGroups.filter(function(g){ return g.id !== gid; });
+      saveGroups();
+      renderGrpBar();
+      renderGrpManageList();
+    }
+    window._deleteGroup = deleteGroup;
+
+    /* 關閉編輯 Modal */
     function closeGrpEdit() {
       var ov = document.getElementById('grpEditOverlay');
       if (ov) ov.classList.remove('show');
@@ -1262,44 +1271,48 @@ function validateForm(data) {
     }
     window._closeGrpEdit = closeGrpEdit;
 
-    /* 渲染編輯 Modal 的機構列表 */
+    /* 渲染編輯 Modal 的機構清單 */
     function renderGrpFacList() {
-      var q = (document.getElementById('grpFacSearch') && document.getElementById('grpFacSearch').value.trim().toLowerCase()) || '';
+      var q = '';
+      var srch = document.getElementById('grpFacSearch');
+      if (srch) q = srch.value.trim().toLowerCase();
       loadGroups();
-      var g = editingGrpId ? facGroups.find(function(x) { return x.id === editingGrpId; }) : null;
-      var currentIds = g ? g.facilityIds : [];
-      var filtered = allFacilities.filter(function(f) {
+      var g = editingGrpId ? facGroups.find(function(x){ return x.id === editingGrpId; }) : null;
+      var currentIds = g ? g.facilityIds.map(String) : [];
+      var filtered = allFacilities.filter(function(f){
         return !q || (f.name + f.short + f.area).toLowerCase().indexOf(q) >= 0;
       });
       var wrap = document.getElementById('grpFacList');
       if (!wrap) return;
-      wrap.innerHTML = filtered.map(function(f) {
+      wrap.innerHTML = filtered.map(function(f){
         var sid = String(f.id);
-        var checked = currentIds.indexOf(sid) >= 0 || currentIds.indexOf(f.id) >= 0;
+        var checked = currentIds.indexOf(sid) >= 0;
         return '<label class="grp-fac-item' + (checked ? ' checked' : '') + '">'
           + '<input type="checkbox" value="' + sid + '"' + (checked ? ' checked' : '') + '>'
-          + '<span class="grp-fac-item-name">' + f.name + (f.area ? '　<span style="color:#94a3b8;font-size:11px;">' + f.area + '</span>' : '') + '</span>'
-          + '</label>';
+          + '<span class="grp-fac-item-name">' + f.name
+          + (f.area ? '　<span style="color:#94a3b8;font-size:11px;">' + f.area + '</span>' : '')
+          + '</span></label>';
       }).join('');
     }
     window._renderGrpFacList = renderGrpFacList;
 
-    /* 儲存群組編輯 */
+    /* 儲存群組 */
     function saveGrpEdit() {
       var nameEl = document.getElementById('grpEditName');
       var name = nameEl ? nameEl.value.trim() : '';
       if (!name) { alert('群組名稱不能為空'); return; }
-      var checkedIds = Array.from(document.querySelectorAll('#grpFacList input[type=checkbox]:checked')).map(function(el) { return el.value; });
+      var checkedIds = Array.from(document.querySelectorAll('#grpFacList input[type=checkbox]:checked')).map(function(el){ return el.value; });
       loadGroups();
       if (editingGrpId) {
-        var g = facGroups.find(function(x) { return x.id === editingGrpId; });
+        var g = facGroups.find(function(x){ return x.id === editingGrpId; });
         if (g) { g.name = name; g.facilityIds = checkedIds; }
       } else {
         facGroups.push({ id: genId(), name: name, facilityIds: checkedIds });
       }
       saveGroups();
       closeGrpEdit();
-      renderGroupCards();
+      renderGrpBar();
+      renderGrpManageList();
     }
     window._saveGrpEdit = saveGrpEdit;
 
