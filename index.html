@@ -647,6 +647,17 @@
   </div>
 </div>
   <script>
+// ===== 機構選擇器全域代理（讓 HTML onclick 能呼叫到） =====
+function openFacModal()     { if (window._openFacModal)     window._openFacModal();     }
+function closeFacModal()    { if (window._closeFacModal)    window._closeFacModal();    }
+function confirmFacModal()  { if (window._confirmFacModal)  window._confirmFacModal();  }
+function toggleFac(id)      { if (window._toggleFac)        window._toggleFac(id);      }
+function selectAllVisible() { if (window._selectAllVisible) window._selectAllVisible(); }
+function clearAllFac()      { if (window._clearAllFac)      window._clearAllFac();      }
+function removeFac(e, id)   { if (window._removeFac)        window._removeFac(e, id);   }
+function renderFacList()    { if (window._renderFacList)    window._renderFacList();    }
+function handleModeChange() { if (window._handleModeChange) window._handleModeChange(); }
+// =======================================================
 function getSpecialCareList() {
   return Array.from(document.querySelectorAll(".special-care:checked")).map(item => item.value);
 }
@@ -955,6 +966,7 @@ function validateForm(data) {
       if (!wrap) return;
       wrap.style.display = (mode && mode.value === '指定機構') ? 'block' : 'none';
     }
+    window._handleModeChange = handleModeChange;
     handleModeChange();
 
     /* ===== 機構選擇器 ===== */
@@ -994,15 +1006,18 @@ function validateForm(data) {
       document.getElementById('facModalOverlay').classList.add('show');
       setTimeout(function() { var inp = document.getElementById('facSearchInput'); if (inp) inp.focus(); }, 80);
     }
+    window._openFacModal = openFacModal;
     function closeFacModal() {
       document.getElementById('facModalOverlay').classList.remove('show');
       var inp = document.getElementById('facSearchInput'); if (inp) inp.value = '';
     }
+    window._closeFacModal = closeFacModal;
     function confirmFacModal() {
       selectedFacIds = new Set(pendingFacIds);
       renderFacTags();
       closeFacModal();
     }
+    window._confirmFacModal = confirmFacModal;
 
     function renderFacList() {
       var inp = document.getElementById('facSearchInput');
@@ -1025,7 +1040,7 @@ function validateForm(data) {
           var safeId = sid.replace(/[^a-zA-Z0-9]/g, '_');
           var shortHtml = (f.short && f.short !== f.name) ? ' <span style="font-weight:400;color:#94a3b8;font-size:12px;">' + f.short + '</span>' : '';
           var phoneHtml = f.phone ? '<div class="fac-item-sub">📞 ' + f.phone + '</div>' : '';
-          listHtml += '<div class="fac-item' + (sel ? ' selected' : '') + '" onclick="toggleFac('' + safeId + '')">'
+          listHtml += '<div class="fac-item' + (sel ? ' selected' : '') + '" onclick="toggleFac(\'' + safeId + '\')">'
             + '<div class="fac-item-check">' + (sel ? '✓' : '') + '</div>'
             + '<div class="fac-item-info"><div class="fac-item-name">' + f.name + shortHtml + '</div>' + phoneHtml + '</div>'
             + '</div>';
@@ -1034,6 +1049,7 @@ function validateForm(data) {
       wrap.innerHTML = listHtml;
       updateFacCount();
     }
+    window._renderFacList = renderFacList;
 
     function toggleFac(safeId) {
       var fac = allFacilities.find(function(f) { return String(f.id).replace(/[^a-zA-Z0-9]/g, '_') === safeId; });
@@ -1043,6 +1059,7 @@ function validateForm(data) {
       else { pendingFacIds.add(id); }
       renderFacList();
     }
+    window._toggleFac = toggleFac;
 
     function selectAllVisible() {
       var inp = document.getElementById('facSearchInput');
@@ -1052,8 +1069,10 @@ function validateForm(data) {
       }).forEach(function(f) { pendingFacIds.add(f.id); });
       renderFacList();
     }
+    window._selectAllVisible = selectAllVisible;
 
     function clearAllFac() { pendingFacIds.clear(); renderFacList(); }
+    window._clearAllFac = clearAllFac;
 
     function updateFacCount() {
       var el = document.getElementById('facSelectedCount');
@@ -1073,7 +1092,7 @@ function validateForm(data) {
       tagWrap.innerHTML = sel.map(function(f) {
         var safeId = String(f.id).replace(/[^a-zA-Z0-9]/g, '_');
         return '<span class="fac-tag">' + (f.short || f.name)
-          + '<button class="fac-tag-del" onclick="removeFac(event,'' + safeId + '')" title="移除">×</button></span>';
+          + '<button class="fac-tag-del" onclick="removeFac(event,\'' + safeId + '\')" title="移除">×</button></span>';
       }).join('');
     }
 
@@ -1083,6 +1102,7 @@ function validateForm(data) {
       if (fac) { selectedFacIds.delete(fac.id); selectedFacIds.delete(String(fac.id)); }
       renderFacTags();
     }
+    window._removeFac = removeFac;
 
     function getSelectedFacilities() {
       return allFacilities.filter(function(f) { return selectedFacIds.has(f.id) || selectedFacIds.has(String(f.id)); });
