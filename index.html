@@ -333,6 +333,51 @@
 .fac-trigger-btn{display:flex;align-items:center;justify-content:space-between;width:100%;border:2px dashed #a7f3d0;background:#f0fdf9;border-radius:14px;padding:14px 16px;cursor:pointer;font-size:15px;font-weight:700;color:#0f766e;transition:all .2s;}
 .fac-trigger-btn:hover{background:#ecfdf5;border-color:#0f766e;}
 .fac-trigger-badge{background:#0f766e;color:#fff;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:900;min-width:24px;text-align:center;}
+/* ===== 群組功能 ===== */
+.fac-tabs{display:flex;border-bottom:2px solid #e5e7eb;flex-shrink:0;background:#fff;}
+.fac-tab{flex:1;padding:12px 8px;font-size:13px;font-weight:700;color:#6b7280;cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;}
+.fac-tab.active{color:#0f766e;border-bottom-color:#0f766e;}
+.fac-tab:hover:not(.active){background:#f8fafc;color:#374151;}
+.fac-pane{display:none;flex-direction:column;flex:1;overflow:hidden;}
+.fac-pane.active{display:flex;}
+/* 群組卡片 */
+.grp-list{padding:12px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;flex:1;}
+.grp-card{border:1.5px solid #d1fae5;border-radius:14px;padding:14px;cursor:pointer;transition:all .15s;background:#fff;}
+.grp-card:hover{background:#f0fdf9;border-color:#0f766e;}
+.grp-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.grp-card-name{font-size:15px;font-weight:800;color:#0f172a;}
+.grp-card-count{font-size:12px;background:#ccfbf1;color:#115e59;border-radius:999px;padding:3px 10px;font-weight:700;}
+.grp-card-preview{font-size:12px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.grp-card-actions{display:flex;gap:6px;margin-top:10px;}
+.grp-card-btn{font-size:12px;font-weight:700;border-radius:8px;padding:5px 10px;border:none;cursor:pointer;}
+.grp-card-btn.select{background:#0f766e;color:#fff;}
+.grp-card-btn.edit{background:#f1f5f9;color:#374151;}
+.grp-card-btn.del{background:#fee2e2;color:#dc2626;}
+.grp-empty{text-align:center;padding:40px 20px;color:#94a3b8;font-size:14px;}
+.grp-add-bar{padding:12px 16px;border-top:1px solid #f1f5f9;flex-shrink:0;display:flex;gap:8px;}
+.grp-add-input{flex:1;border:1px solid #d1d5db;border-radius:10px;padding:9px 12px;font-size:14px;outline:none;}
+.grp-add-input:focus{border-color:#0f766e;}
+.grp-add-btn{background:#0f766e;color:#fff;border:none;border-radius:10px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer;}
+/* 群組編輯 Sub-Modal */
+.grp-edit-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.6);z-index:1100;align-items:center;justify-content:center;padding:16px;}
+.grp-edit-overlay.show{display:flex;}
+.grp-edit-modal{background:#fff;border-radius:20px;width:100%;max-width:600px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(15,23,42,0.25);overflow:hidden;}
+.grp-edit-head{padding:16px 20px;background:linear-gradient(135deg,#1e40af,#3b82f6);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+.grp-edit-head h3{margin:0;font-size:16px;font-weight:900;color:#fff;}
+.grp-edit-close{border:none;background:rgba(255,255,255,0.25);border-radius:8px;width:30px;height:30px;font-size:18px;cursor:pointer;color:#fff;}
+.grp-edit-body{padding:14px 16px;overflow-y:auto;flex:1;}
+.grp-name-field{margin-bottom:14px;}
+.grp-name-label{font-size:13px;font-weight:700;color:#374151;margin-bottom:6px;display:block;}
+.grp-name-input{width:100%;border:1.5px solid #d1d5db;border-radius:10px;padding:10px 12px;font-size:15px;outline:none;box-sizing:border-box;}
+.grp-name-input:focus{border-color:#3b82f6;}
+.grp-fac-search{margin-bottom:10px;border:1px solid #d1d5db;border-radius:8px;padding:8px 12px;font-size:13px;width:100%;outline:none;box-sizing:border-box;}
+.grp-fac-list{display:flex;flex-direction:column;gap:4px;max-height:320px;overflow-y:auto;border:1px solid #e5e7eb;border-radius:10px;padding:6px;}
+.grp-fac-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;cursor:pointer;}
+.grp-fac-item:hover{background:#f0fdf9;}
+.grp-fac-item.checked{background:#ecfdf5;}
+.grp-fac-item input[type=checkbox]{width:16px;height:16px;accent-color:#0f766e;cursor:pointer;}
+.grp-fac-item-name{font-size:13px;font-weight:600;color:#0f172a;}
+.grp-edit-foot{padding:12px 16px;border-top:1px solid #e5e7eb;display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;}
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
@@ -626,23 +671,63 @@
       <h3>🏥 選擇派案機構</h3>
       <button class="fac-modal-close" onclick="closeFacModal()">×</button>
     </div>
-    <div class="fac-search-bar">
-      <input type="text" class="fac-search-input" id="facSearchInput"
-        placeholder="搜尋機構名稱、地區..." oninput="renderFacList()" autocomplete="off" />
+    <!-- 頁籤 -->
+    <div class="fac-tabs">
+      <button class="fac-tab active" id="tabList" onclick="switchFacTab('list')">📋 機構列表</button>
+      <button class="fac-tab" id="tabGroup" onclick="switchFacTab('group')">🏷️ 群組快選</button>
     </div>
-    <div class="fac-stats-bar">
-      <span class="fac-stat-chip" id="facStatTotal">共 0 間</span>
-      <span class="fac-stat-chip" id="facStatFiltered"></span>
-      <div class="fac-action-btns">
-        <button class="fac-action-btn" onclick="selectAllVisible()">全選篩選結果</button>
-        <button class="fac-action-btn" onclick="clearAllFac()">清空全部</button>
+    <!-- 機構列表頁 -->
+    <div class="fac-pane active" id="paneList" style="flex-direction:column;">
+      <div class="fac-search-bar">
+        <input type="text" class="fac-search-input" id="facSearchInput"
+          placeholder="搜尋機構名稱、地區..." oninput="renderFacList()" autocomplete="off" />
+      </div>
+      <div class="fac-stats-bar">
+        <span class="fac-stat-chip" id="facStatTotal">共 0 間</span>
+        <span class="fac-stat-chip" id="facStatFiltered"></span>
+        <div class="fac-action-btns">
+          <button class="fac-action-btn" onclick="selectAllVisible()">全選篩選結果</button>
+          <button class="fac-action-btn" onclick="clearAllFac()">清空全部</button>
+        </div>
+      </div>
+      <div class="fac-list-wrap" id="facListWrap"></div>
+    </div>
+    <!-- 群組快選頁 -->
+    <div class="fac-pane" id="paneGroup" style="flex-direction:column;">
+      <div class="grp-list" id="grpList"></div>
+      <div class="grp-add-bar">
+        <input type="text" class="grp-add-input" id="grpNewName" placeholder="輸入新群組名稱..." />
+        <button class="grp-add-btn" onclick="addGroup()">＋ 新增群組</button>
       </div>
     </div>
-    <div class="fac-list-wrap" id="facListWrap"></div>
+    <!-- 底部 -->
     <div class="fac-modal-foot">
       <span class="fac-selected-count" id="facSelectedCount">已選 0 間</span>
       <button class="btn-secondary" style="padding:10px 18px;font-size:14px;" onclick="closeFacModal()">取消</button>
       <button class="btn-primary" style="padding:10px 18px;font-size:14px;background:#0f766e;" onclick="confirmFacModal()">確認選擇</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 群組編輯 Sub-Modal ===== -->
+<div class="grp-edit-overlay" id="grpEditOverlay" onclick="if(event.target===this)closeGrpEdit()">
+  <div class="grp-edit-modal">
+    <div class="grp-edit-head">
+      <h3 id="grpEditTitle">✏️ 編輯群組</h3>
+      <button class="grp-edit-close" onclick="closeGrpEdit()">×</button>
+    </div>
+    <div class="grp-edit-body">
+      <div class="grp-name-field">
+        <label class="grp-name-label">群組名稱</label>
+        <input type="text" class="grp-name-input" id="grpEditName" placeholder="例：北區合作機構" />
+      </div>
+      <label class="grp-name-label">選擇成員機構</label>
+      <input type="text" class="grp-fac-search" id="grpFacSearch" placeholder="搜尋機構..." oninput="renderGrpFacList()" />
+      <div class="grp-fac-list" id="grpFacList"></div>
+    </div>
+    <div class="grp-edit-foot">
+      <button class="btn-secondary" style="padding:9px 18px;" onclick="closeGrpEdit()">取消</button>
+      <button class="btn-primary" style="padding:9px 18px;background:#1e40af;" onclick="saveGrpEdit()">儲存群組</button>
     </div>
   </div>
 </div>
@@ -657,6 +742,14 @@ function clearAllFac()      { if (window._clearAllFac)      window._clearAllFac(
 function removeFac(e, id)   { if (window._removeFac)        window._removeFac(e, id);   }
 function renderFacList()    { if (window._renderFacList)    window._renderFacList();    }
 function handleModeChange() { if (window._handleModeChange) window._handleModeChange(); }
+function switchFacTab(t) { if (window._switchFacTab) window._switchFacTab(t); }
+function addGroup()      { if (window._addGroup)      window._addGroup();      }
+function editGroup(id)   { if (window._editGroup)      window._editGroup(id);   }
+function deleteGroup(id) { if (window._deleteGroup)    window._deleteGroup(id); }
+function selectGroup(id) { if (window._selectGroup)    window._selectGroup(id); }
+function closeGrpEdit()  { if (window._closeGrpEdit)   window._closeGrpEdit();  }
+function saveGrpEdit()   { if (window._saveGrpEdit)    window._saveGrpEdit();   }
+function renderGrpFacList() { if (window._renderGrpFacList) window._renderGrpFacList(); }
 // =======================================================
 function getSpecialCareList() {
   return Array.from(document.querySelectorAll(".special-care:checked")).map(item => item.value);
@@ -1049,7 +1142,166 @@ function validateForm(data) {
       wrap.innerHTML = listHtml;
       updateFacCount();
     }
+
     window._renderFacList = renderFacList;
+
+    /* ===== 群組管理邏輯 ===== */
+    var GRP_KEY = 'refcare_fac_groups';
+    var facGroups = [];        // [{id, name, facilityIds:[]}]
+    var editingGrpId = null;   // 正在編輯的群組 id
+
+    function loadGroups() {
+      try { facGroups = JSON.parse(localStorage.getItem(GRP_KEY) || '[]'); } catch(e) { facGroups = []; }
+    }
+    function saveGroups() {
+      localStorage.setItem(GRP_KEY, JSON.stringify(facGroups));
+    }
+    function genId() { return 'g' + Date.now() + Math.floor(Math.random()*1000); }
+    loadGroups();
+
+    /* 頁籤切換 */
+    function switchFacTab(tab) {
+      var listTab  = document.getElementById('tabList');
+      var groupTab = document.getElementById('tabGroup');
+      var paneList  = document.getElementById('paneList');
+      var paneGroup = document.getElementById('paneGroup');
+      if (tab === 'list') {
+        listTab.classList.add('active'); groupTab.classList.remove('active');
+        paneList.classList.add('active'); paneGroup.classList.remove('active');
+      } else {
+        groupTab.classList.add('active'); listTab.classList.remove('active');
+        paneGroup.classList.add('active'); paneList.classList.remove('active');
+        renderGroupCards();
+      }
+    }
+    window._switchFacTab = switchFacTab;
+
+    /* 渲染群組卡片 */
+    function renderGroupCards() {
+      loadGroups();
+      var wrap = document.getElementById('grpList');
+      if (!wrap) return;
+      if (!facGroups.length) {
+        wrap.innerHTML = '<div class="grp-empty">📭 尚無群組<br><small>請在下方輸入名稱後新增</small></div>';
+        return;
+      }
+      wrap.innerHTML = facGroups.map(function(g) {
+        var members = allFacilities.filter(function(f) { return g.facilityIds.indexOf(String(f.id)) >= 0 || g.facilityIds.indexOf(f.id) >= 0; });
+        var preview = members.slice(0, 4).map(function(f) { return f.short || f.name; }).join('、');
+        if (members.length > 4) preview += '...';
+        return '<div class="grp-card">'
+          + '<div class="grp-card-head">'
+          + '<span class="grp-card-name">' + g.name + '</span>'
+          + '<span class="grp-card-count">' + members.length + ' 間</span>'
+          + '</div>'
+          + '<div class="grp-card-preview">' + (preview || '（尚未設定成員）') + '</div>'
+          + '<div class="grp-card-actions">'
+          + '<button class="grp-card-btn select" onclick="selectGroup(\'' + g.id + '\')">✔ 選入此群組</button>'
+          + '<button class="grp-card-btn edit" onclick="editGroup(\'' + g.id + '\')">✏️ 編輯</button>'
+          + '<button class="grp-card-btn del" onclick="deleteGroup(\'' + g.id + '\')">🗑</button>'
+          + '</div>'
+          + '</div>';
+      }).join('');
+    }
+
+    /* 新增群組 */
+    function addGroup() {
+      var inp = document.getElementById('grpNewName');
+      var name = inp ? inp.value.trim() : '';
+      if (!name) { alert('請輸入群組名稱'); return; }
+      loadGroups();
+      facGroups.push({ id: genId(), name: name, facilityIds: [] });
+      saveGroups();
+      inp.value = '';
+      renderGroupCards();
+    }
+    window._addGroup = addGroup;
+
+    /* 選入群組所有成員 */
+    function selectGroup(gid) {
+      loadGroups();
+      var g = facGroups.find(function(x) { return x.id === gid; });
+      if (!g) return;
+      g.facilityIds.forEach(function(fid) { pendingFacIds.add(fid); });
+      updateFacCount();
+      var btn = event && event.target;
+      if (btn) { btn.textContent = '✔ 已選入'; btn.style.background = '#0d9488'; }
+      setTimeout(function() { switchFacTab('list'); }, 600);
+    }
+    window._selectGroup = selectGroup;
+
+    /* 刪除群組 */
+    function deleteGroup(gid) {
+      if (!confirm('確定刪除此群組？')) return;
+      loadGroups();
+      facGroups = facGroups.filter(function(g) { return g.id !== gid; });
+      saveGroups();
+      renderGroupCards();
+    }
+    window._deleteGroup = deleteGroup;
+
+    /* 開啟編輯 Sub-Modal */
+    function editGroup(gid) {
+      loadGroups();
+      var g = gid ? facGroups.find(function(x) { return x.id === gid; }) : null;
+      editingGrpId = gid || null;
+      var titleEl = document.getElementById('grpEditTitle');
+      var nameEl  = document.getElementById('grpEditName');
+      if (titleEl) titleEl.textContent = g ? '✏️ 編輯群組' : '➕ 新增群組';
+      if (nameEl)  nameEl.value = g ? g.name : '';
+      renderGrpFacList();
+      var ov = document.getElementById('grpEditOverlay');
+      if (ov) ov.classList.add('show');
+    }
+    window._editGroup = editGroup;
+
+    function closeGrpEdit() {
+      var ov = document.getElementById('grpEditOverlay');
+      if (ov) ov.classList.remove('show');
+      editingGrpId = null;
+    }
+    window._closeGrpEdit = closeGrpEdit;
+
+    /* 渲染編輯 Modal 的機構列表 */
+    function renderGrpFacList() {
+      var q = (document.getElementById('grpFacSearch') && document.getElementById('grpFacSearch').value.trim().toLowerCase()) || '';
+      loadGroups();
+      var g = editingGrpId ? facGroups.find(function(x) { return x.id === editingGrpId; }) : null;
+      var currentIds = g ? g.facilityIds : [];
+      var filtered = allFacilities.filter(function(f) {
+        return !q || (f.name + f.short + f.area).toLowerCase().indexOf(q) >= 0;
+      });
+      var wrap = document.getElementById('grpFacList');
+      if (!wrap) return;
+      wrap.innerHTML = filtered.map(function(f) {
+        var sid = String(f.id);
+        var checked = currentIds.indexOf(sid) >= 0 || currentIds.indexOf(f.id) >= 0;
+        return '<label class="grp-fac-item' + (checked ? ' checked' : '') + '">'
+          + '<input type="checkbox" value="' + sid + '"' + (checked ? ' checked' : '') + '>'
+          + '<span class="grp-fac-item-name">' + f.name + (f.area ? '　<span style="color:#94a3b8;font-size:11px;">' + f.area + '</span>' : '') + '</span>'
+          + '</label>';
+      }).join('');
+    }
+    window._renderGrpFacList = renderGrpFacList;
+
+    /* 儲存群組編輯 */
+    function saveGrpEdit() {
+      var nameEl = document.getElementById('grpEditName');
+      var name = nameEl ? nameEl.value.trim() : '';
+      if (!name) { alert('群組名稱不能為空'); return; }
+      var checkedIds = Array.from(document.querySelectorAll('#grpFacList input[type=checkbox]:checked')).map(function(el) { return el.value; });
+      loadGroups();
+      if (editingGrpId) {
+        var g = facGroups.find(function(x) { return x.id === editingGrpId; });
+        if (g) { g.name = name; g.facilityIds = checkedIds; }
+      } else {
+        facGroups.push({ id: genId(), name: name, facilityIds: checkedIds });
+      }
+      saveGroups();
+      closeGrpEdit();
+      renderGroupCards();
+    }
+    window._saveGrpEdit = saveGrpEdit;
 
     function toggleFac(safeId) {
       var fac = allFacilities.find(function(f) { return String(f.id).replace(/[^a-zA-Z0-9]/g, '_') === safeId; });
