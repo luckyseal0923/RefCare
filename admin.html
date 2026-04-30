@@ -462,6 +462,7 @@
             <div class="edit-field"><label>意識狀態</label><select name="consciousness">${consciousnessHtml}</select></div>
             <div class="edit-field"><label>行動能力</label><select name="mobility">${mobilityHtml}</select></div>
             <div class="edit-field"><label>氧氣需求</label><input name="oxygen" value="${escapeHtml(item.oxygen || '')}" /></div>
+            <div class="edit-field"><label>服務時段</label><input name="service_time" value="${escapeHtml(item.service_time || '')}" /></div>
             <div class="edit-field"><label>聯絡人</label><input name="contact_name" value="${escapeHtml(item.contact_name || '')}" /></div>
             <div class="edit-field"><label>聯絡電話</label><input name="contact_phone" value="${escapeHtml(item.contact_phone || '')}" /></div>
             <div class="edit-field full"><label>地址</label><textarea name="address">${escapeHtml(item.address || '')}</textarea></div>
@@ -491,6 +492,7 @@
         consciousness: formData.get('consciousness'),
         mobility: formData.get('mobility'),
         oxygen: formData.get('oxygen'),
+        service_time: formData.get('service_time'),
         contact_name: formData.get('contact_name'),
         contact_phone: formData.get('contact_phone'),
         address: formData.get('address')
