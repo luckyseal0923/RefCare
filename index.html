@@ -1069,10 +1069,9 @@ function validateForm(data) {
         selectedFacIds = new Set(fullSurveyIds);
         renderFacTags();
       } else if (mode.value === '困難派案(三輪)') {
-        // 預選全部機構
-        const allIds = allFacilities.map(f => f.id);
-        selectedFacIds = new Set(allIds);
-        renderFacTags();
+        // 困難派案不預選機構，由使用者手動挑選
+        // selectedFacIds = new Set();
+        // renderFacTags();
       } else if (mode.value === '指定機構') {
         // 指定機構模式切換時不自動清空，保留使用者之前的選擇，或是視需求清空
         // selectedFacIds = new Set(); 
