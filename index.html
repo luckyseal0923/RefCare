@@ -1050,33 +1050,10 @@ function validateForm(data) {
     loadFacilities();
 
     function handleModeChange() {
-      var mode = document.querySelector('input[name="targetGroup"]:checked');
       var wrap = document.getElementById('facilityPickerWrap');
       if (!wrap) return;
-      
-      // 現在所有模式都顯示選擇器，讓使用者可以微調
+      // 現在所有模式都顯示選擇器，且均不預先選取，由使用者自行操作
       wrap.style.display = 'block';
-      
-      if (!mode) return;
-
-      if (mode.value === '合作機構(一輪)') {
-        const round1Ids = allFacilities.filter(f => f.is_round_1).map(f => f.id);
-        selectedFacIds = new Set(round1Ids);
-        renderFacTags();
-      } else if (mode.value === '全區機構(二輪)') {
-        // 預選標記為「全區調查」的機構（或是全部）
-        const fullSurveyIds = allFacilities.filter(f => f.is_full_survey !== false).map(f => f.id);
-        selectedFacIds = new Set(fullSurveyIds);
-        renderFacTags();
-      } else if (mode.value === '困難派案(三輪)') {
-        // 困難派案不預選機構，由使用者手動挑選
-        // selectedFacIds = new Set();
-        // renderFacTags();
-      } else if (mode.value === '指定機構') {
-        // 指定機構模式切換時不自動清空，保留使用者之前的選擇，或是視需求清空
-        // selectedFacIds = new Set(); 
-        // renderFacTags();
-      }
     }
     window._handleModeChange = handleModeChange;
     handleModeChange();
