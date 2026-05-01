@@ -409,13 +409,30 @@
           <td>${createProgressHtml(item)}</td>
           <td>
             <div class="action-row">
-              <button class="action-btn" type="button" data-index="${index}" data-action="detail">查看詳情</button>
-              <button class="action-btn" type="button" data-index="${index}" data-action="edit">編輯</button>
-              <button class="action-btn" type="button" onclick="copyFacilityLink('${item.case_id}')">複製連結</button>
-              <button class="action-btn" type="button" onclick="closeCase('${item.case_id}')">結案</button>
+              <button class="btn" data-action="detail" data-index="${index}">查看詳情</button>
+              <button class="btn" data-action="edit" data-index="${index}">編輯</button>
+              <button class="btn" onclick="copyFacilityLink('${item.case_id}')">複製連結</button>
+              <button class="btn" onclick="closeCase('${item.case_id}')">結案</button>
+              <button class="btn btn-danger" onclick="deleteCase('${item.case_id}')">刪除</button>
             </div>
           </td>
         </tr>`;
+    }
+
+    async function deleteCase(caseId) {
+      if (!confirm('確定要刪除此案件嗎？此操作無法復原。')) return;
+      try {
+        // 先刪除所有關聯的回覆
+        await sb.from('replies').delete().eq('case_id', caseId);
+        // 再刪除案件
+        const { error } = await sb.from('cases').delete().eq('case_id', caseId);
+        if (error) throw error;
+        alert('刪除成功');
+        await fetchData();
+      } catch (err) {
+        console.error('Delete Error:', err);
+        alert('刪除失敗：' + err.message);
+      }
     }
 
     function updateKPI(list) {
