@@ -472,22 +472,39 @@
       }
 
       const replyHtml = displayList.length ? displayList.map(r => `
-        <div class="reply-item-card" data-status="${r.status}" style="margin-bottom:12px; padding:12px; background:#f8fafc; border-radius:12px; border:1px solid #f1f5f9;">
+        <div class="reply-item-card" data-status="${r.status}" id="reply-card-${item.case_id}-${id}" style="margin-bottom:12px; padding:12px; background:#f8fafc; border-radius:12px; border:1px solid #f1f5f9;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
             <strong style="font-size:15px; ${r.status === 'pending' ? 'color:#64748b;' : 'color:#0f172a;'}">${escapeHtml(r.name)}</strong>
-            <span>
-              ${r.status === 'pending' ? '<span style="color:#f59e0b;font-weight:700;">⏳ 待回覆</span>' : ''}
-              ${r.status === 'accept' ? '<span style="color:#10b981;font-weight:700;">✅ 可接案</span>' : ''}
-              ${r.status === 'reject' ? '<span style="color:#ef4444;font-weight:700;">⚠️ 待協調</span>' : ''}
-            </span>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span>
+                ${r.status === 'pending' ? '<span style="color:#f59e0b;font-weight:700;">⏳ 待回覆</span>' : ''}
+                ${r.status === 'accept' ? '<span style="color:#10b981;font-weight:700;">✅ 可接案</span>' : ''}
+                ${r.status === 'reject' ? '<span style="color:#ef4444;font-weight:700;">⚠️ 待協調</span>' : ''}
+              </span>
+              <button onclick="toggleReplyEdit('${item.case_id}', '${id}', '${escapeHtml(r.name).replace(/'/g,"\\'")}', '${r.status}', '${escapeHtml(r.note).replace(/'/g,"\\'")}')" style="border:none; background:none; cursor:pointer; font-size:14px; padding:2px 5px;" title="手動修正">✏️</button>
+            </div>
           </div>
-          <div style="font-size:13px; color:#64748b; margin-bottom:4px;">
-            📞 電話：<a href="tel:${r.phone}" style="color:#2563eb; text-decoration:none; font-weight:600;">${escapeHtml(r.phone || '未提供')}</a>
-            ${r.area ? ` ｜ 📍 區域：${escapeHtml(r.area)}` : ''}
+          <div id="reply-display-${item.case_id}-${id}">
+            <div style="font-size:13px; color:#64748b; margin-bottom:4px;">
+              📞 電話：<a href="tel:${r.phone}" style="color:#2563eb; text-decoration:none; font-weight:600;">${escapeHtml(r.phone || '未提供')}</a>
+              ${r.area ? ` ｜ 📍 區域：${escapeHtml(r.area)}` : ''}
+            </div>
+            ${r.time ? `<div style="font-size:12px; color:#94a3b8; margin-bottom:4px;">🕒 回覆時間：${escapeHtml(r.time)}</div>` : ''}
+            <div style="font-size:13px; color:#1e293b; background:#fff; padding:8px; border-radius:8px; border:1px solid #edf2f7; margin-top:6px;">
+              ${escapeHtml(r.note)}
+            </div>
           </div>
-          ${r.time ? `<div style="font-size:12px; color:#94a3b8; margin-bottom:4px;">🕒 回覆時間：${escapeHtml(r.time)}</div>` : ''}
-          <div style="font-size:13px; color:#1e293b; background:#fff; padding:8px; border-radius:8px; border:1px solid #edf2f7; margin-top:6px;">
-            ${escapeHtml(r.note)}
+          <div id="reply-edit-${item.case_id}-${id}" style="display:none; margin-top:10px; padding-top:10px; border-top:1px solid #e2e8f0;">
+            <div style="margin-bottom:8px;">
+              <label style="font-size:12px; font-weight:700; margin-right:10px;"><input type="radio" name="editStatus-${id}" value="accept" ${r.status==='accept'?'checked':''}> 可接案</label>
+              <label style="font-size:12px; font-weight:700; margin-right:10px;"><input type="radio" name="editStatus-${id}" value="reject" ${r.status==='reject'?'checked':''}> 待協調</label>
+              <label style="font-size:12px; font-weight:700;"><input type="radio" name="editStatus-${id}" value="pending" ${r.status==='pending'?'checked':''}> 待回覆</label>
+            </div>
+            <textarea id="editNote-${id}" style="width:100%; font-size:12px; padding:6px; border:1px solid #cbd5e1; border-radius:6px; margin-bottom:8px;" rows="2" placeholder="修正備註...">${escapeHtml(r.note)}</textarea>
+            <div style="display:flex; justify-content:flex-end; gap:6px;">
+              <button class="btn" style="padding:4px 8px; font-size:11px;" onclick="toggleReplyEdit('${item.case_id}', '${id}')">取消</button>
+              <button class="btn btn-primary" style="padding:4px 12px; font-size:11px;" onclick="saveReplyEdit('${item.case_id}', '${id}', '${escapeHtml(r.name).replace(/'/g,"\\'")}')">儲存修正</button>
+            </div>
           </div>
         </div>`).join('') : '<div>目前尚無機構回覆紀錄。</div>';
 
@@ -554,6 +571,60 @@
       });
     }
     window.filterReplies = filterReplies;
+
+    function toggleReplyEdit(caseId, facId) {
+      const display = document.getElementById(`reply-display-${caseId}-${facId}`);
+      const edit = document.getElementById(`reply-edit-${caseId}-${facId}`);
+      if (display.style.display === 'none') {
+        display.style.display = 'block';
+        edit.style.display = 'none';
+      } else {
+        display.style.display = 'none';
+        edit.style.display = 'block';
+      }
+    }
+    window.toggleReplyEdit = toggleReplyEdit;
+
+    async function saveReplyEdit(caseId, facId, facName) {
+      const newStatus = document.querySelector(`input[name="editStatus-${facId}"]:checked`).value;
+      const newNote = document.getElementById(`editNote-${facId}`).value.trim();
+      
+      try {
+        if (newStatus === 'pending') {
+          // 刪除回覆紀錄
+          const { error } = await sb.from('replies').delete().eq('case_id', caseId).eq('facility_id', facId);
+          if (error) throw error;
+        } else {
+          // 檢查是否存在，決定用更新或插入
+          const { data: existing } = await sb.from('replies').select('id').eq('case_id', caseId).eq('facility_id', facId).single();
+          
+          if (existing) {
+            const { error } = await sb.from('replies').update({ 
+              reply_status: newStatus, 
+              note: newNote,
+              created_at: new Date().toISOString()
+            }).eq('id', existing.id);
+            if (error) throw error;
+          } else {
+            const { error } = await sb.from('replies').insert([{
+              case_id: caseId,
+              facility_id: facId,
+              facility_name: facName,
+              reply_status: newStatus,
+              note: newNote,
+              round: 1
+            }]);
+            if (error) throw error;
+          }
+        }
+        alert("修正成功！");
+        await fetchData(); // 重新整理資料
+        openDrawer(currentEditingIndex); // 重新渲染 Drawer
+      } catch (err) {
+        alert("修正失敗：" + err.message);
+      }
+    }
+    window.saveReplyEdit = saveReplyEdit;
 
     function createEditForm(item, index) {
       const statusOptions = ['合作機構(一輪)', '一輪媒合中', '二輪媒合中', '三輪媒合中', '指定機構', '案件結案'];
