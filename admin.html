@@ -246,8 +246,15 @@
     const statusFilter = document.getElementById("statusFilter");
     const hospitalFilter = document.getElementById("hospitalFilter");
     const sortFilter = document.getElementById("sortFilter");
-    const btnReload = document.getElementById("btnReload");
     const btnReset = document.getElementById("btnReset");
+    
+    let allFacilities = [];
+    async function loadFacilities() {
+      const { data, error } = await sb.from('facilities').select('id, facility_name, short_name');
+      if (!error && data) {
+        allFacilities = data.map(f => ({ id: f.id, name: f.facility_name, short: f.short_name }));
+      }
+    }
 
     // NOTE: drawerOverlay, detailDrawer, etc. are AFTER this script in HTML
     // So we access them via getter functions
@@ -393,12 +400,37 @@
     }
 
     function createDrawerContent(item) {
+      const targetIds = Array.isArray(item.target_facility_ids) ? item.target_facility_ids : [];
       const replies = item.replies || [];
-      const replyHtml = replies.length ? replies.map(r => `
+      
+      let displayList = [];
+      if (targetIds.length > 0) {
+        displayList = targetIds.map(id => {
+          const fac = allFacilities.find(f => String(f.id) === String(id));
+          const reply = replies.find(r => String(r.facility_id) === String(id));
+          return {
+            name: fac ? (fac.short || fac.name) : (reply ? reply.facility_name : '未知機構'),
+            status: reply ? reply.reply_status : 'pending',
+            time: reply ? new Date(reply.created_at).toLocaleString() : '',
+            note: reply ? (reply.note || '無補充說明') : '尚未回覆'
+          };
+        });
+      } else {
+        displayList = replies.map(r => ({
+          name: r.facility_name,
+          status: r.reply_status,
+          time: new Date(r.created_at).toLocaleString(),
+          note: r.note || '無補充說明'
+        }));
+      }
+
+      const replyHtml = displayList.length ? displayList.map(r => `
         <div style="margin-bottom:10px; padding-bottom:10px; border-bottom:1px dashed #e5e7eb;">
-          <strong>${escapeHtml(r.facility_name)}</strong>｜${escapeHtml(replyText(r.reply_status))}｜${new Date(r.created_at).toLocaleString()}
-          <br>${escapeHtml(r.note || '無補充說明')}
-        </div>`).join('') : '<div>目前尚無機構回覆。</div>';
+          <strong style="${r.status === 'pending' ? 'color:#94a3b8;' : ''}">${escapeHtml(r.name)}</strong>
+          ｜${r.status === 'pending' ? '<span style="color:#f59e0b;font-weight:700;">⏳ 待回覆</span>' : escapeHtml(replyText(r.status))}
+          ${r.time ? '｜' + escapeHtml(r.time) : ''}
+          <br><span style="font-size:12px; color:#64748b;">${escapeHtml(r.note)}</span>
+        </div>`).join('') : '<div>目前尚無機構回覆紀錄。</div>';
 
       const serviceCodes = Array.isArray(item.service_codes) ? item.service_codes : [];
       const serviceCodesHtml = serviceCodes.length ? serviceCodes.map(code => `• ${escapeHtml(code)}`).join('<br>') : '尚未填寫';
@@ -704,6 +736,7 @@
       document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeDrawer(); closeMgrModal(); } });
     });
 
+    loadFacilities();
     fetchData();
     setupRealtime();
   </script>

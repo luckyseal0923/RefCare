@@ -25,7 +25,8 @@ CREATE TABLE cases (
   special_need TEXT,
   case_manager TEXT,
   total_targets INTEGER DEFAULT 0,
-  target_group TEXT DEFAULT '未指定'
+  target_group TEXT DEFAULT '未指定',
+  target_facility_ids JSONB DEFAULT '[]'
 );
 
 -- 2. 機構回覆表

@@ -981,7 +981,8 @@ function validateForm(data) {
         special_need: data.special_needs.join('、') + (data.special_need_other ? ` (${data.special_need_other})` : ""),
         case_manager: data.case_manager,
         total_targets: getSelectedFacilities().length,
-        target_group: data.target_group
+        target_group: data.target_group,
+        target_facility_ids: Array.from(selectedFacIds)
       };
 
       try {
