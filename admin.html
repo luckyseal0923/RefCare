@@ -290,7 +290,8 @@
 
     function replyText(reply) { 
       if (reply === "accept") return "可接案";
-      if (reply === "reject") return "待協調";
+      if (reply === "coordinate") return "待協調";
+      if (reply === "reject") return "無法接案";
       return "尚未回覆";
     }
     function badgeClass(status) {
@@ -498,7 +499,8 @@
               <span>
                 ${r.status === 'pending' ? '<span style="color:#f59e0b;font-weight:700;">⏳ 待回覆</span>' : ''}
                 ${r.status === 'accept' ? '<span style="color:#10b981;font-weight:700;">✅ 可接案</span>' : ''}
-                ${r.status === 'reject' ? '<span style="color:#ef4444;font-weight:700;">⚠️ 待協調</span>' : ''}
+                ${r.status === 'coordinate' ? '<span style="color:#3b82f6;font-weight:700;">⚠️ 待協調</span>' : ''}
+                ${r.status === 'reject' ? '<span style="color:#ef4444;font-weight:700;">❌ 無法接案</span>' : ''}
               </span>
               <button onclick="toggleReplyEdit('${item.case_id}', '${r.id}')" style="border:none; background:none; cursor:pointer; font-size:14px; padding:2px 5px;" title="手動修正">✏️</button>
             </div>
@@ -516,7 +518,8 @@
           <div id="reply-edit-${item.case_id}-${r.id}" style="display:none; margin-top:10px; padding-top:10px; border-top:1px solid #e2e8f0;">
             <div style="margin-bottom:8px;">
               <label style="font-size:12px; font-weight:700; margin-right:10px;"><input type="radio" name="editStatus-${r.id}" value="accept" ${r.status==='accept'?'checked':''}> 可接案</label>
-              <label style="font-size:12px; font-weight:700; margin-right:10px;"><input type="radio" name="editStatus-${r.id}" value="reject" ${r.status==='reject'?'checked':''}> 待協調</label>
+              <label style="font-size:12px; font-weight:700; margin-right:10px;"><input type="radio" name="editStatus-${r.id}" value="coordinate" ${r.status==='coordinate'?'checked':''}> 待協調</label>
+              <label style="font-size:12px; font-weight:700; margin-right:10px;"><input type="radio" name="editStatus-${r.id}" value="reject" ${r.status==='reject'?'checked':''}> 無法接案</label>
               <label style="font-size:12px; font-weight:700;"><input type="radio" name="editStatus-${r.id}" value="pending" ${r.status==='pending'?'checked':''}> 待回覆</label>
             </div>
             <textarea id="editNote-${r.id}" style="width:100%; font-size:12px; padding:6px; border:1px solid #cbd5e1; border-radius:6px; margin-bottom:8px;" rows="2" placeholder="修正備註...">${escapeHtml(r.note)}</textarea>
@@ -566,7 +569,8 @@
               <button class="tab-btn active" onclick="filterReplies('all', this)">全部</button>
               <button class="tab-btn" onclick="filterReplies('pending', this)">待回覆</button>
               <button class="tab-btn" onclick="filterReplies('accept', this)">可接案</button>
-              <button class="tab-btn" onclick="filterReplies('reject', this)">待協調</button>
+              <button class="tab-btn" onclick="filterReplies('coordinate', this)">待協調</button>
+              <button class="tab-btn" onclick="filterReplies('reject', this)">無法接案</button>
             </div>
           </div>
           <div id="repliesContainer">${replyHtml}</div>
