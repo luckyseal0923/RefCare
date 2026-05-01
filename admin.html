@@ -146,6 +146,24 @@
     .reply-status-tag.reject{ background:#fef2f2; color:#991b1b; border-color:#fecaca; }
     .reply-status-tag.pending{ background:#f3f4f6; color:#374151; border-color:#d1d5db; }
 
+    .reply-tabs .tab-btn {
+      border: 1px solid #e2e8f0;
+      background: #fff;
+      color: #64748b;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .reply-tabs .tab-btn:hover { background: #f1f5f9; }
+    .reply-tabs .tab-btn.active {
+      background: #2563eb;
+      color: #fff;
+      border-color: #2563eb;
+    }
+
     .edit-form{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
     .edit-field.full{ grid-column:1 / -1; }
 
@@ -270,7 +288,11 @@
     let currentRenderedList = [];
     let currentEditingIndex = null;
 
-    function replyText(reply) { return reply === "accept" ? "可收案" : "無法收案"; }
+    function replyText(reply) { 
+      if (reply === "accept") return "可接案";
+      if (reply === "reject") return "待協調";
+      return "尚未回覆";
+    }
     function badgeClass(status) {
       if (status === "一輪媒合中" || status === "合作機構(一輪)") return "pending";
       if (status === "二輪媒合中") return "matching";
@@ -422,7 +444,7 @@
           const fac = allFacilities.find(f => String(f.id) === String(id));
           const reply = replies.find(r => String(r.facility_id) === String(id));
           return {
-            name: fac ? (fac.short || fac.name) : (reply ? reply.facility_name : '未知機構'),
+            name: fac ? fac.name : (reply ? reply.facility_name : '未知機構'),
             phone: fac ? fac.phone : (reply ? '未知電話' : ''),
             area: fac ? fac.area : '',
             status: reply ? reply.reply_status : 'pending',
@@ -434,7 +456,7 @@
         displayList = replies.map(r => {
           const fac = allFacilities.find(f => f.name === r.facility_name || f.short === r.facility_name);
           return {
-            name: r.facility_name,
+            name: fac ? fac.name : r.facility_name,
             phone: fac ? fac.phone : '未知電話',
             area: fac ? fac.area : '',
             status: r.reply_status,
@@ -445,10 +467,14 @@
       }
 
       const replyHtml = displayList.length ? displayList.map(r => `
-        <div style="margin-bottom:12px; padding:12px; background:#f8fafc; border-radius:12px; border:1px solid #f1f5f9;">
+        <div class="reply-item-card" data-status="${r.status}" style="margin-bottom:12px; padding:12px; background:#f8fafc; border-radius:12px; border:1px solid #f1f5f9;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
             <strong style="font-size:15px; ${r.status === 'pending' ? 'color:#64748b;' : 'color:#0f172a;'}">${escapeHtml(r.name)}</strong>
-            <span>${r.status === 'pending' ? '<span style="color:#f59e0b;font-weight:700;">⏳ 待回覆</span>' : escapeHtml(replyText(r.status))}</span>
+            <span>
+              ${r.status === 'pending' ? '<span style="color:#f59e0b;font-weight:700;">⏳ 待回覆</span>' : ''}
+              ${r.status === 'accept' ? '<span style="color:#10b981;font-weight:700;">✅ 可接案</span>' : ''}
+              ${r.status === 'reject' ? '<span style="color:#ef4444;font-weight:700;">⚠️ 待協調</span>' : ''}
+            </span>
           </div>
           <div style="font-size:13px; color:#64748b; margin-bottom:4px;">
             📞 電話：<a href="tel:${r.phone}" style="color:#2563eb; text-decoration:none; font-weight:600;">${escapeHtml(r.phone || '未提供')}</a>
@@ -493,10 +519,36 @@
           <div><strong>服務碼別：</strong><br>${serviceCodesHtml}</div>
         </div>
         <div class="detail-card full">
-          <h4>機構回覆紀錄</h4>
-          <div>${replyHtml}</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <h4 style="margin:0;">機構回覆紀錄</h4>
+            <div class="reply-tabs" style="display:flex; gap:5px;">
+              <button class="tab-btn active" onclick="filterReplies('all', this)">全部</button>
+              <button class="tab-btn" onclick="filterReplies('pending', this)">待回覆</button>
+              <button class="tab-btn" onclick="filterReplies('accept', this)">可接案</button>
+              <button class="tab-btn" onclick="filterReplies('reject', this)">待協調</button>
+            </div>
+          </div>
+          <div id="repliesContainer">${replyHtml}</div>
         </div>`;
     }
+
+    function filterReplies(status, btn) {
+      const container = document.getElementById('repliesContainer');
+      const items = container.querySelectorAll('.reply-item-card');
+      const buttons = btn.parentElement.querySelectorAll('.tab-btn');
+      
+      buttons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      items.forEach(item => {
+        if (status === 'all' || item.dataset.status === status) {
+          item.style.display = 'block';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    }
+    window.filterReplies = filterReplies;
 
     function createEditForm(item, index) {
       const statusOptions = ['合作機構(一輪)', '一輪媒合中', '二輪媒合中', '三輪媒合中', '指定機構', '案件結案'];
