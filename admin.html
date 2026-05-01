@@ -404,8 +404,15 @@
       const replies = item.replies || [];
       
       let displayList = [];
-      if (targetIds.length > 0) {
-        displayList = targetIds.map(id => {
+      
+      // 智慧補完：如果舊案件沒有紀錄名單，但標註為「一輪」，則自動對照一輪名單
+      let finalTargetIds = targetIds;
+      if (finalTargetIds.length === 0 && (item.target_group === '合作機構(一輪)' || item.status === '一輪媒合中')) {
+        finalTargetIds = allFacilities.filter(f => f.is_round_1).map(f => String(f.id));
+      }
+
+      if (finalTargetIds.length > 0) {
+        displayList = finalTargetIds.map(id => {
           const fac = allFacilities.find(f => String(f.id) === String(id));
           const reply = replies.find(r => String(r.facility_id) === String(id));
           return {
