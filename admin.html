@@ -194,7 +194,7 @@
       <div class="panel-title">篩選與搜尋</div>
       <div class="toolbar">
         <div class="field"><label for="searchInput">關鍵字搜尋</label><input type="text" id="searchInput" placeholder="搜尋案件編號 / 個案姓名 / 診斷 / 單位" /></div>
-        <div class="field"><label for="statusFilter">案件狀態</label><select id="statusFilter"><option value="all">全部狀態</option><option value="一輪媒合中">一輪媒合中</option><option value="二輪媒合中">二輪媒合中</option><option value="三輪媒合中">三輪媒合中</option><option value="指定機構">指定機構</option><option value="案件結案">案件結案</option></select></div>
+        <div class="field"><label for="statusFilter">案件狀態</label><select id="statusFilter"><option value="all">全部狀態</option><option value="合作機構(一輪)">合作機構(一輪)</option><option value="一輪媒合中">一輪媒合中</option><option value="二輪媒合中">二輪媒合中</option><option value="三輪媒合中">三輪媒合中</option><option value="指定機構">指定機構</option><option value="案件結案">案件結案</option></select></div>
         <div class="field"><label for="hospitalFilter">轉介單位</label><select id="hospitalFilter"><option value="all">全部單位</option><option value="萬芳醫院急診">萬芳醫院急診</option><option value="萬芳醫院住院">萬芳醫院住院</option><option value="雙和醫院">雙和醫院</option></select></div>
         <div class="field"><label for="sortFilter">排序方式</label><select id="sortFilter"><option value="newest">起案時間：新到舊</option><option value="oldest">起案時間：舊到新</option></select></div>
         <button class="btn btn-primary" id="btnReload" type="button">重新整理</button>
@@ -259,7 +259,7 @@
 
     function replyText(reply) { return reply === "accept" ? "可收案" : "無法收案"; }
     function badgeClass(status) {
-      if (status === "一輪媒合中") return "pending";
+      if (status === "一輪媒合中" || status === "合作機構(一輪)") return "pending";
       if (status === "二輪媒合中") return "matching";
       if (status === "三輪媒合中") return "done";
       if (status === "指定機構") return "matching";
@@ -385,7 +385,7 @@
 
     function updateKPI(list) {
       document.getElementById('kpiTotal').textContent = String(list.length);
-      document.getElementById('kpiPending').textContent = String(list.filter(i => i.status === '一輪媒合中').length);
+      document.getElementById('kpiPending').textContent = String(list.filter(i => i.status === '一輪媒合中' || i.status === '合作機構(一輪)').length);
       document.getElementById('kpiMatching').textContent = String(list.filter(i => i.status === '二輪媒合中' || i.status === '三輪媒合中').length);
       document.getElementById('kpiDone').textContent = String(list.filter(i => i.status === '案件結案').length);
       const hintEl = document.getElementById('loadedHint');
@@ -439,7 +439,7 @@
     }
 
     function createEditForm(item, index) {
-      const statusOptions = ['一輪媒合中', '二輪媒合中', '三輪媒合中', '指定機構', '案件結案'];
+      const statusOptions = ['合作機構(一輪)', '一輪媒合中', '二輪媒合中', '三輪媒合中', '指定機構', '案件結案'];
       const statusHtml = statusOptions.map(s => `<option value="${escapeHtml(s)}" ${item.status === s ? 'selected' : ''}>${escapeHtml(s)}</option>`).join('');
       const consciousnessOptions = ['清楚', '混亂', '木僵'];
       const consciousnessHtml = consciousnessOptions.map(c => `<option value="${escapeHtml(c)}" ${item.consciousness === c ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('');

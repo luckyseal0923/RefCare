@@ -919,7 +919,7 @@ function getFormData() {
     special_needs: Array.from(document.querySelectorAll('.special-need-check:checked')).map(el => el.value),
     special_need_other: $("specialNeedOther").value,
     target_group: document.querySelector('input[name="targetGroup"]:checked')?.value || "未指定",
-    status: "待媒合"
+    status: document.querySelector('input[name="targetGroup"]:checked')?.value === '指定機構' ? "一輪媒合中" : (document.querySelector('input[name="targetGroup"]:checked')?.value || "待媒合")
   };
 }
 
@@ -980,7 +980,8 @@ function validateForm(data) {
         service_codes: data.service_codes,
         special_need: data.special_needs.join('、') + (data.special_need_other ? ` (${data.special_need_other})` : ""),
         case_manager: data.case_manager,
-        total_targets: 35
+        total_targets: getSelectedFacilities().length,
+        target_group: data.target_group
       };
 
       try {
@@ -1052,10 +1053,51 @@ function validateForm(data) {
       var mode = document.querySelector('input[name="targetGroup"]:checked');
       var wrap = document.getElementById('facilityPickerWrap');
       if (!wrap) return;
-      wrap.style.display = (mode && mode.value === '指定機構') ? 'block' : 'none';
+      
+      // 現在所有模式都顯示選擇器，讓使用者可以微調
+      wrap.style.display = 'block';
+      
+      if (!mode) return;
+
+      if (mode.value === '合作機構(一輪)') {
+        const round1Ids = allFacilities.filter(f => f.is_round_1).map(f => f.id);
+        selectedFacIds = new Set(round1Ids);
+        renderFacTags();
+      } else if (mode.value === '全區機構(二輪)') {
+        // 預選標記為「全區調查」的機構（或是全部）
+        const fullSurveyIds = allFacilities.filter(f => f.is_full_survey !== false).map(f => f.id);
+        selectedFacIds = new Set(fullSurveyIds);
+        renderFacTags();
+      } else if (mode.value === '困難派案(三輪)') {
+        // 預選全部機構
+        const allIds = allFacilities.map(f => f.id);
+        selectedFacIds = new Set(allIds);
+        renderFacTags();
+      } else if (mode.value === '指定機構') {
+        // 指定機構模式切換時不自動清空，保留使用者之前的選擇，或是視需求清空
+        // selectedFacIds = new Set(); 
+        // renderFacTags();
+      }
     }
     window._handleModeChange = handleModeChange;
     handleModeChange();
+
+    function initDefaultGroups() {
+      loadGroups();
+      const hasRound1 = facGroups.some(g => g.name === '合作機構(一輪)');
+      if (!hasRound1 && allFacilities.length > 0) {
+        const round1Ids = allFacilities.filter(f => f.is_round_1).map(f => String(f.id));
+        if (round1Ids.length > 0) {
+          facGroups.push({
+            id: 'g_round1',
+            name: '合作機構(一輪)',
+            facilityIds: round1Ids
+          });
+          saveGroups();
+          renderGrpBar();
+        }
+      }
+    }
 
     /* ===== 機構選擇器 ===== */
     var allFacilities = [];
@@ -1068,10 +1110,19 @@ function validateForm(data) {
           var res = await window.supabaseClient.from('facilities').select('*').order('service_area');
           if (!res.error && res.data && res.data.length > 0) {
             allFacilities = res.data.map(function(f) {
-              return { id: f.id || f.facility_name, name: f.facility_name || '', short: f.short_name || '', area: f.service_area || '其他', phone: f.phone || '' };
+              return { 
+                id: f.id || f.facility_name, 
+                name: f.facility_name || '', 
+                short: f.short_name || '', 
+                area: f.service_area || '其他', 
+                phone: f.phone || '',
+                is_round_1: f.is_round_1 || false,
+                is_full_survey: f.is_full_survey || false
+              };
             });
             var el = document.getElementById('facStatTotal');
             if (el) el.textContent = '共 ' + allFacilities.length + ' 間';
+            initDefaultGroups();
             return;
           }
         }
