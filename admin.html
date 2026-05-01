@@ -449,6 +449,7 @@
             (fac && r.facility_name === fac.short)
           );
           return {
+            id: id,
             name: fac ? fac.name : (reply ? reply.facility_name : '未知機構'),
             phone: fac ? fac.phone : (reply ? '未知電話' : ''),
             area: fac ? fac.area : '',
@@ -461,6 +462,7 @@
         displayList = replies.map(r => {
           const fac = allFacilities.find(f => f.name === r.facility_name || f.short === r.facility_name);
           return {
+            id: fac ? fac.id : (r.facility_id || genId()),
             name: fac ? fac.name : r.facility_name,
             phone: fac ? fac.phone : '未知電話',
             area: fac ? fac.area : '',
@@ -472,7 +474,7 @@
       }
 
       const replyHtml = displayList.length ? displayList.map(r => `
-        <div class="reply-item-card" data-status="${r.status}" id="reply-card-${item.case_id}-${id}" style="margin-bottom:12px; padding:12px; background:#f8fafc; border-radius:12px; border:1px solid #f1f5f9;">
+        <div class="reply-item-card" data-status="${r.status}" id="reply-card-${item.case_id}-${r.id}" style="margin-bottom:12px; padding:12px; background:#f8fafc; border-radius:12px; border:1px solid #f1f5f9;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
             <strong style="font-size:15px; ${r.status === 'pending' ? 'color:#64748b;' : 'color:#0f172a;'}">${escapeHtml(r.name)}</strong>
             <div style="display:flex; align-items:center; gap:8px;">
@@ -481,10 +483,10 @@
                 ${r.status === 'accept' ? '<span style="color:#10b981;font-weight:700;">✅ 可接案</span>' : ''}
                 ${r.status === 'reject' ? '<span style="color:#ef4444;font-weight:700;">⚠️ 待協調</span>' : ''}
               </span>
-              <button onclick="toggleReplyEdit('${item.case_id}', '${id}', '${escapeHtml(r.name).replace(/'/g,"\\'")}', '${r.status}', '${escapeHtml(r.note).replace(/'/g,"\\'")}')" style="border:none; background:none; cursor:pointer; font-size:14px; padding:2px 5px;" title="手動修正">✏️</button>
+              <button onclick="toggleReplyEdit('${item.case_id}', '${r.id}')" style="border:none; background:none; cursor:pointer; font-size:14px; padding:2px 5px;" title="手動修正">✏️</button>
             </div>
           </div>
-          <div id="reply-display-${item.case_id}-${id}">
+          <div id="reply-display-${item.case_id}-${r.id}">
             <div style="font-size:13px; color:#64748b; margin-bottom:4px;">
               📞 電話：<a href="tel:${r.phone}" style="color:#2563eb; text-decoration:none; font-weight:600;">${escapeHtml(r.phone || '未提供')}</a>
               ${r.area ? ` ｜ 📍 區域：${escapeHtml(r.area)}` : ''}
@@ -494,16 +496,16 @@
               ${escapeHtml(r.note)}
             </div>
           </div>
-          <div id="reply-edit-${item.case_id}-${id}" style="display:none; margin-top:10px; padding-top:10px; border-top:1px solid #e2e8f0;">
+          <div id="reply-edit-${item.case_id}-${r.id}" style="display:none; margin-top:10px; padding-top:10px; border-top:1px solid #e2e8f0;">
             <div style="margin-bottom:8px;">
-              <label style="font-size:12px; font-weight:700; margin-right:10px;"><input type="radio" name="editStatus-${id}" value="accept" ${r.status==='accept'?'checked':''}> 可接案</label>
-              <label style="font-size:12px; font-weight:700; margin-right:10px;"><input type="radio" name="editStatus-${id}" value="reject" ${r.status==='reject'?'checked':''}> 待協調</label>
-              <label style="font-size:12px; font-weight:700;"><input type="radio" name="editStatus-${id}" value="pending" ${r.status==='pending'?'checked':''}> 待回覆</label>
+              <label style="font-size:12px; font-weight:700; margin-right:10px;"><input type="radio" name="editStatus-${r.id}" value="accept" ${r.status==='accept'?'checked':''}> 可接案</label>
+              <label style="font-size:12px; font-weight:700; margin-right:10px;"><input type="radio" name="editStatus-${r.id}" value="reject" ${r.status==='reject'?'checked':''}> 待協調</label>
+              <label style="font-size:12px; font-weight:700;"><input type="radio" name="editStatus-${r.id}" value="pending" ${r.status==='pending'?'checked':''}> 待回覆</label>
             </div>
-            <textarea id="editNote-${id}" style="width:100%; font-size:12px; padding:6px; border:1px solid #cbd5e1; border-radius:6px; margin-bottom:8px;" rows="2" placeholder="修正備註...">${escapeHtml(r.note)}</textarea>
+            <textarea id="editNote-${r.id}" style="width:100%; font-size:12px; padding:6px; border:1px solid #cbd5e1; border-radius:6px; margin-bottom:8px;" rows="2" placeholder="修正備註...">${escapeHtml(r.note)}</textarea>
             <div style="display:flex; justify-content:flex-end; gap:6px;">
-              <button class="btn" style="padding:4px 8px; font-size:11px;" onclick="toggleReplyEdit('${item.case_id}', '${id}')">取消</button>
-              <button class="btn btn-primary" style="padding:4px 12px; font-size:11px;" onclick="saveReplyEdit('${item.case_id}', '${id}', '${escapeHtml(r.name).replace(/'/g,"\\'")}')">儲存修正</button>
+              <button class="btn" style="padding:4px 8px; font-size:11px;" onclick="toggleReplyEdit('${item.case_id}', '${r.id}')">取消</button>
+              <button class="btn btn-primary" style="padding:4px 12px; font-size:11px;" onclick="saveReplyEdit('${item.case_id}', '${r.id}', '${escapeHtml(r.name).replace(/'/g,"\\'")}')">儲存修正</button>
             </div>
           </div>
         </div>`).join('') : '<div>目前尚無機構回覆紀錄。</div>';
