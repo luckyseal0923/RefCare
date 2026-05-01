@@ -506,6 +506,7 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
           
           if (data && data.length > 0) {
             FACILITIES = data.map(item => ({
+              id: item.id,
               short_name: item.short_name || '',
               name: item.facility_name || '',
               phone: item.phone || '',
@@ -730,6 +731,7 @@ ${formatServiceCodes(data.service_codes)}`;
 
       return {
         case_id: data.case_id,
+        facility_id: selectedFacility ? selectedFacility.id : null,
         facility_name: resolvedFacilityName,
         facility_selected_name: selectedFacility ? selectedFacility.name : "",
         facility_custom_name: selectedFacility && selectedFacility.short_name === "其他"
@@ -781,6 +783,7 @@ ${formatServiceCodes(data.service_codes)}`;
             .from('replies')
             .insert([{
               case_id: payload.case_id,
+              facility_id: payload.facility_id,
               facility_name: payload.facility_name,
               reply_status: replyStatus,
               note: payload.reply_note,

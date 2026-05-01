@@ -442,7 +442,12 @@
       if (finalTargetIds.length > 0) {
         displayList = finalTargetIds.map(id => {
           const fac = allFacilities.find(f => String(f.id) === String(id));
-          const reply = replies.find(r => String(r.facility_id) === String(id));
+          // 強化比對：同時嘗試 ID 與 名稱比對
+          const reply = replies.find(r => 
+            String(r.facility_id) === String(id) || 
+            (fac && r.facility_name === fac.name) ||
+            (fac && r.facility_name === fac.short)
+          );
           return {
             name: fac ? fac.name : (reply ? reply.facility_name : '未知機構'),
             phone: fac ? fac.phone : (reply ? '未知電話' : ''),
