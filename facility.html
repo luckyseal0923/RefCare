@@ -499,23 +499,35 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
     let FACILITIES = [];
 
     let TARGET_FACILITY_IDS = []; // 存儲該案件限定的名單
+    let REPLIED_FACILITY_IDS = []; // 存儲已經回覆過的機構 ID
 
-    async function loadFacilities(targetIds = []) {
+    async function loadFacilities(targetIds = [], caseId = null) {
       try {
         if (window.supabaseClient) {
-          const { data, error } = await window.supabaseClient.from('facilities').select('*');
-          if (error) throw error;
+          // 1. 抓取所有機構
+          const { data: allFacs, error: facError } = await window.supabaseClient.from('facilities').select('*');
+          if (facError) throw facError;
           
-          if (data && data.length > 0) {
-            let list = data;
+          // 2. 抓取該案件已有的回覆 (用來剔除已回覆者)
+          if (caseId) {
+            const { data: existingReplies } = await window.supabaseClient
+              .from('replies')
+              .select('facility_id')
+              .eq('case_id', caseId);
+            REPLIED_FACILITY_IDS = existingReplies ? existingReplies.map(r => String(r.facility_id)) : [];
+          }
+
+          if (allFacs && allFacs.length > 0) {
+            let list = allFacs;
             
-            // 如果有名單限定，則進行過濾
+            // 3. 嚴格過濾：只顯示派案名單內的
             if (targetIds && targetIds.length > 0) {
-              list = data.filter(f => targetIds.includes(String(f.id)));
-            } else {
-              // 舊案件或特殊情況：如果是空名單，這裡可以決定是否要預設顯示全部或特定群組
-              // 為了向下相容，我們先不對空名單做嚴格過濾
+              const targetStrIds = targetIds.map(id => String(id));
+              list = allFacs.filter(f => targetStrIds.includes(String(f.id)));
             }
+
+            // 4. 進階過濾：自動剔除已回覆過的機構
+            list = list.filter(f => !REPLIED_FACILITY_IDS.includes(String(f.id)));
 
             FACILITIES = list.map(item => ({
               id: item.id,
@@ -524,13 +536,15 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
               phone: item.phone || '',
               area: item.service_area || ''
             }));
+            
+            console.log("Filtered Facilities count:", FACILITIES.length);
           }
         }
       } catch (err) {
-        console.error("Failed to load facilities from Supabase:", err);
+        console.error("Failed to load facilities:", err);
       }
       
-      // 只有在名單不限或者是特定情況下才加入「其他」
+      // 只有在完全沒名單時（例如舊案件）才允許「其他」
       if (!targetIds || targetIds.length === 0) {
         FACILITIES.push({
           id: 'other',
@@ -603,7 +617,7 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
             
             // 抓到案件名單後，重新載入並過濾機構選單
             TARGET_FACILITY_IDS = Array.isArray(sbData.target_facility_ids) ? sbData.target_facility_ids.map(id => String(id)) : [];
-            await loadFacilities(TARGET_FACILITY_IDS);
+            await loadFacilities(TARGET_FACILITY_IDS, sbData.case_id);
           }
         } catch (err) {
           console.warn("Supabase fetch error:", err);
