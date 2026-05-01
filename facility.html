@@ -498,14 +498,26 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
     ========================= */
     let FACILITIES = [];
 
-    async function loadFacilities() {
+    let TARGET_FACILITY_IDS = []; // 存儲該案件限定的名單
+
+    async function loadFacilities(targetIds = []) {
       try {
         if (window.supabaseClient) {
           const { data, error } = await window.supabaseClient.from('facilities').select('*');
           if (error) throw error;
           
           if (data && data.length > 0) {
-            FACILITIES = data.map(item => ({
+            let list = data;
+            
+            // 如果有名單限定，則進行過濾
+            if (targetIds && targetIds.length > 0) {
+              list = data.filter(f => targetIds.includes(String(f.id)));
+            } else {
+              // 舊案件或特殊情況：如果是空名單，這裡可以決定是否要預設顯示全部或特定群組
+              // 為了向下相容，我們先不對空名單做嚴格過濾
+            }
+
+            FACILITIES = list.map(item => ({
               id: item.id,
               short_name: item.short_name || '',
               name: item.facility_name || '',
@@ -518,13 +530,16 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
         console.error("Failed to load facilities from Supabase:", err);
       }
       
-      // 確保最後有一項「其他」
-      FACILITIES.push({
-        short_name: "其他",
-        name: "其他（自行輸入）",
-        phone: "",
-        area: ""
-      });
+      // 只有在名單不限或者是特定情況下才加入「其他」
+      if (!targetIds || targetIds.length === 0) {
+        FACILITIES.push({
+          id: 'other',
+          short_name: "其他",
+          name: "其他（自行輸入）",
+          phone: "",
+          area: ""
+        });
+      }
     }
 
     const $ = (id) => document.getElementById(id);
@@ -585,6 +600,10 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
               ...sbData,
               special: sbData.special_need || queryData.special
             };
+            
+            // 抓到案件名單後，重新載入並過濾機構選單
+            TARGET_FACILITY_IDS = Array.isArray(sbData.target_facility_ids) ? sbData.target_facility_ids.map(id => String(id)) : [];
+            await loadFacilities(TARGET_FACILITY_IDS);
           }
         } catch (err) {
           console.warn("Supabase fetch error:", err);
@@ -774,6 +793,12 @@ ${formatServiceCodes(data.service_codes)}`;
         return;
       }
 
+      // 限定名單檢查
+      if (TARGET_FACILITY_IDS.length > 0 && (!selectedFacility || !TARGET_FACILITY_IDS.includes(String(selectedFacility.id)))) {
+        showStatus("error", "抱歉，您的機構不在本次案件的派案名單中，無法送出回覆。");
+        return;
+      }
+
       try {
         showStatus("success", "送出中...");
 
@@ -851,10 +876,8 @@ ${formatServiceCodes(data.service_codes)}`;
 
     $("btnSubmitReply").addEventListener("click", submitReply);
 
-    // 初始化：載入機構清單與案件資訊
-    loadFacilities().then(() => {
-      renderCaseInfo();
-    });
+    // 初始化：先讀取案件資訊，再由 renderCaseInfo 觸發 loadFacilities
+    renderCaseInfo();
   </script>
 </body>
 </html>
