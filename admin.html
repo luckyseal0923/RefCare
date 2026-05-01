@@ -376,6 +376,7 @@
             <div class="action-row">
               <button class="action-btn" type="button" data-index="${index}" data-action="detail">查看詳情</button>
               <button class="action-btn" type="button" data-index="${index}" data-action="edit">編輯</button>
+              <button class="action-btn" type="button" onclick="copyFacilityLink('${item.case_id}')">複製連結</button>
               <button class="action-btn" type="button" onclick="closeCase('${item.case_id}')">結案</button>
             </div>
           </td>
@@ -538,6 +539,30 @@
       } catch (err) {
         alert("結案失敗：" + err.message);
       }
+    }
+
+    /** 複製安置機構回覆頁面連結 */
+    function copyFacilityLink(caseId) {
+      const baseUrl = window.location.href.split('?')[0].split('#')[0];
+      const facilityUrl = baseUrl.replace('admin.html', 'facility.html') + '?case_id=' + caseId;
+      
+      navigator.clipboard.writeText(facilityUrl).then(() => {
+        alert("已複製連結：\n" + facilityUrl);
+      }).catch(err => {
+        console.error("Copy failed", err);
+        // Fallback for older browsers or non-secure contexts
+        const textArea = document.createElement("textarea");
+        textArea.value = facilityUrl;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+          document.execCommand('copy');
+          alert("已複製連結：\n" + facilityUrl);
+        } catch (e) {
+          alert("複製失敗，請手動複製：" + facilityUrl);
+        }
+        document.body.removeChild(textArea);
+      });
     }
 
     function openDrawer(index) {
