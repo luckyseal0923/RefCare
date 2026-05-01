@@ -1214,10 +1214,14 @@ function validateForm(data) {
       }
     }
     window._selectGroup = selectGroup;
+    
+    /* 編輯群組時的暫存選取狀態 */
+    var tempGrpFacIds = new Set();
 
     /* 新增群組（快速） */
     function openGrpAdd() {
       editingGrpId = null;
+      tempGrpFacIds = new Set(); // 重置暫存
       var nameEl = document.getElementById('grpEditName');
       if (nameEl) nameEl.value = '';
       renderGrpFacList();
@@ -1269,6 +1273,10 @@ function validateForm(data) {
       loadGroups();
       editingGrpId = gid;
       var g = facGroups.find(function(x){ return x.id === gid; });
+      tempGrpFacIds = new Set();
+      if (g) {
+        g.facilityIds.forEach(function(fid){ tempGrpFacIds.add(String(fid)); });
+      }
       var titleEl = document.getElementById('grpEditTitle');
       var nameEl  = document.getElementById('grpEditName');
       if (titleEl) titleEl.textContent = '✏️ 編輯群組';
@@ -1303,19 +1311,17 @@ function validateForm(data) {
       var q = '';
       var srch = document.getElementById('grpFacSearch');
       if (srch) q = srch.value.trim().toLowerCase();
-      loadGroups();
-      var g = editingGrpId ? facGroups.find(function(x){ return x.id === editingGrpId; }) : null;
-      var currentIds = g ? g.facilityIds.map(String) : [];
+      
       var filtered = allFacilities.filter(function(f){
-        return !q || (f.name + f.short + f.area).toLowerCase().indexOf(q) >= 0;
+        return !q || (f.name + f.short + (f.area||'')).toLowerCase().indexOf(q) >= 0;
       });
       var wrap = document.getElementById('grpFacList');
       if (!wrap) return;
       wrap.innerHTML = filtered.map(function(f){
         var sid = String(f.id);
-        var checked = currentIds.indexOf(sid) >= 0;
+        var checked = tempGrpFacIds.has(sid);
         return '<label class="grp-fac-item' + (checked ? ' checked' : '') + '">'
-          + '<input type="checkbox" value="' + sid + '"' + (checked ? ' checked' : '') + '>'
+          + '<input type="checkbox" value="' + sid + '"' + (checked ? ' checked' : '') + ' onchange="updateTempGrpFac(this)">'
           + '<span class="grp-fac-item-name">' + f.name
           + (f.area ? '　<span style="color:#94a3b8;font-size:11px;">' + f.area + '</span>' : '')
           + '</span></label>';
@@ -1323,12 +1329,23 @@ function validateForm(data) {
     }
     window._renderGrpFacList = renderGrpFacList;
 
+    function updateTempGrpFac(cb) {
+      if (cb.checked) {
+        tempGrpFacIds.add(cb.value);
+        cb.parentElement.classList.add('checked');
+      } else {
+        tempGrpFacIds.delete(cb.value);
+        cb.parentElement.classList.remove('checked');
+      }
+    }
+    window.updateTempGrpFac = updateTempGrpFac;
+
     /* 儲存群組 */
     function saveGrpEdit() {
       var nameEl = document.getElementById('grpEditName');
       var name = nameEl ? nameEl.value.trim() : '';
       if (!name) { alert('群組名稱不能為空'); return; }
-      var checkedIds = Array.from(document.querySelectorAll('#grpFacList input[type=checkbox]:checked')).map(function(el){ return el.value; });
+      var checkedIds = Array.from(tempGrpFacIds);
       loadGroups();
       if (editingGrpId) {
         var g = facGroups.find(function(x){ return x.id === editingGrpId; });
