@@ -171,35 +171,46 @@
     @media (max-width: 900px){ .kpi-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } .toolbar{ grid-template-columns:1fr 1fr; } .detail-grid{ grid-template-columns:1fr; } .edit-form{ grid-template-columns:1fr; } }
     @media (max-width: 640px){ .kpi-grid,.toolbar{ grid-template-columns:1fr; } .wrap{ padding:16px 12px 40px; } .hero h1{ font-size:24px; } }
 
-    /* Manager Modal */
-    .mgr-overlay { position:fixed; inset:0; background:rgba(15,23,42,0.5); z-index:200; display:none; align-items:center; justify-content:center; }
+    /* Manager Modal Premium Upgrade */
+    .mgr-overlay { position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:200; display:none; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
     .mgr-overlay.show { display:flex; }
-    .mgr-modal { background:#fff; border-radius:20px; width:min(750px,92vw); max-height:85vh; display:flex; flex-direction:column; box-shadow:0 24px 60px rgba(0,0,0,0.18); }
-    .mgr-modal-head { padding:20px 24px 16px; border-bottom:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; }
-    .mgr-modal-head h2 { margin:0; font-size:18px; font-weight:900; color:#111827; }
-    .mgr-modal-body { padding:20px 24px; overflow-y:auto; flex:1; }
-    .mgr-modal-close { border:none; background:#f3f4f6; border-radius:10px; width:34px; height:34px; font-size:18px; cursor:pointer; font-weight:900; }
-    .mgr-form { display:grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap:10px; align-items:end; background:#f8fafc; padding:14px; border-radius:12px; margin-bottom:18px; }
-    @media(max-width:600px){ .mgr-form{ grid-template-columns:1fr 1fr; } }
+    .mgr-modal { background:#fff; border-radius:24px; width:min(800px,94vw); max-height:85vh; display:flex; flex-direction:column; box-shadow:0 30px 60px rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.2); }
+    .mgr-modal-head { padding:24px 28px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center; background: linear-gradient(to right, #ffffff, #fafafa); border-radius:24px 24px 0 0; }
+    .mgr-modal-head h2 { margin:0; font-size:20px; font-weight:900; color:#0f172a; display:flex; align-items:center; gap:10px; }
+    .mgr-modal-body { padding:28px; overflow-y:auto; flex:1; background:#fff; }
+    .mgr-modal-close { border:none; background:#f1f5f9; color:#64748b; border-radius:12px; width:36px; height:36px; font-size:20px; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center; }
+    .mgr-modal-close:hover { background:#e2e8f0; color:#0f172a; transform:rotate(90deg); }
 
-    /* Manager Cards */
-    .mgr-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-top: 10px; }
+    .mgr-add-section { background:#f8fafc; border:1px dashed #cbd5e1; border-radius:20px; padding:20px; margin-bottom:28px; }
+    .mgr-add-section h3 { margin:0 0 16px; font-size:15px; font-weight:800; color:#475569; }
+    .mgr-add-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:12px; margin-bottom:12px; }
+    .mgr-add-row input { width:100%; border:1px solid #e2e8f0; border-radius:12px; padding:12px 14px; font-size:14px; outline:none; transition:all 0.2s; }
+    .mgr-add-row input:focus { border-color:#7c3aed; box-shadow:0 0 0 4px rgba(124,58,237,0.1); background:#fff; }
+    
+    .mgr-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap:16px; }
     .mgr-card { 
-      background: #ffffff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 16px; 
-      position: relative; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+      background: #fff; border: 1px solid #f1f5f9; border-radius: 20px; padding: 20px; 
+      position: relative; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.01);
+      display: flex; flex-direction: column; border-left: 4px solid #e2e8f0;
     }
     .mgr-card:hover { 
-      border-color: #7c3aed; box-shadow: 0 10px 20px rgba(124,58,237,0.08); transform: translateY(-2px); 
+      border-color: #ddd6fe; border-left-color: #7c3aed;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05), 0 10px 10px -5px rgba(0,0,0,0.02);
+      transform: translateY(-4px);
     }
-    .mgr-card-name { font-size: 16px; font-weight: 800; color: #111827; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
-    .mgr-card-info { font-size: 13px; color: #4b5563; line-height: 1.6; }
-    .mgr-card-label { color: #9ca3af; font-weight: 500; margin-right: 4px; }
-    .mgr-card-actions { margin-top: 12px; display: flex; justify-content: flex-end; border-top: 1px solid #f3f4f6; padding-top: 10px; }
-    .mgr-del-btn { 
-      background: #fff; border: 1px solid #fee2e2; color: #ef4444; padding: 6px 12px; 
-      border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+    .mgr-card-name { font-size: 17px; font-weight: 900; color: #0f172a; margin-bottom: 12px; }
+    .mgr-card-info { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+    .mgr-card-item { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: #475569; line-height: 1.4; }
+    .mgr-card-icon { font-size: 14px; min-width: 20px; text-align: center; }
+    .mgr-card-val { color: #1e293b; font-weight: 600; }
+    
+    .mgr-card-actions { margin-top: 18px; padding-top: 14px; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; }
+    .mgr-del-link { 
+      font-size: 12px; color: #94a3b8; cursor: pointer; text-decoration: none; 
+      padding: 6px 10px; border-radius: 8px; transition: all 0.2s;
     }
-    .mgr-del-btn:hover { background: #fee2e2; }
+    .mgr-del-link:hover { color: #ef4444; background: #fef2f2; }
   </style>
   
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -873,12 +884,22 @@
           <div class="mgr-card">
             <div class="mgr-card-name">👤 ${escapeHtml(m.name)}</div>
             <div class="mgr-card-info">
-              <div><span class="mgr-card-label">單位：</span>${escapeHtml(m.hospital)}</div>
-              <div><span class="mgr-card-label">電話：</span>${escapeHtml(m.phone)}</div>
-              ${m.ext ? `<div><span class="mgr-card-label">分機：</span>${escapeHtml(m.ext)}</div>` : ''}
+              <div class="mgr-card-item">
+                <span class="mgr-card-icon">📍</span>
+                <div><span style="color:#94a3b8">單位：</span><span class="mgr-card-val">${escapeHtml(m.hospital)}</span></div>
+              </div>
+              <div class="mgr-card-item">
+                <span class="mgr-card-icon">📱</span>
+                <div><span style="color:#94a3b8">電話：</span><span class="mgr-card-val">${escapeHtml(m.phone)}</span></div>
+              </div>
+              ${m.ext ? `
+              <div class="mgr-card-item">
+                <span class="mgr-card-icon">☎️</span>
+                <div><span style="color:#94a3b8">分機：</span><span class="mgr-card-val">${escapeHtml(m.ext)}</span></div>
+              </div>` : ''}
             </div>
             <div class="mgr-card-actions">
-              <button class="mgr-del-btn" onclick="deleteManager('${m.id}')">刪除資料</button>
+              <span class="mgr-del-link" onclick="deleteManager('${m.id}')">移除此成員</span>
             </div>
           </div>`).join('')}</div>`
         : '<div class="mgr-empty">目前尚未建立個管師名單</div>';
