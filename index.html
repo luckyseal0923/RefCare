@@ -613,6 +613,74 @@
     .grp-edit-modal{background:#fff;border-radius:24px;width:100%;max-width:600px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 30px 60px rgba(0,0,0,0.25);}
     .grp-edit-head{padding:18px 24px;background:linear-gradient(135deg,#1e40af,#3b82f6);display:flex;justify-content:space-between;align-items:center;color:#fff;border-radius:24px 24px 0 0;}
 
+    /* BA Service Modal Specific */
+    #serviceListDisplay {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+      padding: 4px;
+    }
+    .service-card {
+      position: relative;
+      border: 1.5px solid #f1f5f9;
+      border-radius: 16px;
+      padding: 14px;
+      background: #fff;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      user-select: none;
+    }
+    .service-card:hover {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+      transform: translateY(-2px);
+    }
+    .service-card.selected {
+      border-color: var(--primary);
+      background: #f0fdf4;
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1);
+    }
+    .service-card input {
+      position: absolute;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .service-code {
+      font-size: 12px;
+      font-weight: 900;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .service-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    .service-check-icon {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: transparent;
+      transition: all 0.2s;
+    }
+    .service-card.selected .service-check-icon {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+
     @media (max-width: 768px) {
       .app-header { padding: 24px 20px 40px; }
       .header-inner { flex-direction: column; }
@@ -1065,18 +1133,29 @@
     function openServiceModal() {
       const wrap = $("serviceListDisplay");
       wrap.innerHTML = baServices.map(s => `
-        <label style="display:flex; align-items:center; gap:8px; padding:12px; border:1.5px solid #f1f5f9; border-radius:14px; cursor:pointer; background:#f8fafc;">
-          <input type="checkbox" class="ba-check" value="${s.code}" ${selectedServiceCodes.has(s.code) ? 'checked' : ''} />
-          <span style="font-size:14px; font-weight:700;">${s.code} ${s.name}</span>
-        </label>
+        <div class="service-card ${selectedServiceCodes.has(s.code) ? 'selected' : ''}" onclick="toggleServiceCard(this, '${s.code}')">
+          <input type="checkbox" value="${s.code}" ${selectedServiceCodes.has(s.code) ? 'checked' : ''} />
+          <div class="service-check-icon">✓</div>
+          <div class="service-code">${s.code}</div>
+          <div class="service-name">${s.name}</div>
+        </div>
       `).join('');
       $("serviceModalOverlay").classList.add("show");
     }
+    function toggleServiceCard(el, code) {
+      const input = el.querySelector('input');
+      input.checked = !input.checked;
+      if (input.checked) {
+        el.classList.add('selected');
+        selectedServiceCodes.add(code);
+      } else {
+        el.classList.remove('selected');
+        selectedServiceCodes.delete(code);
+      }
+    }
     function closeServiceModal() { $("serviceModalOverlay").classList.remove("show"); }
     function confirmService() {
-      const checks = document.querySelectorAll(".ba-check:checked");
-      selectedServiceCodes = new Set(Array.from(checks).map(c => c.value));
-      $("selectedServicesDisplay").textContent = selectedServiceCodes.size > 0 ? Array.from(selectedServiceCodes).join(", ") : "尚未選擇";
+      $("selectedServicesDisplay").textContent = selectedServiceCodes.size > 0 ? Array.from(selectedServiceCodes).sort().join(", ") : "尚未選擇";
       closeServiceModal();
     }
 
