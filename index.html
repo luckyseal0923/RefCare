@@ -706,7 +706,7 @@
           <div class="section-header">
             <div>
               <h2 class="section-title">個案基本資料</h2>
-              <p class="section-desc">請填寫個案的基本生理資訊。</p>
+              <p class="section-desc">請填寫個案的基本生理資訊與聯絡地址。</p>
             </div>
             <span class="badge">個案資訊</span>
           </div>
@@ -736,6 +736,10 @@
               <label>體重 (kg)</label>
               <input type="number" id="weight" placeholder="kg" />
             </div>
+            <div class="field full">
+              <label>現居地址</label>
+              <input type="text" id="address" placeholder="請輸入個案目前居住地址" />
+            </div>
           </div>
         </section>
 
@@ -743,7 +747,7 @@
           <div class="section-header">
             <div>
               <h2 class="section-title">功能評估與照護需求</h2>
-              <p class="section-desc">描述個案的失能等級與特殊醫護需求。</p>
+              <p class="section-desc">描述個案的失能等級、意識與特殊醫護需求。</p>
             </div>
             <span class="badge">臨床評估</span>
           </div>
@@ -771,9 +775,22 @@
                 <option value="臥床">臥床</option>
               </select>
             </div>
+            <div class="field">
+              <label>意識狀態</label>
+              <select id="consciousness">
+                <option value="清楚">清楚</option>
+                <option value="混亂">混亂</option>
+                <option value="木僵">木僵</option>
+                <option value="昏迷">昏迷</option>
+              </select>
+            </div>
             <div class="field full">
-              <label>案況簡述 (診斷、入院原因等)</label>
-              <textarea id="caseSummary" placeholder="請描述個案目前狀況..."></textarea>
+              <label>臨床診斷 (Diagnosis)</label>
+              <input type="text" id="diagnosis" placeholder="請輸入臨床診斷..." />
+            </div>
+            <div class="field full">
+              <label>案況簡述 (入院原因、重要病史等)</label>
+              <textarea id="caseSummary" placeholder="請詳細描述個案狀況..."></textarea>
             </div>
             <div class="field full">
               <label>特殊照護需求</label>
@@ -794,7 +811,7 @@
           <div class="section-header">
             <div>
               <h2 class="section-title">服務需求</h2>
-              <p class="section-desc">選擇本次媒合的目標服務類型。</p>
+              <p class="section-desc">選擇本次媒合的目標服務類型與長照服務碼。</p>
             </div>
             <span class="badge">媒合設定</span>
           </div>
@@ -813,12 +830,14 @@
             </div>
             <div class="field">
               <label>期待服務時段</label>
-              <select id="serviceTime">
-                <option value="白天">白天</option>
-                <option value="全日">全日</option>
-                <option value="假日">假日</option>
-                <option value="可討論">可討論</option>
-              </select>
+              <input type="text" id="serviceTime" placeholder="例如: 平日白天, 假日..." />
+            </div>
+            <div class="field full">
+              <label>長照服務碼 (BA 碼)</label>
+              <div style="display:flex; align-items:center; gap:12px;">
+                <button type="button" class="btn btn-secondary" onclick="openServiceModal()" style="width:auto; padding:8px 16px;">選擇服務碼</button>
+                <div id="selectedServicesDisplay" style="font-size:13px; color:#64748b; flex:1; border-bottom:1px dashed #cbd5e1; padding-bottom:4px;">尚未選擇</div>
+              </div>
             </div>
           </div>
         </section>
@@ -827,9 +846,19 @@
           <div class="section-header">
             <div>
               <h2 class="section-title">派案與通知設定</h2>
-              <p class="section-desc">選擇要通知的機構。您可以快速選擇自定義群組。</p>
+              <p class="section-desc">選擇派案模式與目標機構。系統將根據模式過濾清單。</p>
             </div>
             <span class="badge">派送名單</span>
+          </div>
+
+          <div style="margin-bottom:20px;">
+            <label style="font-size:13px; font-weight:800; color:#475569; display:block; margin-bottom:10px;">派案模式</label>
+            <div class="inline-options" style="gap:16px;">
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="targetGroup" value="指定機構" checked onchange="handleModeChange()" /> 指定機構</label>
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="targetGroup" value="合作機構(一輪)" onchange="handleModeChange()" /> 合作機構(一輪)</label>
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="targetGroup" value="全區機構(二輪)" onchange="handleModeChange()" /> 全區機構(二輪)</label>
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="targetGroup" value="困難派案(三輪)" onchange="handleModeChange()" /> 困難派案(三輪)</label>
+            </div>
           </div>
 
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
@@ -873,6 +902,24 @@
       </aside>
     </div>
   </main>
+
+  <div class="overlay" id="serviceModalOverlay" onclick="if(event.target===this)closeServiceModal()">
+    <div class="modal" style="max-width:800px;">
+      <div class="modal-head">
+        <h3 style="margin:0; font-weight:900;">📜 選擇長照服務碼</h3>
+        <button onclick="closeServiceModal()" style="border:none; background:none; color:white; font-size:24px; cursor:pointer;">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="serviceListDisplay" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:10px;">
+          <!-- 動態渲染服務碼 -->
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-light" onclick="closeServiceModal()">取消</button>
+        <button class="btn btn-primary" onclick="confirmService()" style="width:auto;">確認選擇</button>
+      </div>
+    </div>
+  </div>
 
   <div class="overlay" id="facModalOverlay" onclick="if(event.target===this)closeFacModal()">
     <div class="modal">
@@ -923,6 +970,13 @@
   <script>
     const $ = (id) => document.getElementById(id);
     const N8N_WEBHOOKS = { createCase: "https://chihwei.zeabur.app/webhook/case_bluiding" };
+    
+    // 全域變數
+    let allFacilities = [];
+    let selectedFacIds = new Set();
+    let pendingFacIds = new Set();
+    let facGroups = [];
+    const GRP_KEY = 'refcare_fac_groups';
 
     /* =========================
        1. 初始化與側邊欄連動
@@ -992,11 +1046,43 @@
     /* =========================
        3. 機構選擇邏輯
     ========================= */
-    let allFacilities = [];
-    let selectedFacIds = new Set();
-    let pendingFacIds = new Set();
-    let facGroups = [];
-    const GRP_KEY = 'refcare_fac_groups';
+    /* =========================
+       3. 服務碼系統 (補回)
+    ========================= */
+    const baServices = [
+      { code: "BA01", name: "基本身體清潔" }, { code: "BA02", name: "基本日常照顧" },
+      { code: "BA03", name: "測量生命徵象" }, { code: "BA04", name: "餵食/灌食" },
+      { code: "BA05", name: "餐食照顧" }, { code: "BA07", name: "協助沐浴" },
+      { code: "BA08", name: "足部照護" }, { code: "BA09", name: "翻身拍背" },
+      { code: "BA10", name: "肢體關節活動" }, { code: "BA11", name: "協助上下樓梯" },
+      { code: "BA12", name: "陪同外出" }, { code: "BA13", name: "陪同就醫" },
+      { code: "BA14", name: "家務服務" }, { code: "BA15", name: "代購代送" },
+      { code: "BA16", name: "安全看視" }, { code: "BA17", name: "陪伴服務" },
+      { code: "BA18", name: "巡視服務" }, { code: "BA20", name: "協助排泄" },
+      { code: "BA22", name: "氣道抽吸" }, { code: "BA24", name: "管路清潔" }
+    ];
+    let selectedServiceCodes = new Set();
+    function openServiceModal() {
+      const wrap = $("serviceListDisplay");
+      wrap.innerHTML = baServices.map(s => `
+        <label style="display:flex; align-items:center; gap:8px; padding:12px; border:1.5px solid #f1f5f9; border-radius:14px; cursor:pointer; background:#f8fafc;">
+          <input type="checkbox" class="ba-check" value="${s.code}" ${selectedServiceCodes.has(s.code) ? 'checked' : ''} />
+          <span style="font-size:14px; font-weight:700;">${s.code} ${s.name}</span>
+        </label>
+      `).join('');
+      $("serviceModalOverlay").classList.add("show");
+    }
+    function closeServiceModal() { $("serviceModalOverlay").classList.remove("show"); }
+    function confirmService() {
+      const checks = document.querySelectorAll(".ba-check:checked");
+      selectedServiceCodes = new Set(Array.from(checks).map(c => c.value));
+      $("selectedServicesDisplay").textContent = selectedServiceCodes.size > 0 ? Array.from(selectedServiceCodes).join(", ") : "尚未選擇";
+      closeServiceModal();
+    }
+
+    /* =========================
+       4. 機構選擇邏輯
+    ========================= */
 
     async function loadFacilities() {
       try {
@@ -1005,6 +1091,22 @@
         loadGroups();
         renderFacList();
       } catch (e) { console.error("Load Fac failed", e); }
+    }
+
+    function handleModeChange() {
+      const mode = document.querySelector('input[name="targetGroup"]:checked').value;
+      if (mode === '合作機構(一輪)') {
+        const round1 = allFacilities.filter(f => f.is_round_1).map(f => String(f.id));
+        if (round1.length > 0) {
+          selectedFacIds = new Set(round1);
+          renderSelectedFacList();
+          updateSidebar();
+        }
+      } else if (mode === '指定機構') {
+        // 不動作，保留原本選取
+      } else {
+        // 其他模式可視需求實作過濾
+      }
     }
 
     function openFacModal() {
@@ -1067,7 +1169,7 @@
     }
 
     /* =========================
-       4. 群組功能
+       5. 群組功能
     ========================= */
     function loadGroups() {
       facGroups = JSON.parse(localStorage.getItem(GRP_KEY) || '[]');
@@ -1115,7 +1217,7 @@
     }
 
     /* =========================
-       5. 送出案件
+       6. 送出案件
     ========================= */
     async function submitForm() {
       const careNodes = document.querySelectorAll('input[name="care"]:checked');
@@ -1133,12 +1235,17 @@
         age: parseInt($("age").value) || 0,
         height: $("height").value,
         weight: $("weight").value,
+        address: $("address").value.trim(),
         cms_level: $("cmsLevel").value,
         mobility: $("mobility").value,
+        consciousness: $("consciousness").value,
+        diagnosis: $("diagnosis").value.trim(),
         case_summary: $("caseSummary").value.trim(),
         special_needs: careList,
         service_type: $("serviceType").value,
-        service_time: $("serviceTime").value,
+        service_time: $("serviceTime").value.trim(),
+        service_codes: Array.from(selectedServiceCodes),
+        target_group: document.querySelector('input[name="targetGroup"]:checked').value,
         target_facility_ids: Array.from(selectedFacIds),
         status: "一輪媒合中"
       };
