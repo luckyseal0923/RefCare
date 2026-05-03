@@ -884,6 +884,10 @@
             <div class="mgr-card-name">🔑 ${escapeHtml(m.name)}</div>
             <div class="mgr-card-info">
               <div class="mgr-card-item">
+                <span class="mgr-card-icon">🛡️</span>
+                <div><span style="color:#94a3b8">權限層級：</span><span class="mgr-card-val" style="color:#7c3aed">${escapeHtml(m.role || '個案管理師')}</span></div>
+              </div>
+              <div class="mgr-card-item">
                 <span class="mgr-card-icon">🆔</span>
                 <div><span style="color:#94a3b8">登入員編：</span><span class="mgr-card-val">${escapeHtml(m.emp_id || '未設定')}</span></div>
               </div>
@@ -918,14 +922,19 @@
     }
     async function addManager() {
       const emp_id = ($d('addMEmpId').value || '').trim();
+      const password = ($d('addMPassword').value || '').trim();
+      const role = ($d('addMRole').value || '個案管理師');
       const name = ($d('addMName').value || '').trim();
       const phone = ($d('addMPhone').value || '').trim();
       const hospital = ($d('addMHospital').value || '').trim();
       const ext = ($d('addMExt').value || '').trim();
-      if (!name || !phone || !hospital) return alert("姓名、電話、單位為必填");
-      const { error } = await sb.from('case_managers').insert([{ emp_id, name, phone, hospital, ext }]);
-      if (error) { alert("新增失敗：" + error.message); return; }
+      if (!emp_id || !password || !name || !phone || !hospital) return alert("除了分機外，其餘皆為必填");
+      
+      const { error } = await sb.from('case_managers').insert([{ emp_id, password, role, name, phone, hospital, ext }]);
+      if (error) { alert("建立帳號失敗：" + error.message); return; }
+      
       $d('addMEmpId').value = '';
+      $d('addMPassword').value = '';
       $d('addMName').value = '';
       $d('addMPhone').value = '';
       $d('addMHospital').value = '';
@@ -997,15 +1006,22 @@
         <div class="mgr-add-section">
           <h3>➕ 建立新帳號</h3>
           <div class="mgr-add-row">
-            <input type="text" id="addMEmpId" placeholder="員編 (選填)">
+            <input type="text" id="addMEmpId" placeholder="登入員編 (必填)">
+            <input type="password" id="addMPassword" placeholder="登入密碼 (必填)">
+            <select id="addMRole" style="border:1px solid #e2e8f0; border-radius:12px; padding:0 12px; height:46px; outline:none; font-size:14px; color:#475569;">
+              <option value="個案管理師">個案管理師</option>
+              <option value="系統管理員">系統管理員</option>
+            </select>
+          </div>
+          <div class="mgr-add-row">
             <input type="text" id="addMName" placeholder="姓名 (必填)">
             <input type="text" id="addMPhone" placeholder="電話 (必填)">
           </div>
-            <div class="mgr-add-row">
-              <input type="text" id="addMHospital" placeholder="所屬單位 (必填)" style="flex:2;">
-              <input type="text" id="addMExt" placeholder="分機" style="flex:1;">
-              <button class="btn btn-primary" type="button" onclick="addManager()" style="flex-shrink:0;padding:8px 16px;font-size:13px;">建立帳號</button>
-            </div>
+          <div class="mgr-add-row">
+            <input type="text" id="addMHospital" placeholder="所屬單位 (必填)" style="flex:2;">
+            <input type="text" id="addMExt" placeholder="分機" style="flex:1;">
+            <button class="btn btn-primary" type="button" onclick="addManager()" style="flex-shrink:0;padding:8px 16px;font-size:13px;">建立帳號</button>
+          </div>
         </div>
         <div class="mgr-list" id="managerTableBody">
           <div class="mgr-empty">載入中...</div>
