@@ -1038,7 +1038,8 @@
         </div>
       </div>
       <div class="modal-foot">
-        <span style="margin-right:auto; font-weight:800; color:var(--primary);" id="facSelectedCount">已選 0 間</span>
+        <button class="btn btn-light" onclick="clearFacSelection()" style="margin-right:auto; color:#dc2626; border-color:#fecaca;">🗑️ 清除所有已選</button>
+        <span style="margin-right:16px; font-weight:800; color:var(--primary);" id="facSelectedCount">已選 0 間</span>
         <button class="btn btn-light" onclick="closeFacModal()">取消</button>
         <button class="btn btn-primary" onclick="confirmFacModal()" style="width:auto;">確認選擇</button>
       </div>
@@ -1229,18 +1230,30 @@
 
     function renderFacList() {
       const q = $("facSearchInput").value.toLowerCase();
-      const filtered = allFacilities.filter(f => f.facility_name.toLowerCase().includes(q) || (f.service_area && f.service_area.includes(q)));
+      const filtered = allFacilities.filter(f => 
+        f.facility_name.toLowerCase().includes(q) || 
+        (f.short_name && f.short_name.toLowerCase().includes(q)) ||
+        (f.service_area && f.service_area.includes(q))
+      );
       const wrap = $("facListWrap");
       wrap.innerHTML = filtered.map(f => `
         <div class="fac-item ${pendingFacIds.has(String(f.id)) ? 'selected' : ''}" onclick="toggleFac('${f.id}')">
           <div style="flex:1;">
-            <div class="fac-name">${f.facility_name}</div>
+            <div class="fac-name">
+              ${f.short_name ? `<span style="color:var(--primary); margin-right:6px;">[${f.short_name}]</span>` : ''}${f.facility_name}
+            </div>
             <div class="fac-meta">${f.service_area || ''}</div>
           </div>
           ${pendingFacIds.has(String(f.id)) ? '<span style="color:var(--primary); font-weight:900;">✓</span>' : ''}
         </div>
       `).join('');
       $("facSelectedCount").textContent = `已選 ${pendingFacIds.size} 間`;
+    }
+    function clearFacSelection() {
+      if(confirm("確定要清除所有已勾選的機構嗎？")) {
+        pendingFacIds.clear();
+        renderFacList();
+      }
     }
 
     function toggleFac(id) {
