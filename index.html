@@ -869,19 +869,21 @@
               <label>行動能力 <span class="required">*</span></label>
               <select id="mobility">
                 <option value="">請選擇</option>
-                <option value="自行行走">自行行走</option>
-                <option value="使用輔具">使用輔具</option>
-                <option value="需人扶持">需人扶持</option>
-                <option value="臥床">臥床</option>
+                <option value="可自行行走">可自行行走</option>
+                <option value="可使用輔具行走(手杖、助行器等)">可使用輔具行走(手杖、助行器等)</option>
+                <option value="使用輔具並扶持下行走">使用輔具並扶持下行走</option>
+                <option value="無法行走，但可站立">無法行走，但可站立</option>
+                <option value="無法行走及站立，需全移位">無法行走及站立，需全移位</option>
+                <option value="長期臥床，均於床上照顧">長期臥床，均於床上照顧</option>
               </select>
             </div>
             <div class="field">
               <label>意識狀態</label>
               <select id="consciousness">
+                <option value="">請選擇</option>
                 <option value="清楚">清楚</option>
                 <option value="混亂">混亂</option>
                 <option value="木僵">木僵</option>
-                <option value="昏迷">昏迷</option>
               </select>
             </div>
             <div class="field full">
@@ -893,16 +895,8 @@
               <textarea id="caseSummary" placeholder="請詳細描述個案狀況..."></textarea>
             </div>
             <div class="field full">
-              <label>特殊照護需求</label>
-              <div class="inline-options">
-                <label class="chip"><input type="checkbox" name="care" value="管灌" /> 管灌</label>
-                <label class="chip"><input type="checkbox" name="care" value="氣切" /> 氣切</label>
-                <label class="chip"><input type="checkbox" name="care" value="氧氣" /> 氧氣</label>
-                <label class="chip"><input type="checkbox" name="care" value="洗腎" /> 洗腎</label>
-                <label class="chip"><input type="checkbox" name="care" value="傷口" /> 傷口</label>
-                <label class="chip"><input type="checkbox" name="care" value="造口" /> 造口</label>
-                <label class="chip"><input type="checkbox" name="care" value="導尿管" /> 導尿管</label>
-              </div>
+              <label>特殊照護需求 (管路或特殊護理)</label>
+              <textarea id="specialNeeds" placeholder="例如：管灌、氣切、氧氣、洗腎、傷口、造口、導尿管等..."></textarea>
             </div>
           </div>
         </section>
@@ -1344,9 +1338,6 @@
        6. 送出案件
     ========================= */
     async function submitForm() {
-      const careNodes = document.querySelectorAll('input[name="care"]:checked');
-      const careList = Array.from(careNodes).map(n => n.value);
-
       const formData = {
         case_id: $("caseId").value,
         referral_time: $("referralTime").value,
@@ -1365,7 +1356,7 @@
         consciousness: $("consciousness").value,
         diagnosis: $("diagnosis").value.trim(),
         case_summary: $("caseSummary").value.trim(),
-        special_needs: careList,
+        special_needs: $("specialNeeds").value.trim(),
         service_type: $("serviceType").value,
         service_time: $("serviceTime").value.trim(),
         service_codes: Array.from(selectedServiceCodes),
