@@ -885,6 +885,10 @@
             <div class="mgr-card-name">👤 ${escapeHtml(m.name)}</div>
             <div class="mgr-card-info">
               <div class="mgr-card-item">
+                <span class="mgr-card-icon">🆔</span>
+                <div><span style="color:#94a3b8">員編：</span><span class="mgr-card-val">${escapeHtml(m.emp_id || '未設定')}</span></div>
+              </div>
+              <div class="mgr-card-item">
                 <span class="mgr-card-icon">📍</span>
                 <div><span style="color:#94a3b8">單位：</span><span class="mgr-card-val">${escapeHtml(m.hospital)}</span></div>
               </div>
@@ -914,13 +918,15 @@
       if (el) el.classList.remove('show');
     }
     async function addManager() {
+      const emp_id = ($d('addMEmpId').value || '').trim();
       const name = ($d('addMName').value || '').trim();
       const phone = ($d('addMPhone').value || '').trim();
       const hospital = ($d('addMHospital').value || '').trim();
       const ext = ($d('addMExt').value || '').trim();
       if (!name || !phone || !hospital) return alert("姓名、電話、單位為必填");
-      const { error } = await sb.from('case_managers').insert([{ name, phone, hospital, ext }]);
+      const { error } = await sb.from('case_managers').insert([{ emp_id, name, phone, hospital, ext }]);
       if (error) { alert("新增失敗：" + error.message); return; }
+      $d('addMEmpId').value = '';
       $d('addMName').value = '';
       $d('addMPhone').value = '';
       $d('addMHospital').value = '';
@@ -992,11 +998,12 @@
         <div class="mgr-add-section">
           <h3>➕ 新增個管師</h3>
           <div class="mgr-add-row">
-            <input type="text" id="addMName" placeholder="姓名（必填）">
-            <input type="text" id="addMPhone" placeholder="電話（必填）">
+            <input type="text" id="addMEmpId" placeholder="員編 (選填)">
+            <input type="text" id="addMName" placeholder="姓名 (必填)">
+            <input type="text" id="addMPhone" placeholder="電話 (必填)">
           </div>
           <div class="mgr-add-row">
-            <input type="text" id="addMHospital" placeholder="轉介單位（必填）" style="flex:2;">
+            <input type="text" id="addMHospital" placeholder="轉介單位 (必填)" style="flex:2;">
             <input type="text" id="addMExt" placeholder="分機" style="flex:1;">
             <button class="btn btn-primary" type="button" onclick="addManager()" style="flex-shrink:0;padding:8px 16px;font-size:13px;">新增</button>
           </div>
