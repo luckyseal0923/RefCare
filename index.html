@@ -389,50 +389,48 @@
 ========================= -->
 <div class="card">
   <div class="section-title">立案基本資料</div>
-  <div class="grid">
+  
+  <!-- 1. 員編快速驗證區 -->
+  <div style="background:#f8fafc; border:1px dashed #cbd5e1; border-radius:20px; padding:20px; margin-bottom:28px;">
+    <div style="font-size:14px; font-weight:800; color:#475569; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+      <span>🔑</span> 員編身份認證 (輸入後按 Enter 帶入資料)
+    </div>
+    <div style="display:flex; gap:12px;">
+      <input type="text" id="empIdAuth" placeholder="請輸入員編..." style="flex:1; border:1.5px solid #e2e8f0; border-radius:14px; padding:12px 16px; font-size:15px; outline:none;" />
+      <button type="button" class="btn-primary" onclick="authByEmpId()" style="width:120px; border-radius:14px; font-weight:900; background:linear-gradient(135deg,#1e40af,#3b82f6);">驗證身分</button>
+    </div>
+  </div>
 
-    <!-- 第一列 -->
+  <!-- 2. 個管師詳細資訊網格 -->
+  <div class="grid" style="margin-bottom:28px; gap:20px;">
     <div class="field">
-      <label>案件編號</label>
-      <input type="text" id="caseId" readonly />
+      <label style="font-weight:800; color:#1e293b;">個管師姓名 <span class="required">*</span></label>
+      <input type="text" id="caseManager" placeholder="請輸入姓名" required />
     </div>
-
     <div class="field">
-      <label>起案時間</label>
-      <input type="datetime-local" id="referralTime" />
+      <label style="font-weight:800; color:#1e293b;">聯絡電話 <span class="required">*</span></label>
+      <input type="text" id="caseManagerPhone" placeholder="例如: 0912..." required />
     </div>
-
-    <!-- 員編認證列 -->
-    <div class="field" style="grid-column: span 2;">
-      <label>員編認證 (快速帶入資料)</label>
-      <div style="display:flex; gap:8px;">
-        <input type="text" id="empIdAuth" placeholder="輸入員編後按 Enter..." style="flex:1;" />
-        <button type="button" class="btn-secondary" onclick="authByEmpId()" style="width:100px;">驗證</button>
-      </div>
-    </div>
-
-    <!-- 第二列 -->
     <div class="field">
-      <label>個管師姓名<span class="required">*</span></label>
-      <input type="text" id="caseManager" placeholder="或經由員編驗證帶入" required />
+      <label style="font-weight:800; color:#1e293b;">轉介單位 <span class="required">*</span></label>
+      <input type="text" id="hospital" placeholder="例如: 萬芳醫院急診" required />
     </div>
-
     <div class="field">
-      <label>聯絡電話<span class="required">*</span></label>
-      <input type="text" id="caseManagerPhone" />
+      <label style="font-weight:800; color:#1e293b;">單位分機</label>
+      <input type="text" id="hospitalExt" placeholder="例如: 6524" />
     </div>
+  </div>
 
-    <!-- 第三列 -->
+  <!-- 3. 系統輔助資訊 -->
+  <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:20px; border-top:1.5px solid #f1f5f9; padding-top:24px;">
     <div class="field">
-      <label>轉介單位<span class="required">*</span></label>
-      <input type="text" id="hospital" />
+      <label style="color:#94a3b8; font-size:12px; margin-bottom:4px;">案件編號 (系統自動生成)</label>
+      <input type="text" id="caseId" readonly style="background:#fcfdfe; color:#94a3b8; border:1px solid #f1f5f9; border-radius:10px; font-family:monospace; font-size:14px;" />
     </div>
-
     <div class="field">
-      <label>單位分機</label>
-      <input type="text" id="hospitalExt" />
+      <label style="color:#94a3b8; font-size:12px; margin-bottom:4px;">起案時間</label>
+      <input type="datetime-local" id="referralTime" style="background:#fcfdfe; color:#94a3b8; border:1px solid #f1f5f9; border-radius:10px; font-size:13px;" />
     </div>
-
   </div>
 </div>
 
@@ -1425,38 +1423,8 @@ function validateForm(data) {
     }
 
     let caseManagers = [];
-    async function loadCaseManagers(retries = 5) {
-      const client = window.supabaseClient;
-      if (!client) {
-        if (retries > 0) {
-          setTimeout(() => loadCaseManagers(retries - 1), 500);
-        }
-        return;
-      }
-      try {
-        const { data, error } = await client.from('case_managers').select('*').order('name');
-        if (error) { console.error('loadCaseManagers error:', error); return; }
-        caseManagers = data || [];
-        const sel = document.getElementById("caseManagerSelect");
-        if (!sel) return;
-        sel.innerHTML = '<option value="">快速帶入名單...</option>' +
-          caseManagers.map(m => `<option value="${m.id}">${m.name}（${m.hospital}）</option>`).join('');
-      } catch(e) {
-        console.error('loadCaseManagers exception:', e);
-      }
-    }
-
-    function fillManagerInfo() {
-      const sel = document.getElementById("caseManagerSelect");
-      const m = caseManagers.find(x => x.id === sel.value);
-      if (m) {
-        document.getElementById("caseManager").value = m.name || "";
-        document.getElementById("caseManagerPhone").value = m.phone || "";
-        document.getElementById("hospital").value = m.hospital || "";
-        document.getElementById("hospitalExt").value = m.ext || "";
-        updatePreview();
-      }
-      sel.value = ""; // 重置選單
+    async function loadCaseManagers() {
+      // 目前僅留作擴充，不再渲染下拉選單
     }
     async function authByEmpId() {
       const eid = $("empIdAuth").value.trim();
