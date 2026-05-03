@@ -402,6 +402,15 @@
       <input type="datetime-local" id="referralTime" />
     </div>
 
+    <!-- 員編認證列 -->
+    <div class="field" style="grid-column: span 2;">
+      <label>員編認證 (快速帶入資料)</label>
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="empIdAuth" placeholder="輸入員編後按 Enter..." style="flex:1;" />
+        <button type="button" class="btn-secondary" onclick="authByEmpId()" style="width:100px;">驗證</button>
+      </div>
+    </div>
+
     <!-- 第二列 -->
     <div class="field">
       <label>個管師姓名<span class="required">*</span></label>
@@ -1452,6 +1461,39 @@ function validateForm(data) {
       }
       sel.value = ""; // 重置選單
     }
+    async function authByEmpId() {
+      const eid = $("empIdAuth").value.trim();
+      if (!eid) return;
+      try {
+        showStatus("success", "驗證員編中...");
+        const { data, error } = await window.supabaseClient
+          .from('case_managers')
+          .select('*')
+          .eq('emp_id', eid)
+          .single();
+        
+        if (error || !data) {
+          showStatus("error", "找不到此員編，請確認後再試，或手動輸入");
+          return;
+        }
+
+        $("caseManager").value = data.name || "";
+        $("caseManagerPhone").value = data.phone || "";
+        $("hospital").value = data.hospital || "";
+        $("hospitalExt").value = data.ext || "";
+        showStatus("success", `驗證成功：歡迎 ${data.name}`);
+      } catch (err) {
+        showStatus("error", "驗證過程出錯");
+      }
+    }
+
+    document.getElementById('empIdAuth').addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        authByEmpId();
+      }
+    });
+
   </script>
 </body>
 </html>
