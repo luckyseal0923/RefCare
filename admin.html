@@ -225,7 +225,7 @@
           <p>單檔預覽版。用來在這裡快速預覽與修改，確認後再同步回 GitHub 正式拆檔版。</p>
         </div>
         <div style="display:flex; gap:10px; align-items:center;">
-          <button type="button" onclick="openManagerModal()" style="background:rgba(255,255,255,0.2); color:#fff; border:1px solid rgba(255,255,255,0.4); border-radius:10px; padding:8px 16px; font-size:13px; font-weight:700; cursor:pointer; backdrop-filter:blur(4px); transition:all 0.2s;">👤 個管師名單</button>
+          <button type="button" onclick="openManagerModal()" style="background:rgba(255,255,255,0.2); color:#fff; border:1px solid rgba(255,255,255,0.4); border-radius:10px; padding:8px 16px; font-size:13px; font-weight:700; cursor:pointer; backdrop-filter:blur(4px); transition:all 0.2s;">🔐 帳號管理</button>
           <div class="hero-badge">Admin Preview</div>
         </div>
       </div>
@@ -882,15 +882,15 @@
       container.innerHTML = managersList.length
         ? `<div class="mgr-list">${managersList.map(m => `
           <div class="mgr-card">
-            <div class="mgr-card-name">👤 ${escapeHtml(m.name)}</div>
+            <div class="mgr-card-name">🔑 ${escapeHtml(m.name)}</div>
             <div class="mgr-card-info">
               <div class="mgr-card-item">
                 <span class="mgr-card-icon">🆔</span>
-                <div><span style="color:#94a3b8">員編：</span><span class="mgr-card-val">${escapeHtml(m.emp_id || '未設定')}</span></div>
+                <div><span style="color:#94a3b8">登入員編：</span><span class="mgr-card-val">${escapeHtml(m.emp_id || '未設定')}</span></div>
               </div>
               <div class="mgr-card-item">
-                <span class="mgr-card-icon">📍</span>
-                <div><span style="color:#94a3b8">單位：</span><span class="mgr-card-val">${escapeHtml(m.hospital)}</span></div>
+                <span class="mgr-card-icon">🏢</span>
+                <div><span style="color:#94a3b8">所屬單位：</span><span class="mgr-card-val">${escapeHtml(m.hospital)}</span></div>
               </div>
               <div class="mgr-card-item">
                 <span class="mgr-card-icon">📱</span>
@@ -903,10 +903,10 @@
               </div>` : ''}
             </div>
             <div class="mgr-card-actions">
-              <span class="mgr-del-link" onclick="deleteManager('${m.id}')">移除此成員</span>
+              <span class="mgr-del-link" onclick="deleteManager('${m.id}')">註銷此帳號</span>
             </div>
           </div>`).join('')}</div>`
-        : '<div class="mgr-empty">目前尚未建立個管師名單</div>';
+        : '<div class="mgr-empty">目前尚未建立系統帳號</div>';
     }
     function openManagerModal() {
       const el = $d('mgrOverlay');
@@ -991,22 +991,22 @@
   <div class="mgr-overlay" id="mgrOverlay" onclick="if(event.target===this)closeMgrModal()">
     <div class="mgr-modal">
       <div class="mgr-modal-head">
-        <h2>👤 個管師名單維護</h2>
+        <h2>🔐 系統帳號管理</h2>
         <button class="mgr-modal-close" onclick="closeMgrModal()">×</button>
       </div>
       <div class="mgr-modal-body">
         <div class="mgr-add-section">
-          <h3>➕ 新增個管師</h3>
+          <h3>➕ 建立新帳號</h3>
           <div class="mgr-add-row">
             <input type="text" id="addMEmpId" placeholder="員編 (選填)">
             <input type="text" id="addMName" placeholder="姓名 (必填)">
             <input type="text" id="addMPhone" placeholder="電話 (必填)">
           </div>
-          <div class="mgr-add-row">
-            <input type="text" id="addMHospital" placeholder="轉介單位 (必填)" style="flex:2;">
-            <input type="text" id="addMExt" placeholder="分機" style="flex:1;">
-            <button class="btn btn-primary" type="button" onclick="addManager()" style="flex-shrink:0;padding:8px 16px;font-size:13px;">新增</button>
-          </div>
+            <div class="mgr-add-row">
+              <input type="text" id="addMHospital" placeholder="所屬單位 (必填)" style="flex:2;">
+              <input type="text" id="addMExt" placeholder="分機" style="flex:1;">
+              <button class="btn btn-primary" type="button" onclick="addManager()" style="flex-shrink:0;padding:8px 16px;font-size:13px;">建立帳號</button>
+            </div>
         </div>
         <div class="mgr-list" id="managerTableBody">
           <div class="mgr-empty">載入中...</div>
