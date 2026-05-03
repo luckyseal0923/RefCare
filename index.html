@@ -340,1101 +340,632 @@
 .grp-chip{display:inline-flex;align-items:center;gap:5px;border:1.5px solid #a7f3d0;background:#ecfdf5;border-radius:999px;padding:5px 12px;font-size:12px;font-weight:700;color:#065f46;cursor:pointer;transition:all .15s;white-space:nowrap;}
 .grp-chip:hover{background:#d1fae5;border-color:#0f766e;}
 .grp-chip.flash{background:#0f766e;color:#fff;border-color:#0f766e;}
-.grp-chip-count{background:rgba(0,0,0,0.12);border-radius:999px;padding:1px 7px;font-size:11px;}
-.grp-chip-add{border:1.5px dashed #a7f3d0;background:#fff;border-radius:999px;padding:5px 12px;font-size:12px;font-weight:700;color:#0f766e;cursor:pointer;white-space:nowrap;}
-.grp-chip-add:hover{background:#ecfdf5;}
-.grp-manage-btn{margin-left:auto;font-size:12px;font-weight:700;color:#0f766e;background:none;border:1px solid #a7f3d0;border-radius:8px;padding:4px 10px;cursor:pointer;white-space:nowrap;}
-.grp-manage-btn:hover{background:#ecfdf5;}
-.grp-empty-bar{font-size:12px;color:#94a3b8;padding:2px 0;}
-/* 群組編輯 Sub-Modal */
-.grp-edit-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.6);z-index:1100;align-items:center;justify-content:center;padding:16px;}
-.grp-edit-overlay.show{display:flex;}
-.grp-edit-modal{background:#fff;border-radius:20px;width:100%;max-width:600px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(15,23,42,0.25);overflow:hidden;}
-.grp-edit-head{padding:16px 20px;background:linear-gradient(135deg,#1e40af,#3b82f6);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
-.grp-edit-head h3{margin:0;font-size:16px;font-weight:900;color:#fff;}
-.grp-edit-close{border:none;background:rgba(255,255,255,0.25);border-radius:8px;width:30px;height:30px;font-size:18px;cursor:pointer;color:#fff;}
-.grp-edit-body{padding:14px 16px;overflow-y:auto;flex:1;}
-.grp-name-field{margin-bottom:14px;}
-.grp-name-label{font-size:13px;font-weight:700;color:#374151;margin-bottom:6px;display:block;}
-.grp-name-input{width:100%;border:1.5px solid #d1d5db;border-radius:10px;padding:10px 12px;font-size:15px;outline:none;box-sizing:border-box;}
-.grp-name-input:focus{border-color:#3b82f6;}
-.grp-fac-search{margin-bottom:10px;border:1px solid #d1d5db;border-radius:8px;padding:8px 12px;font-size:13px;width:100%;outline:none;box-sizing:border-box;}
-.grp-fac-list{display:flex;flex-direction:column;gap:4px;max-height:320px;overflow-y:auto;border:1px solid #e5e7eb;border-radius:10px;padding:6px;}
-.grp-fac-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;cursor:pointer;}
-.grp-fac-item:hover{background:#f0fdf9;}
-.grp-fac-item.checked{background:#ecfdf5;}
-.grp-fac-item input[type=checkbox]{width:16px;height:16px;accent-color:#0f766e;cursor:pointer;}
-.grp-fac-item-name{font-size:13px;font-weight:600;color:#0f172a;}
-.grp-edit-foot{padding:12px 16px;border-top:1px solid #e5e7eb;display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;}
+<style>
+    :root {
+      --bg: #f4f7f8;
+      --card: #ffffff;
+      --primary: #0f766e;
+      --primary-dark: #115e59;
+      --primary-soft: #ccfbf1;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --danger: #dc2626;
+      --warning: #f59e0b;
+      --success: #16a34a;
+      --radius: 20px;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    /* Header */
+    .app-header {
+      background: linear-gradient(135deg, #0f766e, #134e4a);
+      color: white;
+      padding: 32px 40px 48px;
+    }
+    .header-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 24px;
+    }
+    .brand-title { font-size: 28px; font-weight: 900; margin: 0 0 8px; letter-spacing: 0.04em; }
+    .brand-subtitle { margin: 0; color: #d1fae5; font-size: 15px; line-height: 1.7; opacity: 0.9; }
+    .header-pill {
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 999px;
+      padding: 10px 18px;
+      font-size: 14px;
+      white-space: nowrap;
+      backdrop-filter: blur(4px);
+    }
+
+    /* Layout */
+    .page {
+      max-width: 1280px;
+      margin: -32px auto 60px;
+      padding: 0 24px;
+    }
+    .main-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* Workflow Steps */
+    .workflow-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .workflow-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .workflow-title h2 { margin: 0; font-size: 18px; font-weight: 800; }
+    .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .step {
+      border: 1.5px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #fafafa;
+      transition: all 0.2s;
+    }
+    .step.active { background: var(--primary-soft); border-color: #5eead4; }
+    .step-number {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--primary); color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 14px;
+    }
+    .step-label { font-weight: 800; font-size: 14px; color: #374151; }
+
+    /* Section Card */
+    .section-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 28px;
+      margin-bottom: 24px;
+      border: 1px solid rgba(0,0,0,0.02);
+    }
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 18px;
+      margin-bottom: 24px;
+    }
+    .section-title { margin: 0 0 6px; font-size: 20px; font-weight: 900; color: #0f172a; }
+    .section-desc { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+    /* Form Elements */
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+    .form-grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .field { display: flex; flex-direction: column; gap: 8px; }
+    .field.full { grid-column: 1 / -1; }
+    label { font-size: 14px; font-weight: 800; color: #374151; }
+    input, select, textarea {
+      width: 100%;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-size: 15px;
+      background: #fff;
+      outline: none;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.08);
+      background: #fff;
+    }
+    textarea { min-height: 110px; resize: vertical; }
+
+    /* Auth Section */
+    .auth-box {
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      border-radius: 18px;
+      padding: 18px;
+      margin-bottom: 24px;
+    }
+
+    /* Badge & Chips */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 800;
+      background: #f0f9ff;
+      color: #0369a1;
+      white-space: nowrap;
+    }
+    .inline-options { display: flex; flex-wrap: wrap; gap: 10px; }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1.5px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 14px;
+      background: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .chip:hover { border-color: var(--primary); background: var(--primary-soft); }
+    .chip input[type="checkbox"] { width: auto; margin: 0; cursor: pointer; }
+
+    /* Side Panel */
+    .side-panel { position: sticky; top: 24px; }
+    .summary-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .summary-label { color: var(--muted); font-size: 13px; margin-bottom: 6px; font-weight: 700; }
+    .summary-id { font-size: 22px; font-weight: 900; letter-spacing: 0.02em; margin-bottom: 20px; color: var(--primary-dark); font-family: monospace; }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 0;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 14px;
+    }
+    .summary-row strong { color: #1e293b; text-align: right; }
+    .summary-note {
+      margin: 20px 0;
+      padding: 14px;
+      border-radius: 16px;
+      background: #fffbeb;
+      color: #92400e;
+      font-size: 13px;
+      line-height: 1.6;
+      border: 1px solid #fef3c7;
+    }
+
+    /* Buttons */
+    .btn {
+      border: 0;
+      border-radius: 14px;
+      padding: 14px 20px;
+      font-size: 15px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      width: 100%;
+      box-shadow: 0 4px 12px rgba(15, 118, 110, 0.2);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(15, 118, 110, 0.3); }
+    .btn-secondary { background: #f0fdfa; color: #0f766e; border: 1.5px solid #99f6e4; }
+    .btn-secondary:hover { background: #ccfbf1; }
+    .btn-light { background: #f9fafb; color: #4b5563; border: 1.5px solid var(--line); }
+    .btn-light:hover { background: #f3f4f6; }
+
+    /* KPI */
+    .kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .kpi {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      background: #fafafa;
+    }
+    .kpi-value { font-size: 24px; font-weight: 900; color: var(--primary-dark); margin-bottom: 4px; }
+    .kpi-label { color: var(--muted); font-size: 13px; font-weight: 700; }
+
+    /* Overlays & Modals (Preserved from existing) */
+    .status { position: fixed; top: 20px; right: 20px; padding: 16px 24px; border-radius: 16px; font-weight: 800; z-index: 2000; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: none; }
+    .status.success { display: block; background: #ecfdf5; color: #059669; border-left: 6px solid #10b981; }
+    .status.error { display: block; background: #fef2f2; color: #dc2626; border-left: 6px solid #ef4444; }
+    
+    .overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.6);z-index:1000;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);}
+    .overlay.show{display:flex;}
+    .modal{background:#fff;border-radius:24px;width:100%;max-width:850px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 30px 60px rgba(0,0,0,0.2);overflow:hidden;}
+    .modal-head{padding:20px 28px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));display:flex;justify-content:space-between;align-items:center;color:#fff;}
+    .modal-body{padding:24px 28px;overflow-y:auto;flex:1;}
+    .modal-foot{padding:20px 28px;border-top:1px solid #f1f5f9;display:flex;justify-content:flex-end;gap:12px;}
+
+    .fac-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
+    .fac-item{padding:16px;border:1.5px solid #f1f5f9;border-radius:18px;cursor:pointer;transition:all 0.2s;display:flex;justify-content:space-between;align-items:center;}
+    .fac-item:hover{border-color:var(--primary);background:var(--primary-soft);}
+    .fac-item.selected{border-color:var(--primary);background:#f0fdfa;box-shadow:0 0 0 4px rgba(15,118,110,0.05);}
+    
+    .grp-edit-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.6);z-index:1100;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);}
+    .grp-edit-overlay.show{display:flex;}
+    .grp-edit-modal{background:#fff;border-radius:24px;width:100%;max-width:600px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 30px 60px rgba(0,0,0,0.25);}
+    .grp-edit-head{padding:18px 24px;background:linear-gradient(135deg,#1e40af,#3b82f6);display:flex;justify-content:space-between;align-items:center;color:#fff;border-radius:24px 24px 0 0;}
+
+    @media (max-width: 768px) {
+      .app-header { padding: 24px 20px 40px; }
+      .header-inner { flex-direction: column; }
+      .main-grid { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: 1fr 1fr; }
+      .page { margin-top: -40px; padding: 0 16px; }
+      .form-grid.three { grid-template-columns: 1fr; }
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js"></script>
 </head>
 <body>
-<div class="wrap">
+  <div id="status" class="status"></div>
 
-  <!-- =========================
-       HERO
-  ========================= -->
-  <div class="hero">
-    <div class="pill">醫療端起案</div>
-    <h1>個案安置轉介平台</h1>
-    <p>
-      此頁提供醫療端建立安置轉介案件。送出後可串接 n8n / LINE Bot / 資料庫，
-      自動通知安置中心群組或各機構。
-    </p>
-  </div>
-
-<!-- =========================
-     立案基本資料（卡片1）
-========================= -->
-<div class="card">
-  <div class="section-title">立案基本資料</div>
-  
-  <!-- 1. 帳號身份認證區 (員編 + 密碼) -->
-  <div style="background:#f8fafc; border:1px dashed #cbd5e1; border-radius:20px; padding:20px; margin-bottom:28px;">
-    <div style="font-size:14px; font-weight:800; color:#475569; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
-      <span>🔑</span> 系統帳號認證 (輸入後按 Enter 帶入資料)
-    </div>
-    <div style="display:flex; gap:12px; flex-wrap:wrap;">
-      <input type="text" id="empIdAuth" placeholder="請輸入員編" style="flex:1; min-width:140px; border:1.5px solid #e2e8f0; border-radius:14px; padding:12px 16px; font-size:15px; outline:none;" />
-      <input type="password" id="empPasswordAuth" placeholder="請輸入密碼" style="flex:1; min-width:140px; border:1.5px solid #e2e8f0; border-radius:14px; padding:12px 16px; font-size:15px; outline:none;" />
-      <button type="button" class="btn-primary" onclick="authByEmpId()" style="width:120px; border-radius:14px; font-weight:900; background:linear-gradient(135deg,#1e40af,#3b82f6);">驗證登入</button>
-    </div>
-  </div>
-
-  <!-- 2. 個管師詳細資訊網格 -->
-  <div class="grid" style="margin-bottom:28px; gap:20px;">
-    <div class="field">
-      <label style="font-weight:800; color:#1e293b;">個管師姓名 <span class="required">*</span></label>
-      <input type="text" id="caseManager" placeholder="請輸入姓名" required />
-    </div>
-    <div class="field">
-      <label style="font-weight:800; color:#1e293b;">聯絡電話 <span class="required">*</span></label>
-      <input type="text" id="caseManagerPhone" placeholder="例如: 0912..." required />
-    </div>
-    <div class="field">
-      <label style="font-weight:800; color:#1e293b;">轉介單位 <span class="required">*</span></label>
-      <input type="text" id="hospital" placeholder="例如: 萬芳醫院急診" required />
-    </div>
-    <div class="field">
-      <label style="font-weight:800; color:#1e293b;">單位分機</label>
-      <input type="text" id="hospitalExt" placeholder="例如: 6524" />
-    </div>
-  </div>
-
-  <!-- 3. 系統輔助資訊 -->
-  <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:20px; border-top:1.5px solid #f1f5f9; padding-top:24px;">
-    <div class="field">
-      <label style="color:#94a3b8; font-size:12px; margin-bottom:4px;">案件編號 (系統自動生成)</label>
-      <input type="text" id="caseId" readonly style="background:#fcfdfe; color:#94a3b8; border:1px solid #f1f5f9; border-radius:10px; font-family:monospace; font-size:14px;" />
-    </div>
-    <div class="field">
-      <label style="color:#94a3b8; font-size:12px; margin-bottom:4px;">起案時間</label>
-      <input type="datetime-local" id="referralTime" style="background:#fcfdfe; color:#94a3b8; border:1px solid #f1f5f9; border-radius:10px; font-size:13px;" />
-    </div>
-  </div>
-</div>
-
-<!-- =========================
-     個案基本資料 + 功能評估（卡片2）
-========================= -->
-<div class="card">
-  <div class="section-title">個案基本資料與功能評估</div>
-
-  <!-- 個案基本資訊 -->
-  <div class="sub-title">個案基本資訊</div>
-  <div class="grid">
-
-    <div class="field">
-      <label>個案姓名</label>
-      <input type="text" id="patientName" />
-    </div>
-
-    <div class="field">
-      <label>性別<span class="required">*</span></label>
-      <select id="gender">
-        <option value="">請選擇</option>
-        <option value="男">男</option>
-        <option value="女">女</option>
-        <option value="其他">其他</option>
-      </select>
-    </div>
-
-    <div class="field">
-      <label>年齡<span class="required">*</span></label>
-      <input type="number" id="age" />
-    </div>
-
-    <div class="field">
-      <label>身高(cm)</label>
-      <input type="number" id="height" />
-    </div>
-
-    <div class="field">
-      <label>體重(kg)</label>
-      <input type="number" id="weight" />
-    </div>
-
-    <div class="field full">
-      <label>地址</label>
-      <input type="text" id="address" />
-    </div>
-
-  </div>
-
-  <!-- 功能評估 -->
-  <div class="sub-title">功能評估</div>
-  <div class="grid-3">
-
-    <div class="field">
-      <label>CMS 失能等級</label>
-      <select id="cmsLevel">
-        <option value="">請選擇</option>
-        <option value="2">2級</option>
-        <option value="3">3級</option>
-        <option value="4">4級</option>
-        <option value="5">5級</option>
-        <option value="6">6級</option>
-        <option value="7">7級</option>
-        <option value="8">8級</option>
-      </select>
-    </div>
-
-    <div class="field">
-      <label>行動能力</label>
-      <select id="mobility">
-        <option value="">請選擇</option>
-        <option value="可自行行走">可自行行走</option>
-        <option value="可使用輔具行走(手杖、助行器等)">可使用輔具行走(手杖、助行器等)</option>
-        <option value="使用輔具並扶持下行走">使用輔具並扶持下行走</option>
-        <option value="無法行走，但可站立">無法行走，但可站立</option>
-        <option value="無法行走及站立，需全移位">無法行走及站立，需全移位</option>
-        <option value="長期臥床，均於床上照顧">長期臥床，均於床上照顧</option>
-      </select>
-    </div>
-
-    <div class="field">
-      <label>意識</label>
-      <select id="consciousness">
-        <option value="">請選擇</option>
-        <option value="清楚">清楚</option>
-        <option value="混亂">混亂</option>
-        <option value="木僵">木僵</option>
-      </select>
-    </div>
-
-  </div>
-</div>
-  
-  <!-- =========================
-       長照轉介資訊（獨立一張卡）
-  ========================= -->
- 
-<div class="card">
-  <div class="section-title">服務項目與照護內容</div>
-
-  <!-- =========================
-       ③ 服務需求
-  ========================= -->
-  <div class="sub-title">服務需求</div>
-  <div class="grid">
-
-    <div class="field">
-      <label>服務類型</label>
-      <select id="serviceType">
-        <option value="">請選擇</option>
-        <option value="居家服務">居家服務</option>
-        <option value="居家喘息服務">居家喘息服務</option>
-      </select>
-    </div>
-
-    <div class="field">
-      <label>服務時段</label>
-      <input type="text" id="serviceTime" />
-    </div>
-
-  </div>
-<div class="sub-title">服務碼別</div>
-
-<div class="field">
-  <button type="button" class="btn-secondary" onclick="openServiceModal()">
-    選擇服務碼（含次數）
-  </button>
-
-  <div id="selectedServices" class="helper">
-    尚未選擇
-  </div>
-</div>
-
-  <div class="field">
-    <label>案況簡述（長照）</label>
-    <textarea id="caseSummary"></textarea>
-  </div>
-
-  <div class="field">
-    <label>特殊需求（長照）</label>
-    <div class="check-grid" style="margin-top:8px;">
-      <label class="check-item"><input type="checkbox" class="special-need-check" value="需女性居服員"> 需女性居服員</label>
-      <label class="check-item"><input type="checkbox" class="special-need-check" value="需男性居服員"> 需男性居服員</label>
-    </div>
-    <textarea id="specialNeedOther" placeholder="其他需求..." style="margin-top:10px;"></textarea>
-  </div>
-
-
-
-  </div>
-
-
-
-</div>
-  <!-- =========================
-       送出案件
-  ========================= -->
-  <div class="card">
-    <div class="section-title">派案設定與送出</div>
-
-    <!-- 派案模式 -->
-    <div class="field" style="margin-bottom:20px;">
-      <label style="font-size:14px; font-weight:700; color:#1e293b; margin-bottom:10px; display:block;">派案模式</label>
-      <div class="check-grid">
-        <label class="check-item">
-          <input type="radio" name="targetGroup" value="指定機構" onchange="handleModeChange()" checked>
-          <span>🎯 指定機構</span>
-        </label>
-        <label class="check-item">
-          <input type="radio" name="targetGroup" value="合作機構(一輪)" onchange="handleModeChange()">
-          <span>🔵 合作機構（一輪）</span>
-        </label>
-        <label class="check-item">
-          <input type="radio" name="targetGroup" value="全區機構(二輪)" onchange="handleModeChange()">
-          <span>🟡 全區機構（二輪）</span>
-        </label>
-        <label class="check-item">
-          <input type="radio" name="targetGroup" value="困難派案(三輪)" onchange="handleModeChange()">
-          <span>🔴 困難派案（三輪）</span>
-        </label>
+  <header class="app-header">
+    <div class="header-inner">
+      <div>
+        <h1 class="brand-title">REF Care 個案轉介平台</h1>
+        <p class="brand-subtitle">建立安置轉介案件，快速通知合作機構，並自動追蹤回覆狀態。</p>
       </div>
+      <div class="header-pill">醫院端起案系統｜正式運行版</div>
     </div>
+  </header>
 
-    <!-- 指定機構選擇器（僅在指定機構模式顯示） -->
-    <div id="facilityPickerWrap" style="margin-bottom:20px;">
-      <label style="font-size:14px; font-weight:700; color:#1e293b; margin-bottom:10px; display:block;">
-        選擇派案機構
-        <span style="font-size:12px; font-weight:400; color:#64748b;">（可多選，支援搜尋）</span>
-      </label>
-      <button type="button" class="fac-trigger-btn" id="facTriggerBtn" onclick="openFacModal()">
-        <span id="facTriggerLabel">點此選擇機構...</span>
-        <span class="fac-trigger-badge" id="facBadge" style="display:none;">0</span>
-      </button>
-      <div class="fac-tags-wrap" id="facTagsWrap"></div>
-    </div>
-
-    <div class="toolbar">
-      <button class="btn-primary" id="btnSubmit">送出案件</button>
-      <button class="btn-secondary" id="btnReset">清空</button>
-    </div>
-
-    <div id="statusBox" class="status"></div>
-  </div>
-
-</div>
-
-  <div id="serviceModal" class="modal">
-  <div class="modal-content">
-
-    <div style="display:flex;justify-content:space-between;">
-      <h3>選擇服務碼</h3>
-      <span onclick="closeServiceModal()" style="cursor:pointer;">✕</span>
-    </div>
-
-    <div id="serviceList"></div>
-
-    <div class="toolbar">
-      <button class="btn-secondary" onclick="closeServiceModal()">取消</button>
-      <button class="btn-primary" onclick="confirmService()">確認</button>
-    </div>
-
-  </div>
-</div>
-
-<!-- ===== 機構選擇 Modal ===== -->
-<div class="fac-modal-overlay" id="facModalOverlay" onclick="if(event.target===this)closeFacModal()">
-  <div class="fac-modal">
-    <div class="fac-modal-head">
-      <h3>🏥 選擇派案機構</h3>
-      <button class="fac-modal-close" onclick="closeFacModal()">×</button>
-    </div>
-    <!-- 群組快選列（常駐） -->
-    <div class="grp-bar" id="grpBar">
-      <span class="grp-bar-label">🏷️ 群組：</span>
-      <span class="grp-empty-bar" id="grpBarEmpty">尚無群組</span>
-      <button class="grp-chip-add" onclick="openGrpAdd()">＋ 新增群組</button>
-      <button class="grp-manage-btn" onclick="openGrpManage()">⚙️ 管理</button>
-    </div>
-    <!-- 機構搜尋列 -->
-    <div class="fac-search-bar">
-      <input type="text" class="fac-search-input" id="facSearchInput"
-        placeholder="搜尋機構名稱、地區..." oninput="renderFacList()" autocomplete="off" />
-    </div>
-    <div class="fac-stats-bar">
-      <span class="fac-stat-chip" id="facStatTotal">共 0 間</span>
-      <span class="fac-stat-chip" id="facStatFiltered"></span>
-      <div class="fac-action-btns">
-        <button class="fac-action-btn" onclick="selectAllVisible()">全選篩選結果</button>
-        <button class="fac-action-btn" onclick="clearAllFac()">清空全部</button>
-      </div>
-    </div>
-    <div class="fac-list-wrap" id="facListWrap"></div>
-    <div class="fac-modal-foot">
-      <span class="fac-selected-count" id="facSelectedCount">已選 0 間</span>
-      <button class="btn-secondary" style="padding:10px 18px;font-size:14px;" onclick="closeFacModal()">取消</button>
-      <button class="btn-primary" style="padding:10px 18px;font-size:14px;background:#0f766e;" onclick="confirmFacModal()">確認選擇</button>
-    </div>
-  </div>
-</div>
-
-<!-- ===== 群組編輯 Sub-Modal ===== -->
-<div class="grp-edit-overlay" id="grpEditOverlay" onclick="if(event.target===this)closeGrpEdit()">
-  <div class="grp-edit-modal">
-    <div class="grp-edit-head">
-      <h3 id="grpEditTitle">✏️ 編輯群組</h3>
-      <button class="grp-edit-close" onclick="closeGrpEdit()">×</button>
-    </div>
-    <div class="grp-edit-body">
-      <div class="grp-name-field">
-        <label class="grp-name-label">群組名稱</label>
-        <input type="text" class="grp-name-input" id="grpEditName" placeholder="例：北區合作機構" />
-      </div>
-      <label class="grp-name-label">選擇成員機構</label>
-      <input type="text" class="grp-fac-search" id="grpFacSearch" placeholder="搜尋機構..." oninput="renderGrpFacList()" />
-      <div class="grp-fac-list" id="grpFacList"></div>
-    </div>
-    <div class="grp-edit-foot">
-      <button class="btn-secondary" style="padding:9px 18px;" onclick="closeGrpEdit()">取消</button>
-      <button class="btn-primary" style="padding:9px 18px;background:#1e40af;" onclick="saveGrpEdit()">儲存群組</button>
-    </div>
-  </div>
-</div>
-<!-- ===== 群組管理 Modal ===== -->
-<div class="grp-edit-overlay" id="grpManageOverlay" onclick="if(event.target===this)closeGrpManage()">
-  <div class="grp-edit-modal">
-    <div class="grp-edit-head" style="background:linear-gradient(135deg,#065f46,#0f766e);">
-      <h3>⚙️ 群組管理</h3>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <button onclick="openGrpAdd()" style="border:none;background:rgba(255,255,255,0.25);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;color:#fff;cursor:pointer;">＋ 新增</button>
-        <button class="grp-edit-close" onclick="closeGrpManage()">×</button>
-      </div>
-    </div>
-    <div style="flex:1;overflow-y:auto;" id="grpManageList"></div>
-  </div>
-</div>
-  <script>
-// ===== 機構選擇器全域代理（讓 HTML onclick 能呼叫到） =====
-function openFacModal()     { if (window._openFacModal)     window._openFacModal();     }
-function closeFacModal()    { if (window._closeFacModal)    window._closeFacModal();    }
-function confirmFacModal()  { if (window._confirmFacModal)  window._confirmFacModal();  }
-function toggleFac(id)      { if (window._toggleFac)        window._toggleFac(id);      }
-function selectAllVisible() { if (window._selectAllVisible) window._selectAllVisible(); }
-function clearAllFac()      { if (window._clearAllFac)      window._clearAllFac();      }
-function removeFac(e, id)   { if (window._removeFac)        window._removeFac(e, id);   }
-function renderFacList()    { if (window._renderFacList)    window._renderFacList();    }
-function handleModeChange() { if (window._handleModeChange) window._handleModeChange(); }
-function switchFacTab(t) { if (window._switchFacTab) window._switchFacTab(t); }
-function addGroup()      { if (window._addGroup)      window._addGroup();      }
-function editGroup(id)   { if (window._editGroup)      window._editGroup(id);   }
-function deleteGroup(id) { if (window._deleteGroup)    window._deleteGroup(id); }
-function selectGroup(id,chip){ if (window._selectGroup) window._selectGroup(id,chip); }
-function closeGrpEdit()  { if (window._closeGrpEdit)   window._closeGrpEdit();  }
-function saveGrpEdit()   { if (window._saveGrpEdit)    window._saveGrpEdit();   }
-function renderGrpFacList(){ if (window._renderGrpFacList) window._renderGrpFacList(); }
-function openGrpAdd()    { if (window._addGroup)       window._addGroup();      }
-function openGrpManage() { if (window._openGrpManage)  window._openGrpManage(); }
-function closeGrpManage(){ if (window._closeGrpManage) window._closeGrpManage(); }
-// =======================================================
-function getSpecialCareList() {
-  return Array.from(document.querySelectorAll(".special-care:checked")).map(item => item.value);
-}
-
-    /* =========================
-   🔥 新增：服務碼 Modal 系統
-========================= */
-const services = [
-  { category: "🔹 1. 生活照護（ADL）", items: [
-    { code: "BA01", name: "基本身體清潔" },
-    { code: "BA02", name: "基本日常照顧" },
-    { code: "BA04", name: "餵食/灌食" },
-    { code: "BA05", name: "餐食照顧" },
-    { code: "BA07", name: "沐浴洗頭" },
-    { code: "BA23", name: "協助洗頭" },
-    { code: "BA24", name: "協助排泄" },
-    { code: "BA10", name: "翻身拍背" },
-    { code: "BA11", name: "關節活動" }
-  ]},
-  { category: "🔹 2. 支持性服務（整合 2 + 3 + 5）", items: [
-    { code: "BA12", name: "上下樓" },
-    { code: "BA13", name: "陪同外出" },
-    { code: "BA14", name: "陪同就醫" },
-    { code: "BA15-1", name: "家務（自用）" },
-    { code: "BA15-2", name: "家務（共用）" },
-    { code: "BA16", name: "代購/代送" },
-    { code: "BA18", name: "安全看視" },
-    { code: "BA20", name: "陪伴服務" },
-    { code: "BA22", name: "巡視服務" }
-  ]},
-  { category: "🔹 3. 醫療與專業照護", items: [
-    { code: "BA03", name: "生命徵象" },
-    { code: "BA17a", name: "氣道抽吸" },
-    { code: "BA17b", name: "口鼻抽吸" },
-    { code: "BA17c", name: "管路清潔" },
-    { code: "BA17d", name: "血糖/通便" },
-    { code: "BA17e", name: "藥盒管理" },
-    { code: "BA08", name: "足部照護" },
-    { code: "BA09", name: "沐浴車" }
-  ]}
-];
-
-let serviceCount = {};
-
-function openServiceModal(){
-  const list = document.getElementById("serviceList");
-  list.innerHTML = "";
-
-  services.forEach(cat => {
-    list.innerHTML += `<div class="category-header" style="margin-top:15px; font-weight:bold; color:#1d4ed8; background:#f0f7ff; padding:8px 12px; border-radius:8px; grid-column: 1 / -1;">${cat.category}</div>`;
-    
-    // 使用 grid 容器包裹項目
-    list.innerHTML += `<div class="service-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; padding: 10px 0;">`;
-    
-    cat.items.forEach(s => {
-      const rowHtml = `
-        <div class="service-row" onclick="toggleService('${s.code}')" style="cursor:pointer; padding:8px 12px; border:1px solid #f1f5f9; border-radius:8px; display:flex; align-items:center; gap:10px; background:#fff; justify-content:flex-start;">
-          <input type="checkbox" id="check-${s.code}" ${serviceCount[s.code] ? 'checked' : ''} style="width:16px;height:16px;" onclick="event.stopPropagation(); toggleService('${s.code}')">
-          <span style="font-size:14px;">${s.code} ${s.name}</span>
+  <main class="page">
+    <section class="workflow-card">
+      <div class="workflow-title">
+        <div>
+          <h2>案件建立流程</h2>
+          <span>按部就班完成評估，系統將自動媒合最適機構。</span>
         </div>
-      `;
-      list.lastElementChild.innerHTML += rowHtml;
-    });
+        <span class="badge">目前步驟：建立案件</span>
+      </div>
+      <div class="steps">
+        <div class="step active"><div class="step-number">1</div><div class="step-label">基本資訊</div></div>
+        <div class="step"><div class="step-number">2</div><div class="step-label">個案評估</div></div>
+        <div class="step"><div class="step-number">3</div><div class="step-label">選擇機構</div></div>
+        <div class="step"><div class="step-number">4</div><div class="step-label">送出通知</div></div>
+      </div>
+    </section>
+
+    <div class="main-grid">
+      <div class="content-column">
+        <section class="section-card">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">起案資訊</h2>
+              <p class="section-desc">請先驗證帳號身分，系統將自動帶入您的聯絡資訊。</p>
+            </div>
+            <span class="badge">身分驗證</span>
+          </div>
+          <div class="auth-box">
+            <div style="font-size:13px; font-weight:800; color:#475569; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+              <span>🔑</span> 帳號登入 (員編 + 密碼)
+            </div>
+            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+              <input type="text" id="empIdAuth" placeholder="員編" style="flex:1; min-width:120px;" />
+              <input type="password" id="empPasswordAuth" placeholder="密碼" style="flex:1; min-width:120px;" />
+              <button type="button" class="btn btn-primary" onclick="authByEmpId()" style="width:100px; padding:10px; margin:0;">驗證</button>
+            </div>
+          </div>
+          <div class="form-grid three">
+            <div class="field">
+              <label>轉介單位 <span class="required">*</span></label>
+              <input type="text" id="hospital" placeholder="例如: 萬芳醫院急診" required />
+            </div>
+            <div class="field">
+              <label>單位分機</label>
+              <input type="text" id="hospitalExt" placeholder="例如: 6524" />
+            </div>
+            <div class="field">
+              <label>個管師姓名 <span class="required">*</span></label>
+              <input type="text" id="caseManager" placeholder="請輸入姓名" required />
+            </div>
+            <div class="field">
+              <label>聯絡電話 <span class="required">*</span></label>
+              <input type="text" id="caseManagerPhone" placeholder="例如: 0912..." required />
+            </div>
+            <div class="field">
+              <label>案件編號 (系統產生)</label>
+              <input type="text" id="caseId" readonly style="background:#f8fafc; font-family:monospace;" />
+            </div>
+            <div class="field">
+              <label>起案時間</label>
+              <input type="datetime-local" id="referralTime" style="background:#f8fafc;" />
+            </div>
+          </div>
+        </section>
+
+        <section class="section-card">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">個案基本資料</h2>
+              <p class="section-desc">請填寫個案的基本生理資訊。</p>
+            </div>
+            <span class="badge">個案資訊</span>
+          </div>
+          <div class="form-grid three">
+            <div class="field">
+              <label>個案姓名</label>
+              <input type="text" id="patientName" placeholder="王○○" />
+            </div>
+            <div class="field">
+              <label>性別 <span class="required">*</span></label>
+              <select id="gender">
+                <option value="">請選擇</option>
+                <option value="男">男</option>
+                <option value="女">女</option>
+                <option value="其他">其他</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>年齡 <span class="required">*</span></label>
+              <input type="number" id="age" placeholder="歲" />
+            </div>
+            <div class="field">
+              <label>身高 (cm)</label>
+              <input type="number" id="height" placeholder="cm" />
+            </div>
+            <div class="field">
+              <label>體重 (kg)</label>
+              <input type="number" id="weight" placeholder="kg" />
+            </div>
+          </div>
+        </section>
+
+        <section class="section-card">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">功能評估與照護需求</h2>
+              <p class="section-desc">描述個案的失能等級與特殊醫護需求。</p>
+            </div>
+            <span class="badge">臨床評估</span>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label>CMS 失能等級 <span class="required">*</span></label>
+              <select id="cmsLevel">
+                <option value="">請選擇</option>
+                <option value="第 2 級">第 2 級</option>
+                <option value="第 3 級">第 3 級</option>
+                <option value="第 4 級">第 4 級</option>
+                <option value="第 5 級">第 5 級</option>
+                <option value="第 6 級">第 6 級</option>
+                <option value="第 7 級">第 7 級</option>
+                <option value="第 8 級">第 8 級</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>行動能力 <span class="required">*</span></label>
+              <select id="mobility">
+                <option value="">請選擇</option>
+                <option value="自行行走">自行行走</option>
+                <option value="使用輔具">使用輔具</option>
+                <option value="需人扶持">需人扶持</option>
+                <option value="臥床">臥床</option>
+              </select>
+            </div>
+            <div class="field full">
+              <label>案況簡述 (診斷、入院原因等)</label>
+              <textarea id="caseSummary" placeholder="請描述個案目前狀況..."></textarea>
+            </div>
+            <div class="field full">
+              <label>特殊照護需求</label>
+              <div class="inline-options">
+                <label class="chip"><input type="checkbox" name="care" value="管灌" /> 管灌</label>
+                <label class="chip"><input type="checkbox" name="care" value="氣切" /> 氣切</label>
+                <label class="chip"><input type="checkbox" name="care" value="氧氣" /> 氧氣</label>
+                <label class="chip"><input type="checkbox" name="care" value="洗腎" /> 洗腎</label>
+                <label class="chip"><input type="checkbox" name="care" value="傷口" /> 傷口</label>
+                <label class="chip"><input type="checkbox" name="care" value="造口" /> 造口</label>
+                <label class="chip"><input type="checkbox" name="care" value="導尿管" /> 導尿管</label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-card">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">服務需求</h2>
+              <p class="section-desc">選擇本次媒合的目標服務類型。</p>
+            </div>
+            <span class="badge">媒合設定</span>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label>服務類型 <span class="required">*</span></label>
+              <select id="serviceType">
+                <option value="">請選擇</option>
+                <option value="居家服務">居家服務</option>
+                <option value="居家喘息">居家喘息</option>
+                <option value="機構安置">機構安置</option>
+                <option value="機構喘息">機構喘息</option>
+                <option value="日間照顧">日間照顧</option>
+                <option value="家庭托顧">家庭托顧</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>期待服務時段</label>
+              <select id="serviceTime">
+                <option value="白天">白天</option>
+                <option value="全日">全日</option>
+                <option value="假日">假日</option>
+                <option value="可討論">可討論</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-card">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">派案與通知設定</h2>
+              <p class="section-desc">選擇要通知的機構。您可以快速選擇自定義群組。</p>
+            </div>
+            <span class="badge">派送名單</span>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <div style="font-size:14px; font-weight:800; color:#475569;">已選擇：<span id="selectedCount" style="color:var(--primary);">0</span> 間機構</div>
+            <button type="button" class="btn btn-secondary" onclick="openFacModal()" style="padding:8px 16px; font-size:13px;">➕ 選擇機構 / 群組</button>
+          </div>
+
+          <div id="selectedFacList" class="facility-list">
+            <div style="grid-column:1/-1; text-align:center; padding:20px; color:#94a3b8; font-size:14px;">尚未選擇任何機構</div>
+          </div>
+        </section>
+      </div>
+
+      <aside class="side-panel">
+        <section class="summary-card">
+          <div class="summary-label">案件編號</div>
+          <div class="summary-id" id="displayCaseId">REF-2026...</div>
+
+          <div class="summary-row"><span>目前狀態</span><strong>準備送出</strong></div>
+          <div class="summary-row"><span>起案人員</span><strong id="displayManager">未認證</strong></div>
+          <div class="summary-row"><span>服務類型</span><strong id="displayService">未選擇</strong></div>
+          <div class="summary-row"><span>媒合機構</span><strong id="displayFacCount">0 間</strong></div>
+
+          <div class="summary-note">
+            🚀 送出後，系統將自動產生機構專屬回覆頁面，並同步通知所選機構。
+          </div>
+
+          <button type="button" id="btnSubmit" class="btn btn-primary" onclick="submitForm()">建立案件並送出通知</button>
+          <button type="button" class="btn btn-light" onclick="resetForm()" style="width:100%; margin-top:12px;">清空重填</button>
+        </section>
+
+        <section class="summary-card">
+          <div class="section-header" style="border-bottom:0; margin-bottom:12px; padding-bottom:0;">
+            <div><h2 class="section-title" style="font-size:17px;">今日起案統計</h2></div>
+          </div>
+          <div class="kpi-grid">
+            <div class="kpi"><div class="kpi-value" id="kpiTodayCount">0</div><div class="kpi-label">今日起案</div></div>
+            <div class="kpi"><div class="kpi-value">--</div><div class="kpi-label">待媒合</div></div>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <div class="overlay" id="facModalOverlay" onclick="if(event.target===this)closeFacModal()">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 style="margin:0; font-weight:900;">🏥 選擇派案機構</h3>
+        <button onclick="closeFacModal()" style="border:none; background:none; color:white; font-size:24px; cursor:pointer;">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="grp-bar" id="grpBar" style="margin-bottom:20px; display:flex; flex-wrap:wrap; gap:8px;">
+          <button class="btn btn-light" style="padding:6px 12px; font-size:12px;" onclick="openGrpAdd()">＋ 新增群組</button>
+        </div>
+        <div style="margin-bottom:16px;">
+          <input type="text" id="facSearchInput" placeholder="搜尋機構名稱、區域..." oninput="renderFacList()" />
+        </div>
+        <div id="facListWrap" class="fac-list">
+        </div>
+      </div>
+      <div class="modal-foot">
+        <span style="margin-right:auto; font-weight:800; color:var(--primary);" id="facSelectedCount">已選 0 間</span>
+        <button class="btn btn-light" onclick="closeFacModal()">取消</button>
+        <button class="btn btn-primary" onclick="confirmFacModal()" style="width:auto;">確認選擇</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="grp-edit-overlay" id="grpEditOverlay" onclick="if(event.target===this)closeGrpEdit()">
+    <div class="grp-edit-modal">
+      <div class="grp-edit-head">
+        <h3 id="grpEditTitle" style="margin:0;">✏️ 編輯群組</h3>
+        <button onclick="closeGrpEdit()" style="border:none; background:none; color:white; font-size:24px; cursor:pointer;">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="field" style="margin-bottom:16px;">
+          <label>群組名稱</label>
+          <input type="text" id="grpEditName" placeholder="例：北區合作機構" />
+        </div>
+        <label>選擇成員機構</label>
+        <div id="grpFacList" style="max-height:300px; overflow-y:auto; border:1.5px solid #e5e7eb; border-radius:14px; padding:12px; margin-top:8px;">
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-light" onclick="closeGrpEdit()">取消</button>
+        <button class="btn btn-primary" onclick="saveGrpEdit()" style="width:auto;">儲存群組</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const N8N_WEBHOOKS = { createCase: "https://chihwei.zeabur.app/webhook/case_bluiding" };
+
+    /* =========================
+       1. 初始化與側邊欄連動
+    ========================= */
+    function getTaiwanDateTimeLocal() {
+      const now = new Date();
+      const taiwanTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+      return taiwanTime.toISOString().slice(0, 16);
+    }
     
-    list.innerHTML += `</div>`;
-  });
-
-  document.getElementById("serviceModal").style.display = "block";
-}
-
-function closeServiceModal(){
-  document.getElementById("serviceModal").style.display = "none";
-}
-
-function toggleService(code){
-  if (serviceCount[code]) {
-    delete serviceCount[code];
-    document.getElementById(`check-${code}`).checked = false;
-  } else {
-    serviceCount[code] = 1;
-    document.getElementById(`check-${code}`).checked = true;
-  }
-  updatePreview();
-}
-
-function updateCount(code, delta){
-  // 保持空函式避免舊程式報錯，或可移除
-}
-
-function confirmService(){
-  const selected = [];
-  services.forEach(cat => {
-    cat.items.forEach(s => {
-      if (serviceCount[s.code]) {
-        selected.push(`${s.code} ${s.name}`);
-      }
-    });
-  });
-
-  document.getElementById("selectedServices").textContent =
-    selected.length ? selected.join("、") : "尚未選擇";
-
-  closeServiceModal();
-  updatePreview();
-}
-
-// =============================================
-// 🔔 N8N Webhook 設定區（串接 LINE 通知用）
-// 取得 N8N webhook URL 後，填入對應常數即可
-// =============================================
-const N8N_WEBHOOKS = {
-  // 新案件送出時，通知個管師 / LINE 群組
-  createCase: "https://chihwei.zeabur.app/webhook/case_bluiding",
-};
-
-/** 通用 Webhook 發送（靜默失敗，不阻斷主流程） */
-function notifyN8N(url, payload) {
-  if (!url || !url.startsWith('http')) return;
-  fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  }).catch(e => console.warn('[N8N Webhook Error]', e));
-}
-
-const $ = (id) => document.getElementById(id);
-
-function getTaiwanDateTimeLocal() {
-  const now = new Date();
-  const taiwanTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
-  return taiwanTime.toISOString().slice(0, 16);
-}
-
-function generateCaseId() {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, "0");
-  const d = String(now.getDate()).padStart(2, "0");
-  const rand = Math.random().toString(36).substring(2, 4).toUpperCase();
-  return `REF-${y}${m}${d}-${rand}`;
-}
-
-function initForm() {
-  $("caseId").value = generateCaseId();
-  $("referralTime").value = getTaiwanDateTimeLocal();
-  updatePreview();
-  // 頁面載入時自動抓取個管師名單（延遲確保 loadCaseManagers 已定義）
-  setTimeout(() => loadCaseManagers(), 200);
-}
-
-function getFormData() {
-  return {
-    hospital_ext: $("hospitalExt").value,
-    case_id: $("caseId").value.trim(),
-    referral_time: $("referralTime").value,
-    hospital: $("hospital").value.trim(),
-    case_manager: $("caseManager").value.trim(),
-    case_manager_phone: $("caseManagerPhone").value.trim(),
-    patient_name: $("patientName").value,
-    gender: $("gender").value,
-    age: $("age").value,
-    cms_level: $("cmsLevel").value,
-    mobility: $("mobility").value,
-    consciousness: $("consciousness").value,
-    height: $("height").value,
-    weight: $("weight").value,
-    address: $("address").value,
-    service_time: $("serviceTime").value,
-    service_codes: Object.keys(serviceCount),
-    case_summary: $("caseSummary").value,
-    special_needs: Array.from(document.querySelectorAll('.special-need-check:checked')).map(el => el.value),
-    special_need_other: $("specialNeedOther").value,
-    target_group: document.querySelector('input[name="targetGroup"]:checked')?.value || "未指定",
-    status: document.querySelector('input[name="targetGroup"]:checked')?.value === '指定機構' ? "一輪媒合中" : (document.querySelector('input[name="targetGroup"]:checked')?.value || "待媒合")
-  };
-}
-
-function validateForm(data) {
-  if (!data.hospital) return "請填寫轉介單位";
-  if (!data.case_manager) return "請填寫個管師姓名";
-  if (!data.case_manager_phone) return "請填寫聯絡電話";
-  if (!data.gender) return "請選擇性別";
-  if (!data.age) return "請填寫年齡";
-  return "";
-}
-
-    function updatePreview() {
-      // 預覽功能已移除，保留空函式避免其他綁定的事件報錯
+    function generateCaseId() {
+      const now = new Date();
+      const rand = Math.random().toString(36).substring(2, 4).toUpperCase();
+      const id = `REF-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,"0")}${String(now.getDate()).padStart(2,"0")}-${rand}`;
+      $("caseId").value = id;
+      $("displayCaseId").textContent = id;
+      return id;
     }
 
-    /* =========================
-       狀態顯示
-    ========================= */
-    function showStatus(type, message) {
-      const box = $("statusBox");
-      box.className = `status ${type}`;
-      box.textContent = message;
+    function updateSidebar() {
+      $("displayCaseId").textContent = $("caseId").value;
+      $("displayManager").textContent = $("caseManager").value || "未認證";
+      $("displayService").textContent = $("serviceType").value || "未選擇";
+      $("displayFacCount").textContent = selectedFacIds.size + " 間";
     }
 
-    /* =========================
-       送出案件
-    ========================= */
-    async function submitForm() {
-      const data = getFormData();
-      const error = validateForm(data);
-
-      if (error) {
-        showStatus("error", error);
-        return;
-      }
-
-      // 映射到 Supabase 資料表欄位
-      const caseData = {
-        case_id: data.case_id,
-        patient_name: data.patient_name,
-        hospital: data.hospital,
-        age: parseInt(data.age) || 0,
-        gender: data.gender,
-        diagnosis: data.case_summary, // 暫時對應到診斷
-        case_summary: data.case_summary,
-        mobility: data.mobility,
-        consciousness: data.consciousness,
-        oxygen: "無", // 預設
-        status: "一輪媒合中",
-        created_at: new Date().toISOString(),
-        contact_name: data.patient_name, // 簡化處理
-        contact_phone: data.case_manager_phone,
-        address: data.address,
-        cms_level: data.cms_level,
-        service_type: "長照服務",
-        service_time: data.service_time,
-        service_codes: data.service_codes,
-        special_need: data.special_needs.join('、') + (data.special_need_other ? ` (${data.special_need_other})` : ""),
-        case_manager: data.case_manager,
-        total_targets: getSelectedFacilities().length,
-        target_group: data.target_group,
-        target_facility_ids: Array.from(selectedFacIds)
-      };
-
-      try {
-        showStatus("success", "儲存至資料庫中...");
-
-        const { error: sbError } = await window.supabaseClient
-          .from('cases')
-          .insert([caseData]);
-
-        if (sbError) throw sbError;
-
-        showStatus(
-          "success",
-          `案件已成功建立！\n案件編號：${data.case_id}\n資料已存入 Supabase 並自動啟動媒合程序。`
-        );
-
-        // 🔔 N8N：新案件建立通知
-        notifyN8N(N8N_WEBHOOKS.createCase, { event: 'case_created', ...caseData });
-
-        setTimeout(() => {
-          if (confirm("建立成功！是否重新整理頁面？")) location.reload();
-        }, 1500);
-
-      } catch (err) {
-        console.error("Supabase Error:", err);
-        showStatus(
-          "error",
-          `儲存至 Supabase 失敗。\n請確認 SQL Table 已建立且 RLS 已開啟。\n錯誤：${err.message}`
-        );
-      }
-    }
-
-    /* =========================
-       清空表單
-    ========================= */
-    function resetForm() {
-      document.querySelectorAll("input[type='text'], input[type='number'], textarea").forEach(el => {
-        if (el.id !== "caseId") el.value = "";
-      });
-
-      document.querySelectorAll("select").forEach(el => el.value = "");
-      
+    function initForm() {
+      generateCaseId();
       $("referralTime").value = getTaiwanDateTimeLocal();
-      $("caseId").value = generateCaseId();
-      updatePreview();
-      loadCaseManagers();
-      $("statusBox").className = "status";
-      $("statusBox").textContent = "";
-
-      serviceCount = {};
-      document.getElementById("selectedServices").textContent = "尚未選擇";
+      updateSidebar();
+      loadFacilities();
     }
 
     /* =========================
-       事件綁定
+       2. 身分驗證 (員編 + 密碼)
     ========================= */
-    document.querySelectorAll("input, select, textarea").forEach(el => {
-      el.addEventListener("input", updatePreview);
-      el.addEventListener("change", updatePreview);
-    });
-
-    $("btnSubmit").addEventListener("click", submitForm);
-    $("btnReset").addEventListener("click", resetForm);
-
-    initForm();
-    loadFacilities();
-
-    function handleModeChange() {
-      var wrap = document.getElementById('facilityPickerWrap');
-      if (!wrap) return;
-      // 現在所有模式都顯示選擇器，且均不預先選取，由使用者自行操作
-      wrap.style.display = 'block';
-    }
-    window._handleModeChange = handleModeChange;
-    handleModeChange();
-
-    function initDefaultGroups() {
-      loadGroups();
-      const hasRound1 = facGroups.some(g => g.name === '合作機構(一輪)');
-      if (!hasRound1 && allFacilities.length > 0) {
-        const round1Ids = allFacilities.filter(f => f.is_round_1).map(f => String(f.id));
-        if (round1Ids.length > 0) {
-          facGroups.push({
-            id: 'g_round1',
-            name: '合作機構(一輪)',
-            facilityIds: round1Ids
-          });
-          saveGroups();
-          renderGrpBar();
-        }
-      }
-    }
-
-    /* ===== 機構選擇器 ===== */
-    var allFacilities = [];
-    var selectedFacIds = new Set();
-    var pendingFacIds  = new Set();
-
-    async function loadFacilities() {
-      try {
-        if (window.supabaseClient) {
-          var res = await window.supabaseClient.from('facilities').select('*').order('service_area');
-          if (!res.error && res.data && res.data.length > 0) {
-            allFacilities = res.data.map(function(f) {
-              return { 
-                id: f.id || f.facility_name, 
-                name: f.facility_name || '', 
-                short: f.short_name || '', 
-                area: f.service_area || '其他', 
-                phone: f.phone || '',
-                is_round_1: f.is_round_1 || false,
-                is_full_survey: f.is_full_survey || false
-              };
-            });
-            var el = document.getElementById('facStatTotal');
-            if (el) el.textContent = '共 ' + allFacilities.length + ' 間';
-            initDefaultGroups();
-            return;
-          }
-        }
-        var resp = await fetch('facilities.json');
-        if (resp.ok) {
-          var json = await resp.json();
-          var arr = Array.isArray(json) ? json : (json.facilities || []);
-          allFacilities = arr.map(function(f, i) {
-            return { id: f.id || f.facility_name || i, name: f.facility_name || f.name || '', short: f.short_name || '', area: f.service_area || f.area || '其他', phone: f.phone || '' };
-          });
-          var el = document.getElementById('facStatTotal');
-          if (el) el.textContent = '共 ' + allFacilities.length + ' 間';
-        }
-      } catch(e) { console.warn('loadFacilities:', e); }
-    }
-
-    function openFacModal() {
-      pendingFacIds = new Set(selectedFacIds);
-      renderGrpBar();
-      renderFacList();
-      document.getElementById('facModalOverlay').classList.add('show');
-      setTimeout(function() { var inp = document.getElementById('facSearchInput'); if (inp) inp.focus(); }, 80);
-    }
-    window._openFacModal = openFacModal;
-    function closeFacModal() {
-      document.getElementById('facModalOverlay').classList.remove('show');
-      var inp = document.getElementById('facSearchInput'); if (inp) inp.value = '';
-    }
-    window._closeFacModal = closeFacModal;
-    function confirmFacModal() {
-      selectedFacIds = new Set(pendingFacIds);
-      renderFacTags();
-      closeFacModal();
-    }
-    window._confirmFacModal = confirmFacModal;
-
-    function renderFacList() {
-      var inp = document.getElementById('facSearchInput');
-      var q = inp ? inp.value.trim().toLowerCase() : '';
-      var filtered = allFacilities.filter(function(f) {
-        return !q || f.name.toLowerCase().indexOf(q) >= 0 || f.short.toLowerCase().indexOf(q) >= 0 || f.area.toLowerCase().indexOf(q) >= 0;
-      });
-      var statEl = document.getElementById('facStatFiltered');
-      if (statEl) statEl.textContent = q ? ('篩選結果 ' + filtered.length + ' 間') : '';
-      var grouped = {};
-      filtered.forEach(function(f) { if (!grouped[f.area]) grouped[f.area] = []; grouped[f.area].push(f); });
-      var wrap = document.getElementById('facListWrap');
-      if (!filtered.length) { wrap.innerHTML = '<div class="fac-no-result">😶 找不到符合的機構</div>'; updateFacCount(); return; }
-      var listHtml = '';
-      Object.keys(grouped).forEach(function(area) {
-        listHtml += '<div class="fac-area-title">' + area + '</div>';
-        grouped[area].forEach(function(f) {
-          var sid = String(f.id);
-          var sel = pendingFacIds.has(f.id) || pendingFacIds.has(sid);
-          var safeId = sid.replace(/[^a-zA-Z0-9]/g, '_');
-          var shortHtml = (f.short && f.short !== f.name) ? ' <span style="font-weight:400;color:#94a3b8;font-size:12px;">' + f.short + '</span>' : '';
-          var phoneHtml = f.phone ? '<div class="fac-item-sub">📞 ' + f.phone + '</div>' : '';
-          listHtml += '<div class="fac-item' + (sel ? ' selected' : '') + '" onclick="toggleFac(\'' + safeId + '\')">'
-            + '<div class="fac-item-check">' + (sel ? '✓' : '') + '</div>'
-            + '<div class="fac-item-info"><div class="fac-item-name">' + f.name + shortHtml + '</div>' + phoneHtml + '</div>'
-            + '</div>';
-        });
-      });
-      wrap.innerHTML = listHtml;
-      updateFacCount();
-    }
-
-    window._renderFacList = renderFacList;
-
-    /* ===== 群組管理邏輯 ===== */
-    var GRP_KEY = 'refcare_fac_groups';
-    var facGroups = [];
-    var editingGrpId = null;
-
-    function loadGroups() {
-      try { facGroups = JSON.parse(localStorage.getItem(GRP_KEY) || '[]'); } catch(e) { facGroups = []; }
-    }
-    function saveGroups() { localStorage.setItem(GRP_KEY, JSON.stringify(facGroups)); }
-    function genId() { return 'g' + Date.now() + Math.floor(Math.random()*1000); }
-    loadGroups();
-
-    /* 渲染群組快選列（Modal 頂部 chips） */
-    function renderGrpBar() {
-      loadGroups();
-      var bar    = document.getElementById('grpBar');
-      var emptyEl = document.getElementById('grpBarEmpty');
-      if (!bar) return;
-      // 移除舊 chip
-      bar.querySelectorAll('.grp-chip').forEach(function(el){ el.remove(); });
-      if (emptyEl) emptyEl.style.display = facGroups.length ? 'none' : 'inline';
-      var addBtn = bar.querySelector('.grp-chip-add');
-      facGroups.forEach(function(g) {
-        var chip = document.createElement('button');
-        chip.className = 'grp-chip';
-        chip.title = '點擊選入所有成員';
-        chip.innerHTML = g.name + '<span class="grp-chip-count">' + g.facilityIds.length + '間</span>';
-        chip.onclick = function(){ selectGroup(g.id, chip); };
-        bar.insertBefore(chip, addBtn);
-      });
-    }
-
-    /* 點擊 chip 選入群組 */
-    function selectGroup(gid, chipEl) {
-      loadGroups();
-      var g = facGroups.find(function(x){ return x.id === gid; });
-      if (!g) return;
-      g.facilityIds.forEach(function(fid){ pendingFacIds.add(fid); });
-      updateFacCount();
-      renderFacList();
-      if (chipEl) {
-        chipEl.classList.add('flash');
-        setTimeout(function(){ chipEl.classList.remove('flash'); }, 800);
-      }
-    }
-    window._selectGroup = selectGroup;
-    
-    /* 編輯群組時的暫存選取狀態 */
-    var tempGrpFacIds = new Set();
-
-    /* 新增群組（快速） */
-    function openGrpAdd() {
-      editingGrpId = null;
-      tempGrpFacIds = new Set(); // 重置暫存
-      var nameEl = document.getElementById('grpEditName');
-      if (nameEl) nameEl.value = '';
-      renderGrpFacList();
-      var ov = document.getElementById('grpEditOverlay');
-      if (ov) ov.classList.add('show');
-    }
-    window._addGroup = openGrpAdd;
-
-    /* 管理群組 → 開啟管理 Modal */
-    function openGrpManage() {
-      editingGrpId = null;
-      renderGrpManageList();
-      var ov = document.getElementById('grpManageOverlay');
-      if (ov) ov.classList.add('show');
-    }
-    window._openGrpManage = openGrpManage;
-
-    function closeGrpManage() {
-      var ov = document.getElementById('grpManageOverlay');
-      if (ov) ov.classList.remove('show');
-    }
-    window._closeGrpManage = closeGrpManage;
-
-    function renderGrpManageList() {
-      loadGroups();
-      var wrap = document.getElementById('grpManageList');
-      if (!wrap) return;
-      if (!facGroups.length) {
-        wrap.innerHTML = '<div style="text-align:center;padding:30px;color:#94a3b8;font-size:14px;">尚無群組，請點右上角「＋ 新增」</div>';
-        return;
-      }
-      wrap.innerHTML = facGroups.map(function(g) {
-        var cnt = g.facilityIds.length;
-        var members = allFacilities.filter(function(f){ return g.facilityIds.indexOf(String(f.id)) >= 0 || g.facilityIds.indexOf(f.id) >= 0; });
-        var preview = members.slice(0, 5).map(function(f){ return f.short || f.name; }).join('、') + (members.length > 5 ? '...' : '');
-        return '<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #f1f5f9;">'
-          + '<div style="flex:1;min-width:0;">'
-          + '<div style="font-size:14px;font-weight:800;color:#0f172a;">' + g.name + ' <span style="font-size:12px;font-weight:400;color:#0f766e;">(' + cnt + '間)</span></div>'
-          + '<div style="font-size:12px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (preview || '尚未設定成員') + '</div>'
-          + '</div>'
-          + '<button onclick="editGroup(\'' + g.id + '\')" style="font-size:12px;font-weight:700;border:1px solid #e2e8f0;background:#f8fafc;border-radius:8px;padding:5px 10px;cursor:pointer;">✏️ 編輯</button>'
-          + '<button onclick="deleteGroup(\'' + g.id + '\')" style="font-size:12px;font-weight:700;border:1px solid #fecaca;background:#fee2e2;color:#dc2626;border-radius:8px;padding:5px 10px;cursor:pointer;">🗑</button>'
-          + '</div>';
-      }).join('');
-    }
-
-    /* 編輯群組 */
-    function editGroup(gid) {
-      loadGroups();
-      editingGrpId = gid;
-      var g = facGroups.find(function(x){ return x.id === gid; });
-      tempGrpFacIds = new Set();
-      if (g) {
-        g.facilityIds.forEach(function(fid){ tempGrpFacIds.add(String(fid)); });
-      }
-      var titleEl = document.getElementById('grpEditTitle');
-      var nameEl  = document.getElementById('grpEditName');
-      if (titleEl) titleEl.textContent = '✏️ 編輯群組';
-      if (nameEl && g) nameEl.value = g.name;
-      renderGrpFacList();
-      var ov = document.getElementById('grpEditOverlay');
-      if (ov) ov.classList.add('show');
-    }
-    window._editGroup = editGroup;
-
-    /* 刪除群組 */
-    function deleteGroup(gid) {
-      if (!confirm('確定刪除此群組？')) return;
-      loadGroups();
-      facGroups = facGroups.filter(function(g){ return g.id !== gid; });
-      saveGroups();
-      renderGrpBar();
-      renderGrpManageList();
-    }
-    window._deleteGroup = deleteGroup;
-
-    /* 關閉編輯 Modal */
-    function closeGrpEdit() {
-      var ov = document.getElementById('grpEditOverlay');
-      if (ov) ov.classList.remove('show');
-      editingGrpId = null;
-    }
-    window._closeGrpEdit = closeGrpEdit;
-
-    /* 渲染編輯 Modal 的機構清單 */
-    function renderGrpFacList() {
-      var q = '';
-      var srch = document.getElementById('grpFacSearch');
-      if (srch) q = srch.value.trim().toLowerCase();
-      
-      var filtered = allFacilities.filter(function(f){
-        return !q || (f.name + f.short + (f.area||'')).toLowerCase().indexOf(q) >= 0;
-      });
-      var wrap = document.getElementById('grpFacList');
-      if (!wrap) return;
-      wrap.innerHTML = filtered.map(function(f){
-        var sid = String(f.id);
-        var checked = tempGrpFacIds.has(sid);
-        return '<label class="grp-fac-item' + (checked ? ' checked' : '') + '">'
-          + '<input type="checkbox" value="' + sid + '"' + (checked ? ' checked' : '') + ' onchange="updateTempGrpFac(this)">'
-          + '<span class="grp-fac-item-name">' + f.name
-          + (f.area ? '　<span style="color:#94a3b8;font-size:11px;">' + f.area + '</span>' : '')
-          + '</span></label>';
-      }).join('');
-    }
-    window._renderGrpFacList = renderGrpFacList;
-
-    function updateTempGrpFac(cb) {
-      if (cb.checked) {
-        tempGrpFacIds.add(cb.value);
-        cb.parentElement.classList.add('checked');
-      } else {
-        tempGrpFacIds.delete(cb.value);
-        cb.parentElement.classList.remove('checked');
-      }
-    }
-    window.updateTempGrpFac = updateTempGrpFac;
-
-    /* 儲存群組 */
-    function saveGrpEdit() {
-      var nameEl = document.getElementById('grpEditName');
-      var name = nameEl ? nameEl.value.trim() : '';
-      if (!name) { alert('群組名稱不能為空'); return; }
-      var checkedIds = Array.from(tempGrpFacIds);
-      loadGroups();
-      if (editingGrpId) {
-        var g = facGroups.find(function(x){ return x.id === editingGrpId; });
-        if (g) { g.name = name; g.facilityIds = checkedIds; }
-      } else {
-        facGroups.push({ id: genId(), name: name, facilityIds: checkedIds });
-      }
-      saveGroups();
-      closeGrpEdit();
-      renderGrpBar();
-      renderGrpManageList();
-    }
-    window._saveGrpEdit = saveGrpEdit;
-
-    function toggleFac(safeId) {
-      var fac = allFacilities.find(function(f) { return String(f.id).replace(/[^a-zA-Z0-9]/g, '_') === safeId; });
-      if (!fac) return;
-      var id = fac.id; var sid = String(id);
-      if (pendingFacIds.has(id) || pendingFacIds.has(sid)) { pendingFacIds.delete(id); pendingFacIds.delete(sid); }
-      else { pendingFacIds.add(id); }
-      renderFacList();
-    }
-    window._toggleFac = toggleFac;
-
-    function selectAllVisible() {
-      var inp = document.getElementById('facSearchInput');
-      var q = inp ? inp.value.trim().toLowerCase() : '';
-      allFacilities.filter(function(f) {
-        return !q || f.name.toLowerCase().indexOf(q) >= 0 || f.short.toLowerCase().indexOf(q) >= 0 || f.area.toLowerCase().indexOf(q) >= 0;
-      }).forEach(function(f) { pendingFacIds.add(f.id); });
-      renderFacList();
-    }
-    window._selectAllVisible = selectAllVisible;
-
-    function clearAllFac() { pendingFacIds.clear(); renderFacList(); }
-    window._clearAllFac = clearAllFac;
-
-    function updateFacCount() {
-      var el = document.getElementById('facSelectedCount');
-      if (el) el.textContent = '已選 ' + pendingFacIds.size + ' 間';
-    }
-
-    function renderFacTags() {
-      var count = selectedFacIds.size;
-      var badge = document.getElementById('facBadge');
-      var label = document.getElementById('facTriggerLabel');
-      var tagWrap = document.getElementById('facTagsWrap');
-      if (!badge || !label || !tagWrap) return;
-      if (count === 0) { badge.style.display = 'none'; label.textContent = '點此選擇機構...'; tagWrap.innerHTML = ''; return; }
-      badge.style.display = 'inline-block'; badge.textContent = count;
-      label.textContent = '已選擇機構：';
-      var sel = allFacilities.filter(function(f) { return selectedFacIds.has(f.id) || selectedFacIds.has(String(f.id)); });
-      tagWrap.innerHTML = sel.map(function(f) {
-        var safeId = String(f.id).replace(/[^a-zA-Z0-9]/g, '_');
-        return '<span class="fac-tag">' + (f.short || f.name)
-          + '<button class="fac-tag-del" onclick="removeFac(event,\'' + safeId + '\')" title="移除">×</button></span>';
-      }).join('');
-    }
-
-    function removeFac(event, safeId) {
-      event.stopPropagation();
-      var fac = allFacilities.find(function(f) { return String(f.id).replace(/[^a-zA-Z0-9]/g, '_') === safeId; });
-      if (fac) { selectedFacIds.delete(fac.id); selectedFacIds.delete(String(fac.id)); }
-      renderFacTags();
-    }
-    window._removeFac = removeFac;
-
-    function getSelectedFacilities() {
-      return allFacilities.filter(function(f) { return selectedFacIds.has(f.id) || selectedFacIds.has(String(f.id)); });
-    }
-
-    let caseManagers = [];
-    async function loadCaseManagers() {
-      // 目前僅留作擴充，不再渲染下拉選單
-    }
     async function authByEmpId() {
       const eid = $("empIdAuth").value.trim();
       const pwd = $("empPasswordAuth").value.trim();
       if (!eid || !pwd) return alert("請輸入員編與密碼");
       
       try {
-        showStatus("success", "登入中...");
+        showStatus("success", "驗證中...");
         const { data, error } = await window.supabaseClient
           .from('case_managers')
           .select('*')
@@ -1443,7 +974,7 @@ function validateForm(data) {
           .single();
         
         if (error || !data) {
-          showStatus("error", "員編或密碼錯誤，請確認後再試");
+          showStatus("error", "員編或密碼錯誤");
           return;
         }
 
@@ -1451,20 +982,205 @@ function validateForm(data) {
         $("caseManagerPhone").value = data.phone || "";
         $("hospital").value = data.hospital || "";
         $("hospitalExt").value = data.ext || "";
-        showStatus("success", `驗證成功：歡迎 ${data.name} (${data.role})`);
+        showStatus("success", `驗證成功：歡迎 ${data.name}`);
+        updateSidebar();
       } catch (err) {
-        showStatus("error", "驗證過程出錯");
+        showStatus("error", "驗證失敗，請檢查網路");
       }
     }
 
-    // 監聽 Enter 鍵（密碼框）
-    document.getElementById('empPasswordAuth').addEventListener('keypress', function (e) {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        authByEmpId();
+    /* =========================
+       3. 機構選擇邏輯
+    ========================= */
+    let allFacilities = [];
+    let selectedFacIds = new Set();
+    let pendingFacIds = new Set();
+    let facGroups = [];
+    const GRP_KEY = 'refcare_fac_groups';
+
+    async function loadFacilities() {
+      try {
+        const { data } = await window.supabaseClient.from('facilities').select('*').order('service_area');
+        if (data) allFacilities = data;
+        loadGroups();
+        renderFacList();
+      } catch (e) { console.error("Load Fac failed", e); }
+    }
+
+    function openFacModal() {
+      pendingFacIds = new Set(selectedFacIds);
+      renderFacList();
+      $("facModalOverlay").classList.add("show");
+    }
+    function closeFacModal() { $("facModalOverlay").classList.remove("show"); }
+
+    function renderFacList() {
+      const q = $("facSearchInput").value.toLowerCase();
+      const filtered = allFacilities.filter(f => f.facility_name.toLowerCase().includes(q) || (f.service_area && f.service_area.includes(q)));
+      const wrap = $("facListWrap");
+      wrap.innerHTML = filtered.map(f => `
+        <div class="fac-item ${pendingFacIds.has(String(f.id)) ? 'selected' : ''}" onclick="toggleFac('${f.id}')">
+          <div style="flex:1;">
+            <div class="fac-name">${f.facility_name}</div>
+            <div class="fac-meta">${f.service_area || ''}</div>
+          </div>
+          ${pendingFacIds.has(String(f.id)) ? '<span style="color:var(--primary); font-weight:900;">✓</span>' : ''}
+        </div>
+      `).join('');
+      $("facSelectedCount").textContent = `已選 ${pendingFacIds.size} 間`;
+    }
+
+    function toggleFac(id) {
+      const sid = String(id);
+      if (pendingFacIds.has(sid)) pendingFacIds.delete(sid);
+      else pendingFacIds.add(sid);
+      renderFacList();
+    }
+
+    function confirmFacModal() {
+      selectedFacIds = new Set(pendingFacIds);
+      renderSelectedFacList();
+      closeFacModal();
+      updateSidebar();
+    }
+
+    function renderSelectedFacList() {
+      const wrap = $("selectedFacList");
+      if (selectedFacIds.size === 0) {
+        wrap.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#94a3b8; font-size:14px;">尚未選擇任何機構</div>';
+        return;
       }
+      const selected = allFacilities.filter(f => selectedFacIds.has(String(f.id)));
+      wrap.innerHTML = selected.map(f => `
+        <div class="chip" style="justify-content:space-between; background:#f0fdfa; border-color:#99f6e4; padding:8px 16px;">
+          <span>${f.facility_name}</span>
+          <span style="cursor:pointer; font-weight:900; padding-left:8px;" onclick="removeSelectedFac('${f.id}')">×</span>
+        </div>
+      `).join('');
+      $("selectedCount").textContent = selectedFacIds.size;
+    }
+
+    function removeSelectedFac(id) {
+      selectedFacIds.delete(String(id));
+      renderSelectedFacList();
+      updateSidebar();
+    }
+
+    /* =========================
+       4. 群組功能
+    ========================= */
+    function loadGroups() {
+      facGroups = JSON.parse(localStorage.getItem(GRP_KEY) || '[]');
+      renderGrpBar();
+    }
+    function saveGroups() {
+      localStorage.setItem(GRP_KEY, JSON.stringify(facGroups));
+      renderGrpBar();
+    }
+    function renderGrpBar() {
+      const bar = $("grpBar");
+      bar.querySelectorAll('.grp-chip-item').forEach(el => el.remove());
+      facGroups.forEach(g => {
+        const btn = document.createElement("button");
+        btn.className = "btn btn-secondary grp-chip-item";
+        btn.style.padding = "6px 12px"; btn.style.fontSize = "12px";
+        btn.innerHTML = `${g.name} <span style="opacity:0.6;">(${g.facilityIds.length})</span>`;
+        btn.onclick = () => { g.facilityIds.forEach(id => pendingFacIds.add(id)); renderFacList(); };
+        bar.insertBefore(btn, bar.firstChild);
+      });
+    }
+    function openGrpAdd() {
+      $("grpEditTitle").textContent = "➕ 新增群組";
+      $("grpEditName").value = "";
+      renderGrpFacList();
+      $("grpEditOverlay").classList.add("show");
+    }
+    function closeGrpEdit() { $("grpEditOverlay").classList.remove("show"); }
+    function renderGrpFacList() {
+      const wrap = $("grpFacList");
+      wrap.innerHTML = allFacilities.map(f => `
+        <label style="display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid #f1f5f9; cursor:pointer;">
+          <input type="checkbox" class="grp-member-check" value="${f.id}" />
+          <span style="font-size:14px; font-weight:700;">${f.facility_name}</span>
+        </label>
+      `).join('');
+    }
+    function saveGrpEdit() {
+      const name = $("grpEditName").value.trim();
+      if (!name) return alert("請輸入名稱");
+      const ids = Array.from(document.querySelectorAll(".grp-member-check:checked")).map(el => el.value);
+      facGroups.push({ id: Date.now(), name, facilityIds: ids });
+      saveGroups();
+      closeGrpEdit();
+    }
+
+    /* =========================
+       5. 送出案件
+    ========================= */
+    async function submitForm() {
+      const careNodes = document.querySelectorAll('input[name="care"]:checked');
+      const careList = Array.from(careNodes).map(n => n.value);
+
+      const formData = {
+        case_id: $("caseId").value,
+        referral_time: $("referralTime").value,
+        hospital: $("hospital").value.trim(),
+        hospital_ext: $("hospitalExt").value.trim(),
+        case_manager: $("caseManager").value.trim(),
+        case_manager_phone: $("caseManagerPhone").value.trim(),
+        patient_name: $("patientName").value.trim(),
+        gender: $("gender").value,
+        age: parseInt($("age").value) || 0,
+        height: $("height").value,
+        weight: $("weight").value,
+        cms_level: $("cmsLevel").value,
+        mobility: $("mobility").value,
+        case_summary: $("caseSummary").value.trim(),
+        special_needs: careList,
+        service_type: $("serviceType").value,
+        service_time: $("serviceTime").value,
+        target_facility_ids: Array.from(selectedFacIds),
+        status: "一輪媒合中"
+      };
+
+      if (!formData.hospital || !formData.case_manager || !formData.case_manager_phone || !formData.gender || !formData.age || !formData.service_type) {
+        return alert("請填寫所有必填欄位 (*)");
+      }
+      if (selectedFacIds.size === 0) return alert("請至少選擇一個派案機構");
+
+      try {
+        showStatus("success", "建立案件中...");
+        const { error } = await window.supabaseClient.from('cases').insert([formData]);
+        if (error) throw error;
+        
+        showStatus("success", "✅ 案件建立成功！");
+        fetch(N8N_WEBHOOKS.createCase, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
+        
+        setTimeout(() => { if (confirm("送出成功！要重新起案嗎？")) location.reload(); }, 1500);
+      } catch (err) {
+        showStatus("error", "儲存失敗：" + err.message);
+      }
+    }
+
+    function resetForm() { if (confirm("確定要清空嗎？")) location.reload(); }
+
+    function showStatus(type, message) {
+      const el = $("status");
+      el.className = `status ${type}`;
+      el.textContent = message;
+      el.style.display = "block";
+      setTimeout(() => el.style.display = "none", 5000);
+    }
+
+    /* 監聽器 */
+    ["hospital", "caseManager", "serviceType"].forEach(id => {
+      $(id).addEventListener("input", updateSidebar);
+    });
+    $("empPasswordAuth").addEventListener("keypress", e => {
+      if (e.key === "Enter") { e.preventDefault(); authByEmpId(); }
     });
 
+    window.onload = initForm;
   </script>
 </body>
 </html>
