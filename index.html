@@ -971,7 +971,7 @@
             </div>
             <span class="badge">媒合設定</span>
           </div>
-          <div class="form-grid">
+          <div class="form-grid three">
             <div class="field">
               <label>服務類型 <span class="required">*</span></label>
               <select id="serviceType">
@@ -987,6 +987,14 @@
             <div class="field">
               <label>期待服務時段</label>
               <input type="text" id="serviceTime" placeholder="例如: 平日白天, 假日..." />
+            </div>
+            <div class="field">
+              <label>居服員性別偏好</label>
+              <select id="caregiverGender">
+                <option value="無限制">無限制</option>
+                <option value="男性">男性</option>
+                <option value="女性">女性</option>
+              </select>
             </div>
             <div class="field full">
               <label>長照服務碼 (BA 碼)</label>
@@ -1456,6 +1464,7 @@
         special_needs: $("specialNeeds").value.trim(),
         service_type: $("serviceType").value,
         service_time: $("serviceTime").value.trim(),
+        caregiver_gender: $("caregiverGender").value,
         service_codes: Array.from(selectedServiceCodes),
         target_group: document.querySelector('input[name="targetGroup"]:checked').value,
         target_facility_ids: Array.from(selectedFacIds),
