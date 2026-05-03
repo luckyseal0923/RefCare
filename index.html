@@ -1055,6 +1055,7 @@
           <div class="summary-row"><span>目前狀態</span><strong>準備送出</strong></div>
           <div class="summary-row"><span>起案人員</span><strong id="displayManager">未認證</strong></div>
           <div class="summary-row"><span>服務類型</span><strong id="displayService">未選擇</strong></div>
+          <div class="summary-row"><span>派案模式</span><strong id="displayMode">指定機構</strong></div>
           <div class="summary-row"><span>媒合機構</span><strong id="displayFacCount">0 間</strong></div>
 
           <div class="summary-note">
@@ -1177,6 +1178,11 @@
       $("displayManager").textContent = $("caseManager").value || "未認證";
       $("displayService").textContent = $("serviceType").value || "未選擇";
       $("displayFacCount").textContent = selectedFacIds.size + " 間";
+      
+      const modeNode = document.querySelector('input[name="targetGroup"]:checked');
+      if (modeNode) {
+        $("displayMode").textContent = modeNode.value;
+      }
     }
 
     function initForm() {
@@ -1292,13 +1298,9 @@
         if (round1.length > 0) {
           selectedFacIds = new Set(round1);
           renderSelectedFacList();
-          updateSidebar();
         }
-      } else if (mode === '指定機構') {
-        // 不動作，保留原本選取
-      } else {
-        // 其他模式可視需求實作過濾
       }
+      updateSidebar();
     }
 
     function openFacModal() {
