@@ -686,7 +686,7 @@
         <div class="nav-section-title">MAIN MENU</div>
         <nav class="nav-list">
           <div class="nav-item active" id="navDash" onclick="switchView('dashboard')">📊 儀表板</div>
-          <div class="nav-item" id="navCases" onclick="switchView('cases')">📁 案件管理</div>
+          <div class="nav-item" id="navCases" onclick="switchView('cases')">📁 歷史案件</div>
           <div class="nav-item" id="navFacs" onclick="switchView('facilities')">🏥 機構管理</div>
           <div class="nav-item" onclick="openManagerModal()">👥 帳號權限</div>
           <div class="nav-item">📤 報表匯出</div>
@@ -1469,7 +1469,7 @@
         
         if (view === 'dashboard') {
           $("mainTableTitle").textContent = "進行中案件";
-          $("mainTableSub").textContent = "僅顯示媒合進行中之案件，已結案案件請至「案件管理」查詢。";
+          $("mainTableSub").textContent = "僅顯示媒合進行中之案件，已結案案件請至「歷史案件」查詢。";
           if ($("dashboardCommandPanel")) $("dashboardCommandPanel").style.display = "block";
           if ($("dashboardKpiGrid")) $("dashboardKpiGrid").style.display = "grid";
           if ($("dashboardSideStack")) $("dashboardSideStack").style.display = "flex";
