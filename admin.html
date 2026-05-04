@@ -1575,14 +1575,7 @@
               <div class="edit-field"><label>許可證號</label><input name="license_number" value="${fac.license || ''}"></div>
               <div class="edit-field full"><label>機構地址</label><input name="address" value="${fac.address || ''}"></div>
               
-              <div class="edit-field full" style="margin-top:10px;">
-                <label>服務屬性與設置</label>
-                <div style="display:flex; gap:20px; padding:10px 0;">
-                  <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:normal;">
-                    <input type="checkbox" name="is_full_survey" ${fac.is_full_survey ? 'checked' : ''} style="width:18px; height:18px;"> 開啟滿意度調查
-                  </label>
-                </div>
-              </div>
+
 
               <div class="edit-field full"><label>自費服務項目</label><textarea name="self_pay_services">${fac.self_pay || ''}</textarea></div>
               <div class="edit-field full"><label>評鑑結果 / 備註</label><textarea name="evaluation_result">${fac.evaluation || ''}</textarea></div>
@@ -1610,9 +1603,7 @@
       // 處理複選的服務區域
       updates.service_area = fd.getAll('service_area').join('、');
 
-      // 處理 Checkbox
-      updates.is_round_1 = form.querySelector('[name="is_round_1"]').checked;
-      updates.is_full_survey = form.querySelector('[name="is_full_survey"]').checked;
+
 
       try {
         if (id) {
