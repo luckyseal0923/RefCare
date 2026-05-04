@@ -686,7 +686,7 @@
         <div class="nav-section-title">MAIN MENU</div>
         <nav class="nav-list">
           <div class="nav-item active" id="navDash" onclick="switchView('dashboard')">📊 儀表板</div>
-          <div class="nav-item" id="navCases" onclick="switchView('dashboard')">📁 案件管理</div>
+          <div class="nav-item" id="navCases" onclick="switchView('cases')">📁 案件管理</div>
           <div class="nav-item" id="navFacs" onclick="switchView('facilities')">🏥 機構管理</div>
           <div class="nav-item" onclick="openManagerModal()">👥 帳號權限</div>
           <div class="nav-item">📤 報表匯出</div>
@@ -782,8 +782,8 @@
             <section class="panel" style="margin-bottom:22px;">
               <div class="panel-header">
                 <div>
-                  <h2 class="panel-title">案件查詢與批次管理</h2>
-                  <p class="panel-subtitle">可依案件編號、個案姓名、轉介單位、媒合狀態或月份快速篩選。</p>
+                  <h2 class="panel-title" id="mainTableTitle">進行中案件</h2>
+                  <p class="panel-subtitle" id="mainTableSub">僅顯示媒合進行中之案件，已結案案件請至「案件管理」查詢。</p>
                 </div>
                 <div class="table-actions">
                   <button class="btn btn-muted" id="btnReload">重新整理</button>
@@ -1129,7 +1129,12 @@
 
       let filtered = allCases.filter(c => {
         const haystack = [c.case_id, c.patient_name, c.hospital, c.diagnosis].join(' ').toLowerCase();
-        return haystack.includes(keyword) && (fStatus === 'all' || c.status === fStatus) && (fHospital === 'all' || c.hospital === fHospital);
+        const matchKeyword = haystack.includes(keyword);
+        const matchStatus = fStatus === 'all' || c.status === fStatus;
+        const matchHospital = fHospital === 'all' || c.hospital === fHospital;
+        const matchView = currentViewMode === 'cases' || c.status !== '案件結案';
+        
+        return matchKeyword && matchStatus && matchHospital && matchView;
       });
 
       filtered.sort((a, b) => {
@@ -1450,16 +1455,32 @@
     });
 
     // --- 視圖切換 ---
+    let currentViewMode = 'dashboard';
+
     function switchView(view) {
-      if (view === 'dashboard') {
+      currentViewMode = view;
+      if (view === 'dashboard' || view === 'cases') {
         $("dashboardView").style.display = "block";
         $("facilitiesView").style.display = "none";
-        $("navDash").classList.add("active");
+        
+        $("navDash").classList.toggle("active", view === 'dashboard');
+        $("navCases").classList.toggle("active", view === 'cases');
         $("navFacs").classList.remove("active");
+        
+        if (view === 'dashboard') {
+          $("mainTableTitle").textContent = "進行中案件";
+          $("mainTableSub").textContent = "僅顯示媒合進行中之案件，已結案案件請至「案件管理」查詢。";
+        } else {
+          $("mainTableTitle").textContent = "所有案件查詢與批次管理";
+          $("mainTableSub").textContent = "可依案件編號、個案姓名、轉介單位、媒合狀態快速篩選（含已結案）。";
+        }
+        
+        renderTable();
       } else {
         $("dashboardView").style.display = "none";
         $("facilitiesView").style.display = "block";
         $("navDash").classList.remove("active");
+        $("navCases").classList.remove("active");
         $("navFacs").classList.add("active");
         renderFacilitiesTable();
       }
