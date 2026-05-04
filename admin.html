@@ -304,7 +304,7 @@
 
     .dashboard-grid {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 360px;
+      grid-template-columns: 1fr;
       gap: 22px;
       align-items: start;
     }
@@ -685,9 +685,9 @@
       <div>
         <div class="nav-section-title">MAIN MENU</div>
         <nav class="nav-list">
-          <div class="nav-item active">📊 儀表板</div>
-          <div class="nav-item">📁 案件管理</div>
-          <div class="nav-item">🏥 機構管理</div>
+          <div class="nav-item active" id="navDash" onclick="switchView('dashboard')">📊 儀表板</div>
+          <div class="nav-item" id="navCases" onclick="switchView('dashboard')">📁 案件管理</div>
+          <div class="nav-item" id="navFacs" onclick="switchView('facilities')">🏥 機構管理</div>
           <div class="nav-item" onclick="openManagerModal()">👥 帳號權限</div>
           <div class="nav-item">📤 報表匯出</div>
         </nav>
@@ -714,7 +714,7 @@
         </div>
       </section>
 
-      <div class="content">
+      <div class="content" id="dashboardView">
         <section class="command-panel">
           <div class="command-grid">
             <div class="command-main">
@@ -753,29 +753,29 @@
 
               <div class="kpi-card">
                 <div class="kpi-top">
-                  <div class="kpi-label">一輪媒合中</div>
+                  <div class="kpi-label">正在媒合</div>
                   <div class="kpi-icon">📨</div>
                 </div>
                 <div class="kpi-value" id="kpiPending">0</div>
-                <div class="kpi-desc">等待合作機構初步回覆</div>
+                <div class="kpi-desc">等待機構初步回覆中</div>
               </div>
 
               <div class="kpi-card amber">
                 <div class="kpi-top">
-                  <div class="kpi-label">二／三輪媒合中</div>
+                  <div class="kpi-label">二輪以上媒合</div>
                   <div class="kpi-icon">⚠️</div>
                 </div>
                 <div class="kpi-value" id="kpiMatching">0</div>
-                <div class="kpi-desc">可能需要擴大通知範圍</div>
+                <div class="kpi-desc">案件較困難，需多方協調</div>
               </div>
 
               <div class="kpi-card green">
                 <div class="kpi-top">
-                  <div class="kpi-label">已結案</div>
+                  <div class="kpi-label">媒合成功 / 結案</div>
                   <div class="kpi-icon">✅</div>
                 </div>
                 <div class="kpi-value" id="kpiDone">0</div>
-                <div class="kpi-desc">完成媒合或管理者結案</div>
+                <div class="kpi-desc">完成安置或管理者手動結案</div>
               </div>
             </section>
 
@@ -795,8 +795,8 @@
               <div class="toolbar-body">
                 <div class="filter-grid">
                   <div class="field"><input id="searchInput" placeholder="搜尋案件編號、個案姓名、機構或關鍵字" /></div>
-                  <div class="field"><select id="statusFilter"><option value="all">全部狀態</option><option value="合作機構(一輪)">合作機構(一輪)</option><option value="一輪媒合中">一輪媒合中</option><option value="二輪媒合中">二輪媒合中</option><option value="三輪媒合中">三輪媒合中</option><option value="指定機構">指定機構</option><option value="案件結案">案件結案</option></select></div>
-                  <div class="field"><select id="hospitalFilter"><option value="all">全部轉介單位</option><option value="萬芳醫院急診">萬芳醫院急診</option><option value="萬芳醫院住院">萬芳醫院住院</option><option value="雙和醫院">雙和醫院</option></select></div>
+                  <div class="field"><select id="statusFilter"><option value="all">全部狀態</option><option value="一輪媒合中">一輪媒合中</option><option value="二輪媒合中">二輪媒合中</option><option value="三輪媒合中">三輪媒合中</option><option value="案件結案">案件結案</option></select></div>
+                  <div class="field"><select id="hospitalFilter"><option value="all">全部轉介單位</option></select></div>
                   <div class="field"><select id="sortFilter"><option value="newest">時間：新到舊</option><option value="oldest">時間：舊到新</option></select></div>
                   <div class="field"><button class="btn btn-muted" style="width:100%; height:46px;" onclick="resetFilters()">重設篩選</button></div>
                 </div>
@@ -822,26 +822,24 @@
                       <th>轉介來源</th>
                       <th>服務需求</th>
                       <th>媒合狀態</th>
-                      <th>機構回覆</th>
-                      <th style="text-align:right;">管理操作</th>
+                      <th>機構回覆進度</th>
+                      <th>管理操作</th>
                     </tr>
                   </thead>
                   <tbody id="tableBody">
-                    <!-- JavaScript 動態渲染 -->
+                    <!-- 動態載入 -->
                   </tbody>
                 </table>
               </div>
-
-              <div id="emptyState" style="padding: 60px; text-align: center; display: none;">
-                <div style="font-size: 40px; margin-bottom: 16px;">🔍</div>
-                <div style="font-size: 18px; font-weight: 900; color: var(--text-strong);">查無相符案件</div>
-                <div style="color: var(--muted); margin-top: 8px;">請嘗試更換關鍵字或清除篩選條件。</div>
+              <div id="emptyState" style="display:none; padding:80px 20px; text-align:center;">
+                <div style="font-size:48px; margin-bottom:16px;">🔍</div>
+                <div style="font-size:18px; font-weight:900; color:var(--text-strong);">找不到符合條件的案件</div>
+                <p style="color:var(--muted); margin-top:8px;">嘗試更換搜尋關鍵字或篩選條件。</p>
               </div>
-
               <div class="pagination">
-                <div id="paginationInfo">載入中...</div>
+                <div id="paginationInfo">正在載入資料...</div>
                 <div class="page-buttons">
-                  <button class="page-btn">‹</button><button class="page-btn active">1</button><button class="page-btn">›</button>
+                  <button class="page-btn active">1</button>
                 </div>
               </div>
             </section>
@@ -849,38 +847,61 @@
 
           <aside class="side-stack">
             <section class="panel insight-card">
-              <h3 class="insight-title">優先處理提醒</h3>
-              <div class="priority-list" id="priorityList">
-                <div class="priority-item">
-                  <div class="priority-dot rose"></div>
-                  <div><div class="priority-main">即時統計中...</div><div class="priority-sub">系統正在計算逾時案件。</div></div>
-                </div>
-              </div>
-            </section>
-
-            <section class="panel insight-card">
-              <h3 class="insight-title">近 7 日起案件量</h3>
+              <h3 class="insight-title">本週轉介量統計</h3>
               <div class="mini-chart" id="weeklyChart">
-                <!-- 示意圖，可由 JS 動態調整高度 -->
-                <div class="bar-wrap"><div class="bar" style="height:30%;"></div><div class="bar-label">一</div></div>
-                <div class="bar-wrap"><div class="bar" style="height:50%;"></div><div class="bar-label">二</div></div>
-                <div class="bar-wrap"><div class="bar" style="height:40%;"></div><div class="bar-label">三</div></div>
-                <div class="bar-wrap"><div class="bar" style="height:80%;"></div><div class="bar-label">四</div></div>
-                <div class="bar-wrap"><div class="bar" style="height:60%;"></div><div class="bar-label">五</div></div>
-                <div class="bar-wrap"><div class="bar" style="height:20%;"></div><div class="bar-label">六</div></div>
-                <div class="bar-wrap"><div class="bar" style="height:90%;"></div><div class="bar-label">日</div></div>
+                <!-- 動態生成 -->
               </div>
             </section>
 
             <section class="panel insight-card">
-              <h3 class="insight-title">機構回覆品質</h3>
+              <h3 class="insight-title">機構回覆效率排名</h3>
               <div class="priority-list" id="qualityList">
-                <div class="priority-item"><div class="priority-dot green"></div><div><div class="priority-main">安心居服中心</div><div class="priority-sub">平均回覆：18 分鐘｜收案率 42%</div></div></div>
-                <div class="priority-item"><div class="priority-dot green"></div><div><div class="priority-main">樂齡照護中心</div><div class="priority-sub">平均回覆：31 分鐘｜收案率 36%</div></div></div>
+                <div style="text-align:center; padding:20px; color:var(--muted);">計算中...</div>
               </div>
             </section>
           </aside>
         </div>
+      </div>
+
+      <!-- Facility Management View (Hidden by default) -->
+      <div class="content" id="facilitiesView" style="display:none;">
+        <section class="panel" style="margin-bottom:22px;">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">機構名單管理</h2>
+              <p class="panel-subtitle">新增、編輯或管理系統內的合作機構（安置機構、居服單位等）。</p>
+            </div>
+            <div class="table-actions">
+              <button class="btn btn-primary" onclick="openFacilityEditor()">＋ 新增機構</button>
+            </div>
+          </div>
+          <div class="toolbar-body">
+            <div class="filter-grid" style="grid-template-columns: 1fr 200px;">
+              <div class="field"><input id="facSearchInput" placeholder="搜尋機構名稱、區域或電話" oninput="renderFacilitiesTable()" /></div>
+              <div class="field"><select id="facAreaFilter" onchange="renderFacilitiesTable()"><option value="all">全部區域</option></select></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="table-scroll">
+            <table class="list-table">
+              <thead>
+                <tr>
+                  <th>機構名稱 / 簡稱</th>
+                  <th>服務區域</th>
+                  <th>聯絡電話</th>
+                  <th>合作屬性</th>
+                  <th>特約狀態</th>
+                  <th style="text-align:right;">管理操作</th>
+                </tr>
+              </thead>
+              <tbody id="facTableBody">
+                <!-- 動態載入 -->
+              </tbody>
+            </table>
+          </div>
+        </section>
       </div>
     </main>
   </div>
@@ -991,35 +1012,33 @@
     function updateKPI() {
       $("kpiTotal").textContent = allCases.length;
       $("kpiPending").textContent = allCases.filter(c => c.status === '一輪媒合中' || c.status === '合作機構(一輪)').length;
-      $("kpiMatching").textContent = allCases.filter(c => c.status === '二輪媒合中' || c.status === '三輪媒合中').length;
+      $("kpiMatching").textContent = allCases.filter(c => c.status === '二輪媒合中' || c.status === '三輪媒合中' || c.status === '指定機構').length;
       $("kpiDone").textContent = allCases.filter(c => c.status === '案件結案').length;
       $("loadedHint").textContent = `目前載入 ${allCases.length} 筆真實轉介案件`;
-      $("paginationInfo").textContent = `顯示第 1–${Math.min(20, allCases.length)} 筆，共 ${allCases.length} 筆案件`;
+      $("selectionSummary").textContent = `已載入 ${allCases.length} 筆資料｜每頁 20 筆`;
+      
+      // 更新醫院篩選器
+      const currentHospital = $("hospitalFilter").value;
+      const hospitals = [...new Set(allCases.map(c => c.hospital).filter(Boolean))].sort();
+      let html = '<option value="all">全部轉介單位</option>';
+      hospitals.forEach(h => {
+        html += `<option value="${h}" ${h === currentHospital ? 'selected' : ''}>${h}</option>`;
+      });
+      $("hospitalFilter").innerHTML = html;
     }
 
     function updateInsights() {
+      const now = new Date();
       const pending24h = allCases.filter(c => {
-        const hours = (new Date() - new Date(c.created_at)) / (1000 * 60 * 60);
+        const hours = (now - new Date(c.created_at)) / (1000 * 60 * 60);
         return hours > 24 && c.status !== '案件結案';
       }).length;
       
       const matchingRound23 = allCases.filter(c => c.status === '二輪媒合中' || c.status === '三輪媒合中').length;
-      const todayNew = allCases.filter(c => new Date(c.created_at).toDateString() === new Date().toDateString()).length;
+      const todayNew = allCases.filter(c => new Date(c.created_at).toDateString() === now.toDateString()).length;
 
       $("statIntervention").textContent = pending24h + matchingRound23;
       $("statTodayNew").textContent = todayNew;
-      
-      // 更新統計列表
-      $("priorityList").innerHTML = `
-        <div class="priority-item">
-          <div class="priority-dot rose"></div>
-          <div><div class="priority-main">${pending24h} 件超過 24 小時未回覆</div><div class="priority-sub">建議管理員介入或重新發送通知。</div></div>
-        </div>
-        <div class="priority-item">
-          <div class="priority-dot"></div>
-          <div><div class="priority-main">${matchingRound23} 件進入二／三輪媒合</div><div class="priority-sub">需注意目前安置資源是否不足。</div></div>
-        </div>
-      `;
 
       // 計算回覆率
       let totalTargets = 0;
@@ -1030,6 +1049,77 @@
       });
       const rate = totalTargets > 0 ? Math.round((totalReplies / totalTargets) * 100) : 0;
       $("statReplyRate").textContent = rate + "%";
+
+      // 更新週統計圖
+      renderWeeklyChart();
+      // 更新機構品質
+      renderQualityList();
+    }
+
+    function renderWeeklyChart() {
+      const days = ['日', '一', '二', '三', '四', '五', '六'];
+      const counts = [0, 0, 0, 0, 0, 0, 0];
+      const now = new Date();
+      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+      allCases.forEach(c => {
+        const d = new Date(c.created_at);
+        if (d >= oneWeekAgo) {
+          counts[d.getDay()]++;
+        }
+      });
+
+      const max = Math.max(...counts, 5);
+      $("weeklyChart").innerHTML = days.map((day, i) => {
+        const height = Math.round((counts[i] / max) * 100);
+        return `
+          <div class="bar-wrap">
+            <div class="bar" style="height:${height}%; min-height:4px;" title="${counts[i]} 筆"></div>
+            <div class="bar-label">${day}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderQualityList() {
+      const stats = {};
+      allCases.forEach(c => {
+        (c.replies || []).forEach(r => {
+          if (!r.facility_name) return;
+          if (!stats[r.facility_name]) stats[r.facility_name] = { count: 0, accept: 0, totalTime: 0 };
+          stats[r.facility_name].count++;
+          if (r.reply_status === 'accept') stats[r.facility_name].accept++;
+          
+          const replyTime = new Date(r.created_at);
+          const caseTime = new Date(c.created_at);
+          const diffMin = (replyTime - caseTime) / (1000 * 60);
+          if (diffMin > 0) stats[r.facility_name].totalTime += diffMin;
+        });
+      });
+
+      const sorted = Object.entries(stats)
+        .map(([name, s]) => ({
+          name,
+          avgMin: Math.round(s.totalTime / s.count),
+          rate: Math.round((s.accept / s.count) * 100)
+        }))
+        .sort((a, b) => a.avgMin - b.avgMin)
+        .slice(0, 5);
+
+      if (sorted.length === 0) {
+        $("qualityList").innerHTML = '<div style="text-align:center; padding:20px; color:var(--muted);">尚無足夠回覆資料</div>';
+        return;
+      }
+
+      $("qualityList").innerHTML = sorted.map(s => `
+        <div class="priority-item">
+          <div class="priority-dot ${s.avgMin < 60 ? 'green' : 'amber'}"></div>
+          <div>
+            <div class="priority-main">${s.name}</div>
+            <div class="priority-sub">平均回覆：${s.avgMin} 分鐘｜收案率 ${s.rate}%</div>
+          </div>
+        </div>
+      `).join("");
     }
 
     // --- 表格渲染 ---
@@ -1343,17 +1433,207 @@
       $("btnReload").onclick = fetchData;
       $("searchInput").oninput = renderTable;
       $("statusFilter").onchange = renderTable;
-      $("hospitalFilter").onchange = onchange = renderTable;
+      $("hospitalFilter").onchange = renderTable;
       $("sortFilter").onchange = renderTable;
 
-      loadFacilities().then(fetchData);
+      loadFacilities().then(() => {
+        fetchData();
+        renderFacilitiesTable();
+      });
       
       // 即時監聽
       sb.channel('admin_all')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'cases' }, fetchData)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'replies' }, fetchData)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'facilities' }, () => {
+          loadFacilities().then(renderFacilitiesTable);
+        })
         .subscribe();
     });
+
+    // --- 視圖切換 ---
+    function switchView(view) {
+      if (view === 'dashboard') {
+        $("dashboardView").style.display = "block";
+        $("facilitiesView").style.display = "none";
+        $("navDash").classList.add("active");
+        $("navFacs").classList.remove("active");
+      } else {
+        $("dashboardView").style.display = "none";
+        $("facilitiesView").style.display = "block";
+        $("navDash").classList.remove("active");
+        $("navFacs").classList.add("active");
+        renderFacilitiesTable();
+      }
+    }
+
+    // --- 機構管理邏輯 ---
+    function renderFacilitiesTable() {
+      const keyword = ($("facSearchInput").value || '').trim().toLowerCase();
+      const fArea = $("facAreaFilter").value;
+
+      // 更新區域篩選器
+      const areas = [...new Set(allFacilities.map(f => f.area).filter(Boolean))].sort();
+      let areaHtml = '<option value="all">全部區域</option>';
+      areas.forEach(a => areaHtml += `<option value="${a}" ${a === fArea ? 'selected' : ''}>${a}</option>`);
+      $("facAreaFilter").innerHTML = areaHtml;
+
+      const filtered = allFacilities.filter(f => {
+        const haystack = [f.name, f.short, f.phone, f.area].join(' ').toLowerCase();
+        return haystack.includes(keyword) && (fArea === 'all' || f.area === fArea);
+      });
+
+      $("facTableBody").innerHTML = filtered.map(f => `
+        <tr>
+          <td><div class="patient-name">${f.name}</div><div class="cell-muted">${f.short || '-'}</div></td>
+          <td>${f.area || '-'}</td>
+          <td>${f.phone || '-'}</td>
+          <td>
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              ${f.is_round_1 ? '<span class="status-badge pending">● 第一輪名單</span>' : '<span class="status-badge closed" style="opacity:0.6;">● 一般名單</span>'}
+              ${f.is_full_survey ? '<span class="status-badge matching">● 滿意度調查</span>' : ''}
+            </div>
+          </td>
+          <td><span class="status-badge done">已特約</span></td>
+          <td style="text-align:right;">
+            <div class="row-actions">
+              <button class="icon-btn primary" onclick="toggleRound1('${f.id}', ${f.is_round_1})">${f.is_round_1 ? '移出首輪' : '設為首輪'}</button>
+              <button class="icon-btn" onclick="openFacilityEditor('${f.id}')">編輯詳情</button>
+              <button class="icon-btn danger" onclick="deleteFacility('${f.id}')">移除</button>
+            </div>
+          </td>
+        </tr>
+      `).join("") || '<tr><td colspan="6" style="text-align:center; padding:40px; color:var(--muted);">目前無機構資料</td></tr>';
+    }
+
+    async function checkAdminPrivilege() {
+      if (sessionStorage.getItem('isAdminAuthorized') === 'true') return true;
+      
+      const empId = prompt('【權限驗證】\\n執行此操作需要管理者權限。\\n請輸入系統管理員帳號 (員編)：');
+      if (!empId) return false;
+      const pwd = prompt('請輸入密碼：');
+      if (!pwd) return false;
+      
+      if (empId === 'admin' && pwd === 'admin123') {
+        sessionStorage.setItem('isAdminAuthorized', 'true');
+        alert('管理者登入成功！');
+        return true;
+      }
+      
+      try {
+        const { data, error } = await sb.from('case_managers')
+          .select('role, password')
+          .eq('emp_id', empId)
+          .single();
+          
+        if (data && data.password === pwd && data.role === '系統管理員') {
+          sessionStorage.setItem('isAdminAuthorized', 'true');
+          alert('驗證成功，已取得管理者權限。');
+          return true;
+        } else {
+          alert('驗證失敗：帳號/密碼錯誤，或該帳號並非「系統管理員」。');
+          return false;
+        }
+      } catch (err) {
+        alert('驗證發生錯誤，查無此帳號或網路異常。');
+        return false;
+      }
+    }
+
+    async function toggleRound1(id, current) {
+      if (!(await checkAdminPrivilege())) return;
+      try {
+        await sb.from('facilities').update({ is_round_1: !current }).eq('id', id);
+        loadFacilities().then(renderFacilitiesTable);
+      } catch (err) { alert("切換失敗"); }
+    }
+
+    async function openFacilityEditor(id = null) {
+      if (!(await checkAdminPrivilege())) return;
+      const fac = id ? allFacilities.find(f => f.id === id) : { 
+        name: '', short: '', phone: '', area: '', responsible: '', address: '', 
+        license: '', self_pay: '', evaluation: '', is_round_1: false, is_full_survey: false 
+      };
+      
+      $("drawerPatientName").textContent = id ? `維護機構：${fac.name}` : '新增合作機構';
+      $("drawerContent").innerHTML = `
+        <div class="detail-grid">
+          <div class="detail-card full">
+            <h4>基本資訊</h4>
+            <form id="facForm" class="edit-form">
+              <input type="hidden" name="id" value="${id || ''}">
+              <div class="edit-field full"><label>機構全名 <span style="color:red;">*</span></label><input name="facility_name" value="${fac.name}" required></div>
+              <div class="edit-field"><label>機構簡稱</label><input name="short_name" value="${fac.short || ''}"></div>
+              <div class="edit-field"><label>服務區域</label><input name="service_area" value="${fac.area || ''}"></div>
+              <div class="edit-field"><label>聯絡電話</label><input name="phone" value="${fac.phone || ''}"></div>
+              <div class="edit-field"><label>傳真號碼</label><input name="fax" value="${fac.fax || ''}"></div>
+              <div class="edit-field"><label>負責人 / 聯絡人</label><input name="responsible_person" value="${fac.responsible || ''}"></div>
+              <div class="edit-field"><label>許可證號</label><input name="license_number" value="${fac.license || ''}"></div>
+              <div class="edit-field full"><label>機構地址</label><input name="address" value="${fac.address || ''}"></div>
+              
+              <div class="edit-field full" style="margin-top:10px;">
+                <label>服務屬性與設置</label>
+                <div style="display:flex; gap:20px; padding:10px 0;">
+                  <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:normal;">
+                    <input type="checkbox" name="is_round_1" ${fac.is_round_1 ? 'checked' : ''} style="width:18px; height:18px;"> 加入第一輪合作名單
+                  </label>
+                  <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:normal;">
+                    <input type="checkbox" name="is_full_survey" ${fac.is_full_survey ? 'checked' : ''} style="width:18px; height:18px;"> 開啟滿意度調查
+                  </label>
+                </div>
+              </div>
+
+              <div class="edit-field full"><label>自費服務項目</label><textarea name="self_pay_services">${fac.self_pay || ''}</textarea></div>
+              <div class="edit-field full"><label>評鑑結果 / 備註</label><textarea name="evaluation_result">${fac.evaluation || ''}</textarea></div>
+            </form>
+          </div>
+        </div>
+        <div style="margin-top:24px; display:flex; gap:12px; padding:0 12px;">
+          <button class="btn btn-primary" style="flex:2;" onclick="saveFacility()">儲存機構資訊</button>
+          <button class="btn btn-muted" style="flex:1;" onclick="closeDrawer()">取消</button>
+        </div>
+      `;
+      $("drawerOverlay").classList.add("show");
+      $("detailDrawer").classList.add("show");
+    }
+
+    async function saveFacility() {
+      const form = $("facForm");
+      if (!form.checkValidity()) { form.reportValidity(); return; }
+      
+      const fd = new FormData(form);
+      const updates = Object.fromEntries(fd);
+      const id = updates.id;
+      delete updates.id;
+
+      // 處理 Checkbox
+      updates.is_round_1 = form.querySelector('[name="is_round_1"]').checked;
+      updates.is_full_survey = form.querySelector('[name="is_full_survey"]').checked;
+
+      try {
+        if (id) {
+          const { error } = await sb.from('facilities').update(updates).eq('id', id);
+          if (error) throw error;
+        } else {
+          const { error } = await sb.from('facilities').insert([updates]);
+          if (error) throw error;
+        }
+        alert("機構資訊已儲存");
+        loadFacilities().then(renderFacilitiesTable);
+        closeDrawer();
+      } catch (err) { alert("儲存失敗：" + err.message); }
+    }
+
+    async function deleteFacility(id) {
+      if (!(await checkAdminPrivilege())) return;
+      if (!confirm("確定移除此機構？移除後將無法在轉介單中選取此機構。")) return;
+      try {
+        const { error } = await sb.from('facilities').delete().eq('id', id);
+        if (error) throw error;
+        alert("機構已移除");
+        loadFacilities().then(renderFacilitiesTable);
+      } catch (err) { alert("移除失敗"); }
+    }
   </script>
 </body>
 </html>
