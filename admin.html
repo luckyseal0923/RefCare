@@ -1545,6 +1545,15 @@
         license: '', self_pay: '', evaluation: '', is_round_1: false, is_full_survey: false 
       };
       
+      const tpeDistricts = ["臺北市全區","中正區","大同區","中山區","松山區","大安區","萬華區","信義區","士林區","北投區","內湖區","南港區","文山區","新北市","其他"];
+      const currentAreas = (fac.area || '').split(/[、, ]+/).filter(Boolean);
+      
+      const areaCheckboxes = tpeDistricts.map(d => `
+        <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:normal; font-size:14px;">
+          <input type="checkbox" name="service_area" value="${d}" ${currentAreas.includes(d) ? 'checked' : ''} style="width:16px; height:16px; margin:0;"> ${d}
+        </label>
+      `).join("");
+      
       $("drawerPatientName").textContent = id ? `維護機構：${fac.name}` : '新增合作機構';
       $("drawerContent").innerHTML = `
         <div class="detail-grid">
@@ -1554,9 +1563,14 @@
               <input type="hidden" name="id" value="${id || ''}">
               <div class="edit-field full"><label>機構全名 <span style="color:red;">*</span></label><input name="facility_name" value="${fac.name}" required></div>
               <div class="edit-field"><label>機構簡稱</label><input name="short_name" value="${fac.short || ''}"></div>
-              <div class="edit-field"><label>服務區域</label><input name="service_area" value="${fac.area || ''}"></div>
               <div class="edit-field"><label>聯絡電話</label><input name="phone" value="${fac.phone || ''}"></div>
               <div class="edit-field"><label>傳真號碼</label><input name="fax" value="${fac.fax || ''}"></div>
+              <div class="edit-field full">
+                <label>服務區域 (可複選)</label>
+                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(110px, 1fr)); gap:12px; background:#f8fafc; border:1px solid var(--line); border-radius:12px; padding:16px;">
+                  ${areaCheckboxes}
+                </div>
+              </div>
               <div class="edit-field"><label>負責人 / 聯絡人</label><input name="responsible_person" value="${fac.responsible || ''}"></div>
               <div class="edit-field"><label>許可證號</label><input name="license_number" value="${fac.license || ''}"></div>
               <div class="edit-field full"><label>機構地址</label><input name="address" value="${fac.address || ''}"></div>
@@ -1592,6 +1606,9 @@
       const updates = Object.fromEntries(fd);
       const id = updates.id;
       delete updates.id;
+
+      // 處理複選的服務區域
+      updates.service_area = fd.getAll('service_area').join('、');
 
       // 處理 Checkbox
       updates.is_round_1 = form.querySelector('[name="is_round_1"]').checked;
