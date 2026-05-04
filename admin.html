@@ -891,7 +891,7 @@
                   <th>機構名稱 / 簡稱</th>
                   <th>服務區域</th>
                   <th>聯絡電話</th>
-                  <th style="text-align:right;">管理操作</th>
+                  <th style="text-align:right; min-width:180px; white-space:nowrap;">管理操作</th>
                 </tr>
               </thead>
               <tbody id="facTableBody">
@@ -1486,8 +1486,8 @@
           <td><div class="patient-name">${f.name}</div><div class="cell-muted">${f.short || '-'}</div></td>
           <td>${f.area || '-'}</td>
           <td>${f.phone || '-'}</td>
-          <td style="text-align:right;">
-            <div class="row-actions">
+          <td style="text-align:right; white-space:nowrap;">
+            <div class="row-actions" style="flex-wrap:nowrap;">
               <button class="icon-btn" onclick="openFacilityEditor('${f.id}')">編輯詳情</button>
               <button class="icon-btn danger" onclick="deleteFacility('${f.id}')">移除</button>
             </div>
