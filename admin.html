@@ -715,7 +715,7 @@
       </section>
 
       <div class="content" id="dashboardView">
-        <section class="command-panel">
+        <section class="command-panel" id="dashboardCommandPanel">
           <div class="command-grid">
             <div class="command-main">
               <h2>今日轉介指揮中心</h2>
@@ -741,7 +741,7 @@
 
         <div class="dashboard-grid">
           <div>
-            <section class="kpi-grid">
+            <section class="kpi-grid" id="dashboardKpiGrid">
               <div class="kpi-card cyan">
                 <div class="kpi-top">
                   <div class="kpi-label">累計案件數</div>
@@ -845,7 +845,7 @@
             </section>
           </div>
 
-          <aside class="side-stack">
+          <aside class="side-stack" id="dashboardSideStack">
             <section class="panel insight-card">
               <h3 class="insight-title">本週轉介量統計</h3>
               <div class="mini-chart" id="weeklyChart">
@@ -1470,9 +1470,15 @@
         if (view === 'dashboard') {
           $("mainTableTitle").textContent = "進行中案件";
           $("mainTableSub").textContent = "僅顯示媒合進行中之案件，已結案案件請至「案件管理」查詢。";
+          if ($("dashboardCommandPanel")) $("dashboardCommandPanel").style.display = "block";
+          if ($("dashboardKpiGrid")) $("dashboardKpiGrid").style.display = "grid";
+          if ($("dashboardSideStack")) $("dashboardSideStack").style.display = "flex";
         } else {
           $("mainTableTitle").textContent = "所有案件查詢與批次管理";
           $("mainTableSub").textContent = "可依案件編號、個案姓名、轉介單位、媒合狀態快速篩選（含已結案）。";
+          if ($("dashboardCommandPanel")) $("dashboardCommandPanel").style.display = "none";
+          if ($("dashboardKpiGrid")) $("dashboardKpiGrid").style.display = "none";
+          if ($("dashboardSideStack")) $("dashboardSideStack").style.display = "none";
         }
         
         renderTable();
