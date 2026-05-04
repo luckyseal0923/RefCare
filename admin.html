@@ -891,8 +891,6 @@
                   <th>機構名稱 / 簡稱</th>
                   <th>服務區域</th>
                   <th>聯絡電話</th>
-                  <th>合作屬性</th>
-                  <th>特約狀態</th>
                   <th style="text-align:right;">管理操作</th>
                 </tr>
               </thead>
@@ -1488,22 +1486,14 @@
           <td><div class="patient-name">${f.name}</div><div class="cell-muted">${f.short || '-'}</div></td>
           <td>${f.area || '-'}</td>
           <td>${f.phone || '-'}</td>
-          <td>
-            <div style="display:flex; flex-direction:column; gap:4px;">
-              ${f.is_round_1 ? '<span class="status-badge pending">● 第一輪名單</span>' : '<span class="status-badge closed" style="opacity:0.6;">● 一般名單</span>'}
-              ${f.is_full_survey ? '<span class="status-badge matching">● 滿意度調查</span>' : ''}
-            </div>
-          </td>
-          <td><span class="status-badge done">已特約</span></td>
           <td style="text-align:right;">
             <div class="row-actions">
-              <button class="icon-btn primary" onclick="toggleRound1('${f.id}', ${f.is_round_1})">${f.is_round_1 ? '移出首輪' : '設為首輪'}</button>
               <button class="icon-btn" onclick="openFacilityEditor('${f.id}')">編輯詳情</button>
               <button class="icon-btn danger" onclick="deleteFacility('${f.id}')">移除</button>
             </div>
           </td>
         </tr>
-      `).join("") || '<tr><td colspan="6" style="text-align:center; padding:40px; color:var(--muted);">目前無機構資料</td></tr>';
+      `).join("") || '<tr><td colspan="4" style="text-align:center; padding:40px; color:var(--muted);">目前無機構資料</td></tr>';
     }
 
     async function checkAdminPrivilege() {
@@ -1574,9 +1564,6 @@
               <div class="edit-field full" style="margin-top:10px;">
                 <label>服務屬性與設置</label>
                 <div style="display:flex; gap:20px; padding:10px 0;">
-                  <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:normal;">
-                    <input type="checkbox" name="is_round_1" ${fac.is_round_1 ? 'checked' : ''} style="width:18px; height:18px;"> 加入第一輪合作名單
-                  </label>
                   <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:normal;">
                     <input type="checkbox" name="is_full_survey" ${fac.is_full_survey ? 'checked' : ''} style="width:18px; height:18px;"> 開啟滿意度調查
                   </label>
