@@ -920,7 +920,7 @@
                       <th>起案時間 / 案件編號</th>
                       <th>個案資訊</th>
                       <th>個管師</th>
-                      <th style="min-width: 250px;">個案摘要</th>
+                      <th style="width: 220px; max-width: 220px;">個案摘要</th>
                       <th>媒合狀態</th>
                       <th>機構回覆進度</th>
                       <th>管理操作</th>
@@ -1275,7 +1275,11 @@
               <td>
                 <div style="font-weight:900; color:var(--primary); font-size:15px;">👤 ${c.case_manager || '未認證'}</div>
               </td>
-              <td><div class="cell-muted" style="color:var(--text-strong); font-size:14px; line-height:1.4;" title="${c.case_summary || ''}">${(c.case_summary || c.diagnosis || '').substring(0,40)}${(c.case_summary || c.diagnosis || '').length > 40 ? '...' : ''}</div></td>
+              <td style="width: 220px; max-width: 220px;">
+                <div style="width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text-strong); font-size:14px;" title="${c.case_summary || ''}">
+                  ${c.case_summary || c.diagnosis || '無摘要'}
+                </div>
+              </td>
               <td><span class="status-badge ${badgeClass}">● ${c.status}</span></td>
               <td>
                 <div class="reply-block">
