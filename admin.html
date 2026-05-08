@@ -729,8 +729,12 @@
       </div>
 
       <div class="sidebar-footer">
-        <strong>系統狀態：優良</strong>
-        <span id="lastSyncTime">最後同步：--:--<br>Supabase 連線正常</span>
+        <strong id="sidebarUserName">載入中...</strong>
+        <span id="sidebarUserRole">權限：驗證中</span>
+        <div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.1); font-size:11px; color:#94a3b8;">
+          系統連線：正常<br>
+          <a href="javascript:void(0)" onclick="doLogout()" style="color:#fda4af; text-decoration:none; font-weight:800;">↩ 安全登出系統</a>
+        </div>
       </div>
     </aside>
 
@@ -743,9 +747,10 @@
         </div>
         <div class="top-actions">
           <div class="today-pill" id="todayDate">今日｜----/--/--</div>
-          <button class="btn btn-muted">匯出報表</button>
-          <button class="btn btn-muted" onclick="openManagerModal()">帳號管理</button>
+          <div class="today-pill" id="userPill" style="background:var(--primary-soft); border-color:var(--primary); color:var(--primary-dark); display:none;">👤 未知 | 未授權</div>
+          <button class="btn btn-muted" onclick="switchView('dashboard')">匯出報表</button>
           <button class="btn btn-primary" onclick="window.open('index.html', '_blank')">＋ 建立案件</button>
+          <button class="btn btn-danger" onclick="doLogout()" style="padding:11px 12px; min-width:auto; width:42px; height:42px; border-radius:14px; box-shadow:none;">🚪</button>
         </div>
       </section>
 
@@ -1491,10 +1496,14 @@
         }
 
         currentUserRole = data.role || '個案管理師';
-        applyPermissions();
-        $("adminLoginOverlay").style.display = "none";
+        const userName = data.name || '管理員';
+        
         sessionStorage.setItem('admin_token', eid);
         sessionStorage.setItem('admin_role', currentUserRole);
+        sessionStorage.setItem('admin_name', userName);
+        
+        applyPermissions();
+        $("adminLoginOverlay").style.display = "none";
         
         fetchData();
         renderFacilitiesTable();
@@ -1505,12 +1514,25 @@
     }
 
     function applyPermissions() {
+      const name = sessionStorage.getItem('admin_name') || '管理員';
+      $("userPill").textContent = `👤 ${name} | ${currentUserRole}`;
+      $("userPill").style.display = "inline-flex";
+      $("sidebarUserName").textContent = name;
+      $("sidebarUserRole").textContent = `權限：${currentUserRole}`;
+
       if (currentUserRole === '個案管理師') {
         $("navFacs").style.display = "none";
         $("navMgr").style.display = "none";
       } else {
         $("navFacs").style.display = "flex";
         $("navMgr").style.display = "flex";
+      }
+    }
+
+    function doLogout() {
+      if (confirm("確定要登出系統嗎？")) {
+        sessionStorage.clear();
+        location.reload();
       }
     }
 
