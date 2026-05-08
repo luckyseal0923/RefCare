@@ -722,8 +722,7 @@
         <nav class="nav-list">
           <div class="nav-item active" id="navDash" onclick="switchView('dashboard')">📊 儀表板</div>
           <div class="nav-item" id="navCases" onclick="switchView('cases')">📁 歷史案件</div>
-          <div class="nav-item" id="navFacs" onclick="switchView('facilities')">🏥 機構管理</div>
-          <div class="nav-item" id="navGroups" onclick="switchView('groups')">🏷️ 群組維護</div>
+          <div class="nav-item" id="navFacs" onclick="switchView('facilities')">🏥 機構與群組</div>
           <div class="nav-item" id="navMgr" onclick="openManagerModal()">👥 帳號權限</div>
           <div class="nav-item" id="navReport" onclick="alert('報表功能開發中')">📤 報表匯出</div>
         </nav>
@@ -903,26 +902,37 @@
 
       <!-- Facility Management View (Hidden by default) -->
       <div class="content" id="facilitiesView" style="display:none;">
-        <section class="panel" style="margin-bottom:22px;">
-          <div class="panel-header">
+        <div class="panel-header" style="flex-direction:column; align-items:flex-start; gap:20px;">
+          <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
             <div>
-              <h2 class="panel-title">機構名單管理</h2>
-              <p class="panel-subtitle">新增、編輯或管理系統內的合作機構（安置機構、居服單位等）。</p>
+              <h2 class="panel-title">機構與群組管理</h2>
+              <p class="panel-subtitle">維護合作機構基本資訊，並定義常用群組以供快速派案。</p>
             </div>
-            <div class="table-actions">
+            <div id="facActionBtns">
               <button class="btn btn-primary" onclick="openFacilityEditor()">＋ 新增機構</button>
             </div>
-          </div>
-          <div class="toolbar-body">
-            <div class="filter-grid" style="grid-template-columns: 1fr 200px;">
-              <div class="field"><input id="facSearchInput" placeholder="搜尋機構名稱、區域或電話" oninput="renderFacilitiesTable()" /></div>
-              <div class="field"><select id="facAreaFilter" onchange="renderFacilitiesTable()"><option value="all">全部區域</option></select></div>
+            <div id="grpActionBtns" style="display:none;">
+              <button class="btn btn-primary" onclick="openGroupEditor()">＋ 新增群組</button>
             </div>
           </div>
-        </section>
+          
+          <div class="reply-tabs" style="margin-bottom:0;">
+            <button class="tab-btn active" id="tabFacList" onclick="switchFacSubView('facs')">🏥 機構名單</button>
+            <button class="tab-btn" id="tabGrpList" onclick="switchFacSubView('groups')">🏷️ 常用群組</button>
+          </div>
+        </div>
 
-        <section class="panel">
-          <div class="table-scroll">
+        <!-- 子頁面 1: 機構名單 -->
+        <div id="subViewFacs">
+          <section class="panel" style="margin-bottom:0; border-radius:18px 18px 0 0; border-bottom:none;">
+            <div class="toolbar-body">
+              <div class="filter-grid" style="grid-template-columns: 1fr 200px;">
+                <div class="field"><input id="facSearchInput" placeholder="搜尋機構名稱、區域或電話" oninput="renderFacilitiesTable()" /></div>
+                <div class="field"><select id="facAreaFilter" onchange="renderFacilitiesTable()"><option value="all">全部區域</option></select></div>
+              </div>
+            </div>
+          </section>
+          <div class="panel-body" style="padding:0; background:white; border:1px solid var(--line); border-radius:0 0 18px 18px;">
             <table class="list-table">
               <thead>
                 <tr>
@@ -932,32 +942,25 @@
                   <th style="text-align:right; min-width:180px; white-space:nowrap;">管理操作</th>
                 </tr>
               </thead>
-              <tbody id="facTableBody">
-                <!-- 動態載入 -->
-              </tbody>
+              <tbody id="facTableBody"></tbody>
             </table>
           </div>
-        </section>
-      </div>
-      <div class="content" id="groupsView" style="display:none;">
-        <div class="panel-header">
-          <div>
-            <h2 class="panel-title">群組管理與定義</h2>
-            <p class="panel-subtitle">建立常用的機構組合，方便個管師在起案時快速整批選取。</p>
-          </div>
-          <button class="btn btn-primary" onclick="openGroupEditor()">＋ 新增群組</button>
         </div>
-        <div class="panel-body" style="padding:0;">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>群組名稱 / 建立時間</th>
-                <th>成員數量</th>
-                <th style="text-align:right;">操作區塊</th>
-              </tr>
-            </thead>
-            <tbody id="groupsTableBody"></tbody>
-          </table>
+
+        <!-- 子頁面 2: 群組管理 -->
+        <div id="subViewGroups" style="display:none;">
+          <div class="panel-body" style="padding:0; background:white; border:1px solid var(--line); border-radius:18px;">
+            <table class="list-table">
+              <thead>
+                <tr>
+                  <th>群組名稱 / 建立時間</th>
+                  <th>成員數量</th>
+                  <th style="text-align:right; min-width:180px; white-space:nowrap;">管理操作</th>
+                </tr>
+              </thead>
+              <tbody id="groupsTableBody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -1700,7 +1703,7 @@
     let currentViewMode = 'dashboard';
 
     function switchView(view) {
-      if (currentUserRole !== '系統管理員' && (view === 'facilities' || view === 'managers' || view === 'groups')) {
+      if (currentUserRole !== '系統管理員' && (view === 'facilities' || view === 'managers')) {
         alert('您的權限不足以訪問此模組');
         return;
       }
@@ -1708,12 +1711,10 @@
       if (view === 'dashboard' || view === 'cases') {
         $("dashboardView").style.display = "block";
         $("facilitiesView").style.display = "none";
-        $("groupsView").style.display = "none";
         
         $("navDash").classList.toggle("active", view === 'dashboard');
         $("navCases").classList.toggle("active", view === 'cases');
         $("navFacs").classList.remove("active");
-        $("navGroups").classList.remove("active");
         
         if (view === 'dashboard') {
           $("mainTableTitle").textContent = "進行中案件";
@@ -1733,20 +1734,29 @@
       } else if (view === 'facilities') {
         $("dashboardView").style.display = "none";
         $("facilitiesView").style.display = "block";
-        $("groupsView").style.display = "none";
         $("navDash").classList.remove("active");
         $("navCases").classList.remove("active");
         $("navFacs").classList.add("active");
-        $("navGroups").classList.remove("active");
+        switchFacSubView('facs');
+      }
+    }
+
+    function switchFacSubView(sub) {
+      if (sub === 'facs') {
+        $("subViewFacs").style.display = "block";
+        $("subViewGroups").style.display = "none";
+        $("tabFacList").classList.add("active");
+        $("tabGrpList").classList.remove("active");
+        $("facActionBtns").style.display = "block";
+        $("grpActionBtns").style.display = "none";
         renderFacilitiesTable();
-      } else if (view === 'groups') {
-        $("dashboardView").style.display = "none";
-        $("facilitiesView").style.display = "none";
-        $("groupsView").style.display = "block";
-        $("navDash").classList.remove("active");
-        $("navCases").classList.remove("active");
-        $("navFacs").classList.remove("active");
-        $("navGroups").classList.add("active");
+      } else {
+        $("subViewFacs").style.display = "none";
+        $("subViewGroups").style.display = "block";
+        $("tabFacList").classList.remove("active");
+        $("tabGrpList").classList.add("active");
+        $("facActionBtns").style.display = "none";
+        $("grpActionBtns").style.display = "block";
         loadGroups();
       }
     }
