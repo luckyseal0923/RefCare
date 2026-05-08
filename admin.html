@@ -1106,10 +1106,12 @@
         const { data: cases } = await sb.from('cases').select('*').order('created_at', { ascending: false });
         const { data: replies } = await sb.from('replies').select('*');
         
-        allCases = (cases || []).map(c => ({
-          ...c,
-          replies: (replies || []).filter(r => r.case_id === c.case_id)
-        }));
+        allCases = (cases || [])
+          .filter(c => c.status !== '系統刪除')
+          .map(c => ({
+            ...c,
+            replies: (replies || []).filter(r => r.case_id === c.case_id)
+          }));
 
         renderTable();
         updateKPI();
@@ -1473,13 +1475,14 @@
     }
 
     async function deleteCase(id) {
-      if (!confirm("確定刪除此案件？所有相關機構回覆也會被移除。")) return;
+      if (!(await checkAdminPrivilege())) return;
+      if (!confirm("確定刪除此案件？此操作將使案件從清單中隱藏，但資料仍會保留在後端系統中。")) return;
       try {
-        await sb.from('replies').delete().eq('case_id', id);
-        await sb.from('cases').delete().eq('case_id', id);
-        alert("已刪除");
+        const { error } = await sb.from('cases').update({ status: '系統刪除' }).eq('case_id', id);
+        if (error) throw error;
+        alert("案件已移除（虛擬刪除）");
         fetchData();
-      } catch (err) { alert("刪除失敗"); }
+      } catch (err) { alert("刪除失敗：" + err.message); }
     }
 
     async function closeCase(id) {
