@@ -919,7 +919,7 @@
                       <th style="width:42px;"><input type="checkbox" /></th>
                       <th>起案時間 / 案件編號</th>
                       <th>個案資訊</th>
-                      <th>轉介人員</th>
+                      <th>個管師</th>
                       <th>服務需求</th>
                       <th>媒合狀態</th>
                       <th>機構回覆進度</th>
@@ -1273,8 +1273,7 @@
               <td><div class="case-time">${dateStr}</div><div class="case-id">${c.case_id}</div></td>
               <td><div class="patient-name">${c.patient_name}</div><div class="patient-meta">${c.age}歲 / ${c.gender}</div></td>
               <td>
-                <div class="cell-strong">${c.hospital || '-'}</div>
-                <div class="cell-muted">${c.case_manager || '未認證'}</div>
+                <div style="font-weight:900; color:var(--primary); font-size:15px;">👤 ${c.case_manager || '未認證'}</div>
               </td>
               <td><div class="need-tag">${needTag}</div><div class="cell-muted">${(c.diagnosis || '').substring(0,15)}...</div></td>
               <td><span class="status-badge ${badgeClass}">● ${c.status}</span></td>
