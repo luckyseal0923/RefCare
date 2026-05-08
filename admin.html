@@ -638,20 +638,20 @@
     .mgr-form-grid .field.span-2 { grid-column: span 2; }
     .mgr-form-grid .btn-wrap { display: flex; align-items: flex-end; }
     
-    .mgr-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 24px; }
+    .mgr-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 24px; }
     .mgr-card { 
-      background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 24px; 
-      transition: all .2s; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+      background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 16px 20px; 
+      transition: all .2s; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     }
-    .mgr-card:hover { border-color: var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.05); transform: translateY(-4px); }
-    .mgr-card-name { font-size: 16px; font-weight: 950; color: #1e293b; display: flex; align-items:center; gap:8px; }
-    .mgr-card-info { display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: #64748b; }
-    .mgr-card-item { display: flex; justify-content: space-between; border-bottom: 1px dashed #f1f5f9; padding-bottom: 4px; }
+    .mgr-card:hover { border-color: var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.05); transform: translateY(-3px); }
+    .mgr-card-name { font-size: 15px; font-weight: 950; color: #1e293b; display: flex; align-items:center; gap:6px; margin-bottom: 4px; }
+    .mgr-card-info { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: #64748b; }
+    .mgr-card-item { display: flex; justify-content: space-between; border-bottom: 1px dashed #f1f5f9; padding-bottom: 3px; }
     .mgr-card-val { font-weight: 800; color: #334155; }
-    .mgr-card-actions { margin-top: auto; padding-top: 12px; display: flex; justify-content: flex-end; }
+    .mgr-card-actions { margin-top: 4px; padding-top: 8px; display: flex; justify-content: flex-end; }
     .mgr-del-link { 
-      font-size: 12px; color: #64748b; cursor: pointer; text-decoration: none; 
-      padding: 8px 12px; border-radius: 10px; transition: all 0.2s; font-weight: 900;
+      font-size: 11px; color: #94a3b8; cursor: pointer; text-decoration: none; 
+      padding: 4px 8px; border-radius: 8px; transition: all 0.2s; font-weight: 900;
     }
     .mgr-del-link:hover { color: var(--rose); background: var(--rose-soft); }
 
@@ -1055,10 +1055,10 @@
               </select>
             </div>
             <div class="field"><label>姓名</label><input type="text" id="addMName" placeholder="全名"></div>
-            <div class="field span-2"><label>聯絡電話</label><input type="text" id="addMPhone" placeholder="手機或分機"></div>
+            <div class="field span-2"><label>手機號碼</label><input type="text" id="addMPhone" placeholder="手機門號"></div>
             
             <div class="field"><label>所屬醫院/單位</label><input type="text" id="addMHospital" placeholder="例如：萬芳醫院急診"></div>
-            <div class="field"><label>分機</label><input type="text" id="addMExt" placeholder="Ext"></div>
+            <div class="field"><label>院內 GSM 代碼</label><input type="text" id="addMExt" placeholder="GSM"></div>
             <div class="btn-wrap">
               <button class="btn btn-primary" type="button" onclick="addManager()" style="height:48px; width:100%; box-shadow: 0 4px 12px rgba(99,102,241,0.2);">建立帳號</button>
             </div>
@@ -1509,7 +1509,8 @@
               <div class="mgr-card-item"><span>🆔 登入員編</span> <span class="mgr-card-val">${m.emp_id || '--'}</span></div>
               <div class="mgr-card-item"><span>🔑 登入密碼</span> <span class="mgr-card-val">${maskPwd}</span></div>
               <div class="mgr-card-item"><span>🏢 醫院單位</span> <span class="mgr-card-val">${m.hospital || '--'}</span></div>
-              <div class="mgr-card-item"><span>📞 聯絡電話</span> <span class="mgr-card-val">${m.phone || '--'}${m.ext ? ` (#${m.ext})` : ''}</span></div>
+              <div class="mgr-card-item"><span>📱 手機號碼</span> <span class="mgr-card-val">${m.phone || '--'}</span></div>
+              <div class="mgr-card-item"><span>📟 GSM 代碼</span> <span class="mgr-card-val">${m.ext || '--'}</span></div>
             </div>
             <div class="mgr-card-actions">
               <span class="mgr-del-link" onclick="deleteManager('${m.id}')">⚠️ 註銷帳號</span>
