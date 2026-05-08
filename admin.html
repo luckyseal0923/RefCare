@@ -670,8 +670,43 @@
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
+  <style>
+    /* Admin Login Overlay */
+    .admin-login-overlay {
+      position: fixed; inset: 0; background: #0f172a; z-index: 9999;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .admin-login-card {
+      background: white; border-radius: 28px; width: 100%; max-width: 420px;
+      padding: 40px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+    .login-brand { display: flex; align-items: center; gap: 14px; margin-bottom: 32px; }
+    .login-logo { width: 48px; height: 48px; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: white; font-size: 20px; }
+  </style>
 </head>
-<body>
+<body class="is-unauthorized">
+  <!-- Login Overlay -->
+  <div id="adminLoginOverlay" class="admin-login-overlay">
+    <div class="admin-login-card">
+      <div class="login-brand">
+        <div class="login-logo">R</div>
+        <div>
+          <div style="font-weight: 950; font-size: 18px;">REF Care Admin</div>
+          <div style="font-size: 13px; color: #64748b;">後臺管理系統登入</div>
+        </div>
+      </div>
+      <div class="edit-field" style="margin-bottom: 16px;">
+        <label>管理員員編</label>
+        <input type="text" id="adminEmpId" placeholder="請輸入員編">
+      </div>
+      <div class="edit-field" style="margin-bottom: 24px;">
+        <label>登入密碼</label>
+        <input type="password" id="adminPassword" placeholder="請輸入密碼">
+      </div>
+      <button class="btn btn-primary" style="width: 100%; height: 50px; font-size: 16px;" onclick="doAdminLogin()">安全登入系統</button>
+      <div id="loginError" style="margin-top: 16px; color: var(--rose); font-size: 13px; text-align: center; font-weight: 800; display: none;"></div>
+    </div>
+  </div>
   <div class="admin-shell">
     <aside class="sidebar">
       <div class="brand">
@@ -688,8 +723,8 @@
           <div class="nav-item active" id="navDash" onclick="switchView('dashboard')">📊 儀表板</div>
           <div class="nav-item" id="navCases" onclick="switchView('cases')">📁 歷史案件</div>
           <div class="nav-item" id="navFacs" onclick="switchView('facilities')">🏥 機構管理</div>
-          <div class="nav-item" onclick="openManagerModal()">👥 帳號權限</div>
-          <div class="nav-item">📤 報表匯出</div>
+          <div class="nav-item" id="navMgr" onclick="openManagerModal()">👥 帳號權限</div>
+          <div class="nav-item" id="navReport" onclick="alert('報表功能開發中')">📤 報表匯出</div>
         </nav>
       </div>
 
@@ -1132,7 +1167,10 @@
         const matchKeyword = haystack.includes(keyword);
         const matchStatus = fStatus === 'all' || c.status === fStatus;
         const matchHospital = fHospital === 'all' || c.hospital === fHospital;
-        const matchView = currentViewMode === 'cases' || c.status !== '案件結案';
+        
+        // 邏輯調整：儀表板僅顯示未結案，歷史案件僅顯示已結案
+        const isClosed = c.status === '案件結案';
+        const matchView = (currentViewMode === 'dashboard' && !isClosed) || (currentViewMode === 'cases' && isClosed);
         
         return matchKeyword && matchStatus && matchHospital && matchView;
       });
@@ -1429,8 +1467,77 @@
       renderTable();
     }
 
+    // --- 權限登入邏輯 ---
+    let currentUserRole = '';
+    async function doAdminLogin() {
+      const eid = $("adminEmpId").value.trim();
+      const pwd = $("adminPassword").value.trim();
+      if (!eid || !pwd) return;
+      
+      const errEl = $("loginError");
+      errEl.style.display = "none";
+
+      try {
+        const { data, error } = await sb.from('case_managers')
+          .select('*')
+          .eq('emp_id', eid)
+          .eq('password', pwd)
+          .single();
+        
+        if (error || !data) {
+          errEl.textContent = "員編或密碼錯誤，請重新輸入";
+          errEl.style.display = "block";
+          return;
+        }
+
+        currentUserRole = data.role || '個案管理師';
+        applyPermissions();
+        $("adminLoginOverlay").style.display = "none";
+        sessionStorage.setItem('admin_token', eid);
+        sessionStorage.setItem('admin_role', currentUserRole);
+        
+        fetchData();
+        renderFacilitiesTable();
+      } catch (err) {
+        errEl.textContent = "系統連線異常";
+        errEl.style.display = "block";
+      }
+    }
+
+    function applyPermissions() {
+      if (currentUserRole === '個案管理師') {
+        $("navFacs").style.display = "none";
+        $("navMgr").style.display = "none";
+      } else {
+        $("navFacs").style.display = "flex";
+        $("navMgr").style.display = "flex";
+      }
+    }
+
+    function checkLogin() {
+      const savedEid = sessionStorage.getItem('admin_token');
+      const savedRole = sessionStorage.getItem('admin_role');
+      if (savedEid && savedRole) {
+        currentUserRole = savedRole;
+        applyPermissions();
+        $("adminLoginOverlay").style.display = "none";
+        return true;
+      }
+      return false;
+    }
+
+    // --- 修正原有按鈕點擊 ---
+    window.openManagerModal = function() {
+      if (currentUserRole !== '系統管理員') return alert('權限不足');
+      $("mgrOverlay").classList.add("show"); loadManagers();
+    }
+
     // --- 初始化 ---
     document.addEventListener("DOMContentLoaded", () => {
+      if (!checkLogin()) {
+        // 如果沒登入，就不自動抓資料
+        return;
+      }
       $("drawerOverlay").onclick = closeDrawer;
       $("drawerClose").onclick = closeDrawer;
       $("btnReload").onclick = fetchData;
@@ -1458,6 +1565,10 @@
     let currentViewMode = 'dashboard';
 
     function switchView(view) {
+      if (currentUserRole !== '系統管理員' && (view === 'facilities' || view === 'managers')) {
+        alert('您的權限不足以訪問此模組');
+        return;
+      }
       currentViewMode = view;
       if (view === 'dashboard' || view === 'cases') {
         $("dashboardView").style.display = "block";
@@ -1474,8 +1585,8 @@
           if ($("dashboardKpiGrid")) $("dashboardKpiGrid").style.display = "grid";
           if ($("dashboardSideStack")) $("dashboardSideStack").style.display = "flex";
         } else {
-          $("mainTableTitle").textContent = "所有案件查詢與批次管理";
-          $("mainTableSub").textContent = "可依案件編號、個案姓名、轉介單位、媒合狀態快速篩選（含已結案）。";
+          $("mainTableTitle").textContent = "歷史案件記錄";
+          $("mainTableSub").textContent = "僅顯示已結案之案件記錄。";
           if ($("dashboardCommandPanel")) $("dashboardCommandPanel").style.display = "none";
           if ($("dashboardKpiGrid")) $("dashboardKpiGrid").style.display = "none";
           if ($("dashboardSideStack")) $("dashboardSideStack").style.display = "none";
