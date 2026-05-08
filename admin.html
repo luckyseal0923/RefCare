@@ -1529,7 +1529,7 @@
       const facOptions = allFacilities.map(f => `
         <label style="display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px dotted #e2e8f0; cursor:pointer;">
           <input type="checkbox" name="grp_fac_ids" value="${f.id}" ${selectedIds.has(String(f.id)) ? 'checked' : ''} />
-          <span style="font-size:14px;">${f.short_name ? `[${f.short_name}] ` : ''}${f.facility_name}</span>
+          <span style="font-size:14px;">${f.short ? `[${f.short}] ` : ''}${f.name}</span>
         </label>
       `).join("");
 
