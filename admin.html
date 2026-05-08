@@ -708,6 +708,21 @@
     .btn-del { background: #fff1f2; color: #e11d48; border: 1px solid #fecaca; }
     .btn-del:hover { background: #ffe4e6; border-color: #fda4af; }
 
+    /* 群組管理卡片樣式 */
+    .grp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; padding: 20px; }
+    .grp-card { 
+      background: white; border: 1px solid var(--line); border-radius: 20px; padding: 24px; 
+      transition: all .2s ease; display: flex; flex-direction: column; gap: 14px;
+    }
+    .grp-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.06); border-color: var(--primary); }
+    .grp-card-name { font-size: 18px; font-weight: 950; color: #0f172a; }
+    .grp-card-meta { font-size: 13px; color: #64748b; }
+    .grp-card-count { 
+      display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; 
+      background: #f0fdfa; color: var(--primary); border-radius: 10px; font-weight: 800; font-size: 13px;
+    }
+    .grp-card-foot { display: flex; gap: 10px; margin-top: 10px; border-top: 1px solid #f1f5f9; padding-top: 16px; }
+
     .fac-card-list { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px; }
     .fac-mini-card { 
       display: flex; align-items: center; gap: 12px; padding: 12px 16px; 
@@ -977,22 +992,13 @@
 
         <!-- 子頁面 2: 群組管理 -->
         <div id="subViewGroups" style="display:none;">
-          <section class="panel" style="margin-bottom:0; border-radius:18px 18px 0 0; border-bottom:none;">
-            <div class="toolbar-body" style="display:flex; justify-content:flex-end;">
-              <button class="btn btn-primary" onclick="openGroupEditor()">＋ 新增群組</button>
+          <section class="panel" style="margin-bottom:0; border:none; background:transparent;">
+            <div class="toolbar-body" style="display:flex; justify-content:flex-end; padding:20px 0;">
+              <button class="btn btn-primary" onclick="openGroupEditor()" style="height:50px; padding:0 24px; box-shadow: 0 4px 14px rgba(99,102,241,0.3);">＋ 新增群組</button>
             </div>
           </section>
-          <div class="panel-body" style="padding:0; background:white; border:1px solid var(--line); border-radius:0 0 18px 18px;">
-            <table class="list-table">
-              <thead>
-                <tr>
-                  <th>群組名稱 / 建立時間</th>
-                  <th>成員數量</th>
-                  <th style="text-align:right; min-width:180px; white-space:nowrap;">管理操作</th>
-                </tr>
-              </thead>
-              <tbody id="groupsTableBody"></tbody>
-            </table>
+          <div id="groupsTableBody" class="grp-grid">
+            <!-- 以卡片形式動態載入 -->
           </div>
         </div>
       </div>
@@ -1540,19 +1546,21 @@
       const wrap = $("groupsTableBody");
       wrap.innerHTML = allGroups.map(g => {
         const count = (g.facility_ids || []).length;
+        const dateStr = new Date(g.created_at).toLocaleDateString();
         return `
-          <tr>
-            <td><div class="patient-name">${g.name}</div><div class="cell-muted">建立於 ${new Date(g.created_at).toLocaleDateString()}</div></td>
-            <td><span class="status-badge done">${count} 間機構</span></td>
-            <td>
-              <div class="row-actions">
-                <button class="icon-btn" onclick="openGroupEditor('${g.id}')">編輯群組</button>
-                <button class="icon-btn danger" onclick="deleteGroup('${g.id}')">刪除</button>
-              </div>
-            </td>
-          </tr>
+          <div class="grp-card">
+            <div class="grp-card-name">${g.name}</div>
+            <div class="grp-card-meta">📅 建立時間：${dateStr}</div>
+            <div>
+              <span class="grp-card-count">👥 ${count} 間結構成員</span>
+            </div>
+            <div class="grp-card-foot">
+              <button class="fac-card-btn btn-edit" style="flex:2;" onclick="openGroupEditor('${g.id}')">⚙️ 編輯群組</button>
+              <button class="fac-card-btn btn-del" style="flex:1;" onclick="deleteGroup('${g.id}')">移除</button>
+            </div>
+          </div>
         `;
-      }).join("") || '<tr><td colspan="3" style="text-align:center; padding:40px; color:var(--muted);">目前無任何群組</td></tr>';
+      }).join("") || '<div style="grid-column: 1/-1; text-align:center; padding:80px; color:var(--muted); background:white; border-radius:20px; border:1px dashed var(--line);">目前無任何群組設定</div>';
     }
 
     async function openGroupEditor(id = null) {
