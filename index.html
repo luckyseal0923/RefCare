@@ -316,14 +316,14 @@
 .fac-action-btn:hover{background:#f3f4f6;}
 .fac-list-wrap{overflow-y:auto;flex:1;padding:8px 0;}
 .fac-area-title{padding:8px 16px 4px;font-size:11px;font-weight:900;color:#94a3b8;text-transform:uppercase;position:sticky;top:0;background:#fff;z-index:1;}
-.fac-item{display:flex;align-items:center;gap:12px;padding:10px 16px;cursor:pointer;transition:background .12s;border-bottom:1px solid #f8fafc;}
-.fac-item:hover{background:#f0fdf9;}
-.fac-item.selected{background:#ecfdf5;}
+.fac-item{display:flex;align-items:center;gap:12px;padding:14px 20px;cursor:pointer;transition:all .15s;border:1px solid #edf2f7;border-radius:14px;margin-bottom:10px;}
+.fac-item:hover{border-color:#14b8a6;background:#f0fdfa;}
+.fac-item.selected{background:#e6fffa;border-color:#14b8a6;box-shadow:0 4px 12px rgba(20,184,166,0.1);}
 .fac-item-check{width:20px;height:20px;border-radius:6px;border:2px solid #d1d5db;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;font-size:13px;color:transparent;}
 .fac-item.selected .fac-item-check{background:#0f766e;border-color:#0f766e;color:#fff;}
-.fac-item-info{flex:1;min-width:0;}
-.fac-item-name{font-size:14px;font-weight:700;color:#0f172a;}
-.fac-item-sub{font-size:12px;color:#94a3b8;margin-top:2px;}
+.fac-item-info{flex:1;min-width:0;text-align:left;}
+.fac-item-name{font-size:15px;font-weight:800;color:#0f172a;line-height:1.4;}
+.fac-item-sub{font-size:13px;color:#64748b;margin-top:6px;font-weight:500;}
 .fac-no-result{text-align:center;padding:32px;color:#94a3b8;font-size:14px;}
 .fac-modal-foot{padding:14px 20px;border-top:1px solid #e5e7eb;flex-shrink:0;display:flex;gap:10px;justify-content:flex-end;align-items:center;}
 .fac-selected-count{font-size:13px;color:#0f766e;font-weight:700;margin-right:auto;}
@@ -1329,13 +1329,13 @@
       const wrap = $("facListWrap");
       wrap.innerHTML = filtered.map(f => `
         <div class="fac-item ${pendingFacIds.has(String(f.id)) ? 'selected' : ''}" onclick="toggleFac('${f.id}')">
-          <div style="flex:1;">
-            <div class="fac-name">
+          <div class="fac-item-info">
+            <div class="fac-item-name">
               ${f.short_name ? `<span style="color:var(--primary); margin-right:6px;">[${f.short_name}]</span>` : ''}${f.facility_name}
             </div>
-            <div class="fac-meta">${f.service_area || ''}</div>
+            <div class="fac-item-sub">${f.service_area || '全區服務'}</div>
           </div>
-          ${pendingFacIds.has(String(f.id)) ? '<span style="color:var(--primary); font-weight:900;">✓</span>' : ''}
+          ${pendingFacIds.has(String(f.id)) ? '<span style="color:var(--primary); font-size:20px;">✓</span>' : ''}
         </div>
       `).join('');
       $("facSelectedCount").textContent = `已選 ${pendingFacIds.size} 間`;
@@ -1395,51 +1395,47 @@
     /* =========================
        5. 群組功能
     ========================= */
-    function loadGroups() {
-      facGroups = JSON.parse(localStorage.getItem(GRP_KEY) || '[]');
-      renderGrpBar();
+    async function loadGroups() {
+      try {
+        const { data, error } = await sb.from('facility_groups').select('*').order('name');
+        if (error) throw error;
+        facGroups = data || [];
+        renderGrpBar();
+      } catch (err) { console.error("Load groups error:", err); }
     }
-    function saveGroups() {
-      localStorage.setItem(GRP_KEY, JSON.stringify(facGroups));
-      renderGrpBar();
-    }
+
     function renderGrpBar() {
       const bar = $("grpBar");
+      // 清除舊有的群組按鈕
       bar.querySelectorAll('.grp-chip-item').forEach(el => el.remove());
       facGroups.forEach(g => {
         const btn = document.createElement("button");
-        btn.className = "btn btn-secondary grp-chip-item";
-        btn.style.padding = "6px 12px"; btn.style.fontSize = "12px";
-        btn.innerHTML = `${g.name} <span style="opacity:0.6;">(${g.facilityIds.length})</span>`;
-        btn.onclick = () => { g.facilityIds.forEach(id => pendingFacIds.add(id)); renderFacList(); };
-        bar.insertBefore(btn, bar.firstChild);
+        btn.className = "grp-chip grp-chip-item";
+        btn.innerHTML = `<span>${g.name}</span> <span style="font-size:10px; opacity:0.7;">(${g.facility_ids?.length || 0})</span>`;
+        btn.onclick = () => applyGroup(g);
+        bar.appendChild(btn);
       });
     }
-    function openGrpAdd() {
-      $("grpEditTitle").textContent = "➕ 新增群組";
-      $("grpEditName").value = "";
-      renderGrpFacList();
-      $("grpEditOverlay").classList.add("show");
+
+    function applyGroup(group) {
+      if (!group.facility_ids || group.facility_ids.length === 0) return;
+      group.facility_ids.forEach(id => selectedFacIds.add(String(id)));
+      renderSelectedFacList();
+      updateSidebar();
+      
+      // 視覺反饋
+      const chips = document.querySelectorAll('.grp-chip-item');
+      chips.forEach(c => {
+        if (c.querySelector('span').textContent === group.name) {
+          c.classList.add('flash');
+          setTimeout(() => c.classList.remove('flash'), 500);
+        }
+      });
     }
-    function closeGrpEdit() { $("grpEditOverlay").classList.remove("show"); }
-    function renderGrpFacList() {
-      const wrap = $("grpFacList");
-      wrap.innerHTML = allFacilities.map(f => `
-        <label style="display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #f1f5f9; cursor:pointer; text-align:left;">
-          <input type="checkbox" class="grp-member-check" value="${f.id}" style="width:18px; height:18px; flex-shrink:0;" />
-          <span style="font-size:14px; font-weight:700; flex:1;">
-            ${f.short_name ? `<span style="color:var(--primary); margin-right:6px;">[${f.short_name}]</span>` : ''}${f.facility_name}
-          </span>
-        </label>
-      `).join('');
-    }
-    function saveGrpEdit() {
-      const name = $("grpEditName").value.trim();
-      if (!name) return alert("請輸入名稱");
-      const ids = Array.from(document.querySelectorAll(".grp-member-check:checked")).map(el => el.value);
-      facGroups.push({ id: Date.now(), name, facilityIds: ids });
-      saveGroups();
-      closeGrpEdit();
+
+    // 機構群組現由管理後台統一設定
+    function openGrpEdit() { 
+      alert("機構群組現由管理後台統一設定。如需調整，請聯繫系統管理員。");
     }
 
     /* =========================

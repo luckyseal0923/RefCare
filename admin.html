@@ -723,6 +723,7 @@
           <div class="nav-item active" id="navDash" onclick="switchView('dashboard')">📊 儀表板</div>
           <div class="nav-item" id="navCases" onclick="switchView('cases')">📁 歷史案件</div>
           <div class="nav-item" id="navFacs" onclick="switchView('facilities')">🏥 機構管理</div>
+          <div class="nav-item" id="navGroups" onclick="switchView('groups')">🏷️ 群組維護</div>
           <div class="nav-item" id="navMgr" onclick="openManagerModal()">👥 帳號權限</div>
           <div class="nav-item" id="navReport" onclick="alert('報表功能開發中')">📤 報表匯出</div>
         </nav>
@@ -938,6 +939,28 @@
           </div>
         </section>
       </div>
+      <div class="content" id="groupsView" style="display:none;">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">群組管理與定義</h2>
+            <p class="panel-subtitle">建立常用的機構組合，方便個管師在起案時快速整批選取。</p>
+          </div>
+          <button class="btn btn-primary" onclick="openGroupEditor()">＋ 新增群組</button>
+        </div>
+        <div class="panel-body" style="padding:0;">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>群組名稱 / 建立時間</th>
+                <th>成員數量</th>
+                <th style="text-align:right;">操作區塊</th>
+              </tr>
+            </thead>
+            <tbody id="groupsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
     </main>
   </div>
 
@@ -1469,6 +1492,99 @@
       renderTable();
     }
 
+    // --- 群組管理 ---
+    let allGroups = [];
+    async function loadGroups() {
+      const { data, error } = await sb.from('facility_groups').select('*').order('created_at', { ascending: false });
+      allGroups = data || [];
+      renderGroupsTable();
+    }
+
+    function renderGroupsTable() {
+      const wrap = $("groupsTableBody");
+      wrap.innerHTML = allGroups.map(g => {
+        const count = (g.facility_ids || []).length;
+        return `
+          <tr>
+            <td><div class="patient-name">${g.name}</div><div class="cell-muted">建立於 ${new Date(g.created_at).toLocaleDateString()}</div></td>
+            <td><span class="status-badge done">${count} 間機構</span></td>
+            <td>
+              <div class="row-actions">
+                <button class="icon-btn" onclick="openGroupEditor('${g.id}')">編輯群組</button>
+                <button class="icon-btn danger" onclick="deleteGroup('${g.id}')">刪除</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("") || '<tr><td colspan="3" style="text-align:center; padding:40px; color:var(--muted);">目前無任何群組</td></tr>';
+    }
+
+    async function openGroupEditor(id = null) {
+      const group = id ? allGroups.find(g => g.id === id) : { name: '', facility_ids: [] };
+      const selectedIds = new Set((group.facility_ids || []).map(String));
+      
+      const facOptions = allFacilities.map(f => `
+        <label style="display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px dotted #e2e8f0; cursor:pointer;">
+          <input type="checkbox" name="grp_fac_ids" value="${f.id}" ${selectedIds.has(String(f.id)) ? 'checked' : ''} />
+          <span style="font-size:14px;">${f.short_name ? `[${f.short_name}] ` : ''}${f.facility_name}</span>
+        </label>
+      `).join("");
+
+      $("drawerPatientName").textContent = id ? `維護群組：${group.name}` : '建立新機構群組';
+      $("drawerContent").innerHTML = `
+        <div class="detail-card full">
+          <form id="groupForm" class="edit-form">
+            <input type="hidden" name="id" value="${id || ''}">
+            <div class="edit-field full"><label>群組名稱 <span style="color:red;">*</span></label><input name="name" value="${group.name}" required placeholder="例如：北區合作機構"></div>
+            <div class="edit-field full">
+              <label>選擇結構成員 (可複選)</label>
+              <div style="max-height:400px; overflow-y:auto; background:#f8fafc; border:1px solid var(--line); border-radius:12px; padding:16px;">
+                ${facOptions}
+              </div>
+            </div>
+          </form>
+          <div style="margin-top:24px; display:flex; gap:12px;">
+            <button class="btn btn-primary" style="flex:2;" onclick="saveGroup()">儲存群組設定</button>
+            <button class="btn btn-muted" style="flex:1;" onclick="closeDrawer()">取消</button>
+          </div>
+        </div>
+      `;
+      $("drawerOverlay").classList.add("show");
+      $("detailDrawer").classList.add("show");
+    }
+
+    async function saveGroup() {
+      const form = document.getElementById('groupForm');
+      const fd = new FormData(form);
+      const name = fd.get('name');
+      const id = fd.get('id');
+      const facility_ids = fd.getAll('grp_fac_ids');
+
+      if (!name) return alert("請填寫群組名稱");
+
+      try {
+        if (id) {
+          const { error } = await sb.from('facility_groups').update({ name, facility_ids }).eq('id', id);
+          if (error) throw error;
+        } else {
+          const { error } = await sb.from('facility_groups').insert([{ name, facility_ids }]);
+          if (error) throw error;
+        }
+        alert("群組已儲存");
+        closeDrawer();
+        loadGroups();
+      } catch (err) { alert("儲存失敗：" + err.message); }
+    }
+
+    async function deleteGroup(id) {
+      if (!confirm("確定刪除此群組？這不會移除機構本身，只會移除群組定義。")) return;
+      try {
+        await sb.from('facility_groups').delete().eq('id', id);
+        alert("已刪除");
+        loadGroups();
+      } catch (err) { alert("刪除失敗"); }
+    }
+
     // --- 權限登入邏輯 ---
     let currentUserRole = '';
     async function doAdminLogin() {
@@ -1584,7 +1700,7 @@
     let currentViewMode = 'dashboard';
 
     function switchView(view) {
-      if (currentUserRole !== '系統管理員' && (view === 'facilities' || view === 'managers')) {
+      if (currentUserRole !== '系統管理員' && (view === 'facilities' || view === 'managers' || view === 'groups')) {
         alert('您的權限不足以訪問此模組');
         return;
       }
@@ -1592,10 +1708,12 @@
       if (view === 'dashboard' || view === 'cases') {
         $("dashboardView").style.display = "block";
         $("facilitiesView").style.display = "none";
+        $("groupsView").style.display = "none";
         
         $("navDash").classList.toggle("active", view === 'dashboard');
         $("navCases").classList.toggle("active", view === 'cases');
         $("navFacs").classList.remove("active");
+        $("navGroups").classList.remove("active");
         
         if (view === 'dashboard') {
           $("mainTableTitle").textContent = "進行中案件";
@@ -1612,13 +1730,24 @@
         }
         
         renderTable();
-      } else {
+      } else if (view === 'facilities') {
         $("dashboardView").style.display = "none";
         $("facilitiesView").style.display = "block";
+        $("groupsView").style.display = "none";
         $("navDash").classList.remove("active");
         $("navCases").classList.remove("active");
         $("navFacs").classList.add("active");
+        $("navGroups").classList.remove("active");
         renderFacilitiesTable();
+      } else if (view === 'groups') {
+        $("dashboardView").style.display = "none";
+        $("facilitiesView").style.display = "none";
+        $("groupsView").style.display = "block";
+        $("navDash").classList.remove("active");
+        $("navCases").classList.remove("active");
+        $("navFacs").classList.remove("active");
+        $("navGroups").classList.add("active");
+        loadGroups();
       }
     }
 
