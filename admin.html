@@ -636,25 +636,19 @@
     .mgr-add-section { background:#f8fafc; border:2px dashed var(--line); border-radius:24px; padding:24px; margin-bottom:34px; }
     .mgr-add-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:16px; margin-bottom:16px; }
     
-    .mgr-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:20px; }
+    .mgr-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 24px; }
     .mgr-card { 
-      background: #fff; border: 1px solid var(--line); border-radius: 24px; padding: 24px; 
-      position: relative; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: var(--shadow-sm);
-      display: flex; flex-direction: column; border-left: 6px solid var(--line);
+      background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 24px; 
+      transition: all .2s; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     }
-    .mgr-card:hover { 
-      border-color: #ddd6fe; border-left-color: var(--primary);
-      box-shadow: var(--shadow);
-      transform: translateY(-6px);
-    }
-    .mgr-card-name { font-size: 18px; font-weight: 950; color: var(--text-strong); margin-bottom: 16px; }
-    .mgr-card-info { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; flex: 1; }
-    .mgr-card-item { display: flex; align-items: flex-start; gap: 12px; font-size: 13px; color: var(--muted); line-height: 1.5; font-weight: 700; }
-    .mgr-card-val { color: var(--text-strong); font-weight: 800; }
-    .mgr-card-actions { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line-soft); display: flex; justify-content: flex-end; }
+    .mgr-card:hover { border-color: var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.05); transform: translateY(-4px); }
+    .mgr-card-name { font-size: 16px; font-weight: 950; color: #1e293b; display: flex; align-items:center; gap:8px; }
+    .mgr-card-info { display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: #64748b; }
+    .mgr-card-item { display: flex; justify-content: space-between; border-bottom: 1px dashed #f1f5f9; padding-bottom: 4px; }
+    .mgr-card-val { font-weight: 800; color: #334155; }
+    .mgr-card-actions { margin-top: auto; padding-top: 12px; display: flex; justify-content: flex-end; }
     .mgr-del-link { 
-      font-size: 12px; color: var(--muted); cursor: pointer; text-decoration: none; 
+      font-size: 12px; color: #64748b; cursor: pointer; text-decoration: none; 
       padding: 8px 12px; border-radius: 10px; transition: all 0.2s; font-weight: 900;
     }
     .mgr-del-link:hover { color: var(--rose); background: var(--rose-soft); }
@@ -1502,19 +1496,25 @@
       renderManagers();
     }
     function renderManagers() {
-      $("managerTableBody").innerHTML = managersList.map(m => `
-        <div class="mgr-card">
-          <div class="mgr-card-name">🔑 ${m.name}</div>
-          <div class="mgr-card-info">
-            <div class="mgr-card-item">🛡️ 角色：<span class="mgr-card-val">${m.role || '個管師'}</span></div>
-            <div class="mgr-card-item">🆔 員編：<span class="mgr-card-val">${m.emp_id || '--'}</span></div>
-            <div class="mgr-card-item">🏢 單位：<span class="mgr-card-val">${m.hospital}</span></div>
+      $("managerTableBody").className = "mgr-grid";
+      $("managerTableBody").innerHTML = managersList.map(m => {
+        const maskPwd = m.password ? m.password.substring(0,2) + '****' : '****';
+        return `
+          <div class="mgr-card">
+            <div class="mgr-card-name">👤 ${m.name}</div>
+            <div class="mgr-card-info">
+              <div class="mgr-card-item"><span>🛡️ 權限層級</span> <span class="mgr-card-val">${m.role || '個管師'}</span></div>
+              <div class="mgr-card-item"><span>🆔 登入員編</span> <span class="mgr-card-val">${m.emp_id || '--'}</span></div>
+              <div class="mgr-card-item"><span>🔑 登入密碼</span> <span class="mgr-card-val">${maskPwd}</span></div>
+              <div class="mgr-card-item"><span>🏢 醫院單位</span> <span class="mgr-card-val">${m.hospital || '--'}</span></div>
+              <div class="mgr-card-item"><span>📞 聯絡電話</span> <span class="mgr-card-val">${m.phone || '--'}${m.ext ? ` (#${m.ext})` : ''}</span></div>
+            </div>
+            <div class="mgr-card-actions">
+              <span class="mgr-del-link" onclick="deleteManager('${m.id}')">⚠️ 註銷帳號</span>
+            </div>
           </div>
-          <div class="mgr-card-actions">
-            <span class="mgr-del-link" onclick="deleteManager('${m.id}')">註銷帳號</span>
-          </div>
-        </div>
-      `).join("") || '<div style="text-align:center; padding:40px; color:var(--muted);">目前無任何管理帳號。</div>';
+        `;
+      }).join("") || '<div style="grid-column: 1/-1; text-align:center; padding:40px; color:var(--muted);">目前無任何管理帳號。</div>';
     }
     function openManagerModal() { $("mgrOverlay").classList.add("show"); loadManagers(); }
     function closeMgrModal() { $("mgrOverlay").classList.remove("show"); }
