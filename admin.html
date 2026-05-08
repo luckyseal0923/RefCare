@@ -1475,7 +1475,7 @@
     }
 
     async function deleteCase(id) {
-      if (!(await checkAdminPrivilege())) return;
+      if (!(await checkAdminPrivilege(true))) return;
       if (!confirm("確定刪除此案件？此操作將使案件從清單中隱藏，但資料仍會保留在後端系統中。")) return;
       try {
         const { error } = await sb.from('cases').update({ status: '系統刪除' }).eq('case_id', id);
@@ -1902,10 +1902,10 @@
       `).join("") || '<div style="grid-column: 1/-1; text-align:center; padding:80px; color:var(--muted); background:white; border-radius:20px; border:1px dashed var(--line);">目前無機構資料</div>';
     }
 
-    async function checkAdminPrivilege() {
-      if (sessionStorage.getItem('isAdminAuthorized') === 'true') return true;
+    async function checkAdminPrivilege(force = false) {
+      if (!force && sessionStorage.getItem('isAdminAuthorized') === 'true') return true;
       
-      const empId = prompt('【權限驗證】\\n執行此操作需要管理者權限。\\n請輸入系統管理員帳號 (員編)：');
+      const empId = prompt('【權限驗證】\n執行此操作需要管理者權限。\n請輸入系統管理員帳號 (員編)：');
       if (!empId) return false;
       const pwd = prompt('請輸入密碼：');
       if (!pwd) return false;
