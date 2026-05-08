@@ -1440,8 +1440,12 @@
               </select>
             </div>
             <div class="edit-field"><label>個管師</label><input name="case_manager" value="${item.case_manager || ''}"></div>
-            <div class="edit-field full"><label>診斷</label><textarea name="diagnosis">${item.diagnosis}</textarea></div>
-            <div class="edit-field full"><label>案況摘要</label><textarea name="case_summary">${item.case_summary}</textarea></div>
+            <div class="edit-field"><label>CMS 等級</label><input type="number" name="cms_level" value="${item.cms_level || ''}" placeholder="1-8"></div>
+            <div class="edit-field"><label>行動能力</label><input name="mobility" value="${item.mobility || ''}" placeholder="例如：輪椅、臥床"></div>
+            <div class="edit-field"><label>服務類型</label><input name="service_type" value="${item.service_type || ''}" placeholder="例如：長照服務"></div>
+            <div class="edit-field full"><label>主要診斷</label><textarea name="diagnosis" style="min-height:80px;">${item.diagnosis || ''}</textarea></div>
+            <div class="edit-field full"><label>案況摘要</label><textarea name="case_summary" style="min-height:100px;">${item.case_summary || ''}</textarea></div>
+            <div class="edit-field full"><label>特殊需求</label><textarea name="special_needs" style="min-height:80px;">${item.special_needs || ''}</textarea></div>
           </form>
           <div style="margin-top:24px; display:flex; gap:12px;">
             <button class="btn btn-primary" style="flex:2;" onclick="saveEdit()">儲存修改</button>
