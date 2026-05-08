@@ -1391,7 +1391,7 @@
             <h4>診斷與摘要</h4>
             <div><strong>主要診斷：</strong>${item.diagnosis}</div>
             <div><strong>案況描述：</strong>${item.case_summary}</div>
-            <div><strong>特殊需求：</strong>${item.special_needs || '無'}</div>
+            <div><strong>特殊需求：</strong>${item.special_need || '無'}</div>
           </div>
           <div class="detail-card full">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
@@ -1447,7 +1447,7 @@
             <div class="edit-field"><label>服務類型</label><input name="service_type" value="${item.service_type || ''}" placeholder="例如：長照服務"></div>
             <div class="edit-field full"><label>主要診斷</label><textarea name="diagnosis" style="min-height:80px;">${item.diagnosis || ''}</textarea></div>
             <div class="edit-field full"><label>案況摘要</label><textarea name="case_summary" style="min-height:100px;">${item.case_summary || ''}</textarea></div>
-            <div class="edit-field full"><label>特殊需求</label><textarea name="special_needs" style="min-height:80px;">${item.special_needs || ''}</textarea></div>
+            <div class="edit-field full"><label>特殊需求</label><textarea name="special_need" style="min-height:80px;">${item.special_need || ''}</textarea></div>
           </form>
           <div style="margin-top:24px; display:flex; gap:12px;">
             <button class="btn btn-primary" style="flex:2;" onclick="saveEdit()">儲存修改</button>
