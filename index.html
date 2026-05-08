@@ -1478,7 +1478,7 @@
         showStatus("success", "✅ 案件建立成功！");
         fetch(N8N_WEBHOOKS.createCase, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
         
-        setTimeout(() => { if (confirm("送出成功！要重新起案嗎？")) location.reload(); }, 1500);
+        setTimeout(() => { location.reload(); }, 1500);
       } catch (err) {
         showStatus("error", "儲存失敗：" + err.message);
       }
