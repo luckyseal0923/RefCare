@@ -1425,9 +1425,11 @@
     function renderGrpFacList() {
       const wrap = $("grpFacList");
       wrap.innerHTML = allFacilities.map(f => `
-        <label style="display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid #f1f5f9; cursor:pointer;">
-          <input type="checkbox" class="grp-member-check" value="${f.id}" />
-          <span style="font-size:14px; font-weight:700;">${f.facility_name}</span>
+        <label style="display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #f1f5f9; cursor:pointer; text-align:left;">
+          <input type="checkbox" class="grp-member-check" value="${f.id}" style="width:18px; height:18px; flex-shrink:0;" />
+          <span style="font-size:14px; font-weight:700; flex:1;">
+            ${f.short_name ? `<span style="color:var(--primary); margin-right:6px;">[${f.short_name}]</span>` : ''}${f.facility_name}
+          </span>
         </label>
       `).join('');
     }
