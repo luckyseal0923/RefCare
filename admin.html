@@ -682,6 +682,19 @@
     }
     .login-brand { display: flex; align-items: center; gap: 14px; margin-bottom: 32px; }
     .login-logo { width: 48px; height: 48px; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: white; font-size: 20px; }
+
+    .fac-card-list { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px; }
+    .fac-mini-card { 
+      display: flex; align-items: center; gap: 12px; padding: 12px 16px; 
+      border: 1px solid var(--line); border-radius: 12px; cursor: pointer; transition: all .15s;
+      background: #fff; text-align: left;
+    }
+    .fac-mini-card:hover { border-color: var(--primary); background: #f0fdfa; }
+    .fac-mini-card.selected { border-color: var(--primary); background: #e6fffa; box-shadow: 0 2px 8px rgba(20,184,166,0.1); }
+    .fac-mini-card input { width: 18px; height: 18px; cursor: pointer; flex-shrink: 0; }
+    .fac-mini-info { flex: 1; }
+    .fac-mini-name { font-size: 14px; font-weight: 800; color: #0f172a; }
+    .fac-mini-sub { font-size: 12px; color: #64748b; margin-top: 4px; }
   </style>
 </head>
 <body class="is-unauthorized">
@@ -1527,10 +1540,13 @@
       const selectedIds = new Set((group.facility_ids || []).map(String));
       
       const facOptions = allFacilities.map(f => `
-        <label style="display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px dotted #e2e8f0; cursor:pointer;">
-          <input type="checkbox" name="grp_fac_ids" value="${f.id}" ${selectedIds.has(String(f.id)) ? 'checked' : ''} />
-          <span style="font-size:14px;">${f.short ? `[${f.short}] ` : ''}${f.name}</span>
-        </label>
+        <div class="fac-mini-card ${selectedIds.has(String(f.id)) ? 'selected' : ''}" onclick="toggleGroupMember(this)">
+          <input type="checkbox" name="grp_fac_ids" value="${f.id}" ${selectedIds.has(String(f.id)) ? 'checked' : ''} onchange="updateGroupCount()" />
+          <div class="fac-mini-info">
+            <div class="fac-mini-name">${f.short ? `<span style="color:var(--primary);">[${f.short}]</span> ` : ''}${f.name}</div>
+            <div class="fac-mini-sub">${f.area || '全區服務'}</div>
+          </div>
+        </div>
       `).join("");
 
       $("drawerPatientName").textContent = id ? `維護群組：${group.name}` : '建立新機構群組';
@@ -1540,8 +1556,11 @@
             <input type="hidden" name="id" value="${id || ''}">
             <div class="edit-field full"><label>群組名稱 <span style="color:red;">*</span></label><input name="name" value="${group.name}" required placeholder="例如：北區合作機構"></div>
             <div class="edit-field full">
-              <label>選擇結構成員 (可複選)</label>
-              <div style="max-height:400px; overflow-y:auto; background:#f8fafc; border:1px solid var(--line); border-radius:12px; padding:16px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <label style="margin:0;">選擇結構成員 (可複選)</label>
+                <span id="groupMemberCount" style="font-size:13px; font-weight:800; color:var(--primary);">已選擇 0 / 0</span>
+              </div>
+              <div class="fac-card-list" style="max-height:450px; overflow-y:auto; background:#f8fafc; border:1px solid var(--line); border-radius:16px; padding:16px;">
                 ${facOptions}
               </div>
             </div>
@@ -1554,6 +1573,27 @@
       `;
       $("drawerOverlay").classList.add("show");
       $("detailDrawer").classList.add("show");
+      updateGroupCount();
+    }
+
+    function toggleGroupMember(el) {
+      if (event.target.tagName === 'INPUT') return;
+      const cb = el.querySelector('input');
+      cb.checked = !cb.checked;
+      el.classList.toggle('selected', cb.checked);
+      updateGroupCount();
+    }
+
+    function updateGroupCount() {
+      const total = allFacilities.length;
+      const checked = document.querySelectorAll('input[name="grp_fac_ids"]:checked').length;
+      $("groupMemberCount").textContent = `已選擇 ${checked} / ${total}`;
+      
+      // 同步卡片樣式 (如果是透過 checkbox 直接點擊)
+      document.querySelectorAll('.fac-mini-card').forEach(card => {
+        const cb = card.querySelector('input');
+        card.classList.toggle('selected', cb.checked);
+      });
     }
 
     async function saveGroup() {
