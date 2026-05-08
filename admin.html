@@ -680,6 +680,19 @@
       background: white; border-radius: 28px; width: 100%; max-width: 420px;
       padding: 40px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     }
+    /* 管理分頁標籤樣式 */
+    .fac-tab-container { display: flex; gap: 16px; margin-top: 24px; padding-bottom: 8px; }
+    .fac-tab-btn { 
+      padding: 12px 28px; border-radius: 14px; font-size: 15px; font-weight: 800; cursor: pointer; transition: all .2s;
+      border: 1px solid #e2e8f0; background: #fff; color: #64748b; display: flex; align-items: center; gap: 10px;
+    }
+    .fac-tab-btn:hover { border-color: var(--primary); color: var(--primary); background: #f0fdfa; }
+    .fac-tab-btn.active { 
+      background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; border: none; 
+      box-shadow: 0 10px 20px -5px rgba(99,102,241,0.4);
+    }
+    .fac-tab-btn.active svg { filter: brightness(2); }
+    
     .login-brand { display: flex; align-items: center; gap: 14px; margin-bottom: 32px; }
     .login-logo { width: 48px; height: 48px; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: white; font-size: 20px; }
 
@@ -963,9 +976,9 @@
             </div>
           </div>
           
-          <div class="reply-tabs" style="margin-bottom:0;">
-            <button class="tab-btn active" id="tabFacList" onclick="switchFacSubView('facs')">🏥 機構名單</button>
-            <button class="tab-btn" id="tabGrpList" onclick="switchFacSubView('groups')">🏷️ 群組維護</button>
+          <div class="fac-tab-container">
+            <button id="tabFacList" class="fac-tab-btn active" onclick="switchFacSubView('facs')">🏥 機構名單</button>
+            <button id="tabGrpList" class="fac-tab-btn" onclick="switchFacSubView('groups')">🏷️ 群組維護</button>
           </div>
         </div>
 
