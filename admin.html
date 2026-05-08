@@ -1538,9 +1538,14 @@
       if(error) alert(error.message); else loadManagers();
     }
     async function deleteManager(id) {
-      if(!confirm("確定註銷？")) return;
-      await sb.from('case_managers').delete().eq('id', id);
-      loadManagers();
+      if (!(await checkAdminPrivilege())) return;
+      if(!confirm("確定註銷此帳號？此操作無法復原。")) return;
+      try {
+        const { error } = await sb.from('case_managers').delete().eq('id', id);
+        if (error) throw error;
+        alert("帳號已註銷");
+        loadManagers();
+      } catch (err) { alert("註銷失敗：" + err.message); }
     }
 
     function resetFilters() {
