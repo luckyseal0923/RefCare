@@ -340,7 +340,8 @@
 .grp-chip{display:inline-flex;align-items:center;gap:5px;border:1.5px solid #a7f3d0;background:#ecfdf5;border-radius:999px;padding:5px 12px;font-size:12px;font-weight:700;color:#065f46;cursor:pointer;transition:all .15s;white-space:nowrap;}
 .grp-chip:hover{background:#d1fae5;border-color:#0f766e;}
 .grp-chip.flash{background:#0f766e;color:#fff;border-color:#0f766e;}
-<style>
+  </style>
+  <style>
     :root {
       --bg: #f4f7f8;
       --card: #ffffff;
@@ -454,12 +455,10 @@
       justify-content: space-between;
       align-items: flex-start;
       gap: 16px;
-      border-bottom: 1px solid var(--line);
-      padding-bottom: 18px;
       margin-bottom: 24px;
     }
-    .section-title { margin: 0 0 6px; font-size: 20px; font-weight: 900; color: #0f172a; }
-    .section-desc { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+    .section-title { margin: 0 0 4px; font-size: 24px; font-weight: 950; color: #0f172a; }
+    .section-desc { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.6; }
 
     /* Form Elements */
     .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
@@ -469,17 +468,18 @@
     label { font-size: 14px; font-weight: 800; color: #374151; }
     input, select, textarea {
       width: 100%;
-      border: 1.5px solid #e5e7eb;
+      border: 1.5px solid #e2e8f0;
       border-radius: 14px;
-      padding: 12px 16px;
+      padding: 13px 16px;
       font-size: 15px;
       background: #fff;
       outline: none;
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
     }
     input:focus, select:focus, textarea:focus {
       border-color: var(--primary);
-      box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.08);
+      box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.1);
       background: #fff;
     }
     textarea { min-height: 110px; resize: vertical; }
@@ -488,9 +488,9 @@
     .auth-box {
       background: #f8fafc;
       border: 1px dashed #cbd5e1;
-      border-radius: 18px;
-      padding: 18px;
-      margin-bottom: 24px;
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 28px;
     }
 
     /* Badge & Chips */
@@ -827,31 +827,31 @@
             <span class="badge">身分驗證</span>
           </div>
           <div class="auth-box">
-            <div style="font-size:13px; font-weight:800; color:#475569; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
-              <span>🔑</span> 帳號登入 (員編 + 密碼)
+            <div style="font-size:14px; font-weight:800; color:#475569; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+              <span style="color:var(--warning);">🔑</span> 帳號登入 (員編 + 密碼)
             </div>
-            <div style="display:flex; gap:12px; flex-wrap:wrap;">
-              <input type="text" id="empIdAuth" placeholder="員編" style="flex:1; min-width:120px;" />
-              <input type="password" id="empPasswordAuth" placeholder="密碼" style="flex:1; min-width:120px;" />
-              <button type="button" class="btn btn-primary" onclick="authByEmpId()" style="width:100px; padding:10px; margin:0;">驗證</button>
+            <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center;">
+              <input type="text" id="empIdAuth" placeholder="員編" style="flex:1; min-width:140px;" />
+              <input type="password" id="empPasswordAuth" placeholder="密碼" style="flex:1; min-width:140px;" />
+              <button type="button" class="btn btn-primary" onclick="authByEmpId()" style="width:120px; padding:12px; margin:0; border-radius:12px;">驗證</button>
             </div>
           </div>
           <div class="form-grid three">
             <div class="field">
-              <label>轉介單位 <span class="required">*</span></label>
-              <input type="text" id="hospital" placeholder="例如: 萬芳醫院急診" required />
-            </div>
-            <div class="field">
-              <label>單位分機</label>
-              <input type="text" id="hospitalExt" placeholder="例如: 6524" />
-            </div>
-            <div class="field">
               <label>個管師姓名 <span class="required">*</span></label>
-              <input type="text" id="caseManager" placeholder="請輸入姓名" required />
+              <input type="text" id="caseManager" placeholder="請先驗證員編" readonly style="background:#f8fafc;" />
             </div>
             <div class="field">
               <label>聯絡電話 <span class="required">*</span></label>
-              <input type="text" id="caseManagerPhone" placeholder="例如: 0912..." required />
+              <input type="text" id="caseManagerPhone" placeholder="由系統帶入" readonly style="background:#f8fafc;" />
+            </div>
+            <div class="field">
+              <label>單位分機</label>
+              <input type="text" id="hospitalExt" placeholder="由系統帶入" readonly style="background:#f8fafc;" />
+            </div>
+            <div class="field">
+              <label>轉介單位 <span class="required">*</span></label>
+              <input type="text" id="hospital" placeholder="由系統帶入" readonly style="background:#f8fafc;" />
             </div>
             <div class="field">
               <label>案件編號 (系統產生)</label>
@@ -859,7 +859,7 @@
             </div>
             <div class="field">
               <label>起案時間</label>
-              <input type="datetime-local" id="referralTime" style="background:#f8fafc;" />
+              <input type="datetime-local" id="referralTime" readonly style="background:#f8fafc;" />
             </div>
           </div>
         </section>
