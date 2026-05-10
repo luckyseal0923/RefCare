@@ -448,18 +448,19 @@
       white-space: nowrap;
     }
     .list-table td {
-      padding: 18px;
+      padding: 14px 18px;
       border-bottom: 1px solid var(--line-soft);
       vertical-align: middle;
       font-size: 14px;
       background: rgba(255,255,255,0.72);
+      white-space: nowrap;
     }
     .list-table tbody tr:hover td { background: #f8faff; }
 
     .case-time { font-weight: 950; color: var(--text-strong); margin-bottom: 5px; white-space: nowrap; }
     .case-id { font-size: 12px; color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-    .patient-name { font-weight: 950; color: var(--text-strong); margin-bottom: 4px; }
-    .patient-meta, .cell-muted { color: var(--muted); font-size: 13px; line-height: 1.55; }
+    .patient-name { font-weight: 950; color: var(--text-strong); margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+    .patient-meta, .cell-muted { color: var(--muted); font-size: 13px; line-height: 1.55; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
 
     .need-tag {
       display: inline-flex;
@@ -488,11 +489,11 @@
     .status-badge.closed { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; }
 
     .reply-block { min-width: 160px; }
-    .reply-text { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; margin-bottom: 8px; color: #475569; font-weight: 800; }
+    .reply-text { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; margin-bottom: 8px; color: #475569; font-weight: 800; white-space: nowrap; }
     .progress { height: 8px; border-radius: 999px; background: #e5e7eb; overflow: hidden; }
     .progress-bar { height: 100%; background: linear-gradient(135deg, var(--primary), var(--primary-2)); border-radius: 999px; }
 
-    .row-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+    .row-actions { display: flex; gap: 8px; justify-content: flex-end; }
     .icon-btn {
       border: 1px solid var(--line);
       background: white;
@@ -1275,7 +1276,7 @@
               <td><div class="case-time">${dateStr}</div><div class="case-id">${c.case_id}</div></td>
               <td><div class="patient-name">${c.patient_name}</div><div class="patient-meta">${c.age}歲 / ${c.gender}</div></td>
               <td>
-                <div style="font-weight:900; color:var(--primary); font-size:15px;">👤 ${c.case_manager || '未認證'}</div>
+                <div style="font-weight:900; color:var(--primary); font-size:15px; overflow:hidden; text-overflow:ellipsis; max-width:120px;" title="${c.case_manager || ''}">👤 ${c.case_manager || '未認證'}</div>
               </td>
               <td style="width: 220px; max-width: 220px;">
                 <div style="width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text-strong); font-size:14px;" title="${c.case_summary || ''}">
