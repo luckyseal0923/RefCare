@@ -359,9 +359,8 @@
           <div class="info-value" id="diagnosisView">肺炎治療後病況穩定，因反覆跌倒與生活功能下降，出院後需持續居家照護與日常生活協助。</div>
         </div>
         <div class="info-item">
-          <div class="info-label">地址 / 聯絡人</div>
-          <div class="info-value" id="contactSummaryView">文山區興隆路三段 88 號 5 樓
-女兒林小姐 / 0912-345-678</div>
+          <div class="info-label">現居地址</div>
+          <div class="info-value" id="addressView">文山區興隆路三段 88 號 5 樓</div>
         </div>
       </div>
 
@@ -373,7 +372,7 @@
         </div>
         <div class="info-item compact">
           <div class="info-label">意識</div>
-          <div class="info-value" id="consciousnessView">清楚</div>
+          <div class="info-value" id="consciousnessEvalView">清楚</div>
         </div>
         <div class="info-item compact">
           <div class="info-label">行動能力</div>
@@ -585,8 +584,6 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
         height: params.get("height") || "155",
         weight: params.get("weight") || "48",
         address: params.get("address") || "台北市文山區興隆路三段 88 號 5 樓",
-        contact_name: params.get("contact_name") || "林小姐（女兒）",
-        contact_phone: params.get("contact_phone") || "0912-345-678",
         diagnosis: params.get("diagnosis") || params.get("case_summary") || "肺炎治療後病況穩定，因反覆跌倒與生活功能下降，出院後需持續居家照護與日常生活協助。",
         cms_level: params.get("cms_level") || "第 6 級",
         mobility: params.get("mobility") || "無法行走，但可站立",
@@ -634,8 +631,6 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
       }
 
       const bodyText = `${data.height || "--"} cm / ${data.weight || "--"} kg`;
-      const contactSummary = `${data.address || "--"}
-${data.contact_name || "--"} / ${data.contact_phone || "--"}`;
       const serviceNeed = `${data.service_time || "--"}
 ${formatServiceCodes(data.service_codes)}`;
 
@@ -645,11 +640,12 @@ ${formatServiceCodes(data.service_codes)}`;
       $("patientNameView").textContent = data.patient_name;
       $("basicView").textContent = `${data.age}歲 / ${data.gender}`;
       $("bodyView").textContent = bodyText;
-      $("consciousnessView").textContent = data.consciousness;
+      $("consciousnessView").textContent = data.consciousness || "--";
       $("diagnosisView").textContent = data.diagnosis;
-      $("contactSummaryView").textContent = contactSummary;
+      $("addressView").textContent = data.address || "--";
       $("cmsView").textContent = data.cms_level;
       $("mobilityView").textContent = data.mobility;
+      $("consciousnessEvalView").textContent = data.consciousness || "--";
       $("specialView").textContent = data.special;
       $("serviceNeedView").textContent = serviceNeed;
       $("caseSummaryView").textContent = data.case_summary;
