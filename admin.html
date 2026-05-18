@@ -1405,12 +1405,14 @@
             <div><strong>特殊需求：</strong>${item.special_need || '無'}</div>
           </div>
           <div class="detail-card full">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
               <h4 style="margin:0;">機構回覆進度</h4>
-              <div class="reply-tabs">
+              <div class="reply-tabs" style="display:flex; gap:6px; flex-wrap:wrap;">
                 <button class="tab-btn active" onclick="filterReplies('all', this)">全部</button>
-                <button class="tab-btn" onclick="filterReplies('accept', this)">可接案</button>
-                <button class="tab-btn" onclick="filterReplies('pending', this)">待回覆</button>
+                <button class="tab-btn" onclick="filterReplies('pending', this)">⌛ 待回覆</button>
+                <button class="tab-btn" onclick="filterReplies('accept', this)">✅ 可接案</button>
+                <button class="tab-btn" onclick="filterReplies('coordinate', this)">⚠️ 待協調</button>
+                <button class="tab-btn" onclick="filterReplies('reject', this)">❌ 無法接案</button>
               </div>
             </div>
             <div id="repliesContainer">${replyCardsHtml}</div>
