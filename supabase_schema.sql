@@ -26,6 +26,7 @@ CREATE TABLE cases (
   case_manager TEXT,
   total_targets INTEGER DEFAULT 0,
   target_group TEXT DEFAULT '未指定',
+  target_group_line_id TEXT,
   target_facility_ids JSONB DEFAULT '[]'
 );
 
@@ -62,6 +63,7 @@ CREATE TABLE facilities (
   self_pay_services TEXT,
   evaluation_result TEXT,
   service_area TEXT,
+  line_group_id TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
