@@ -296,6 +296,32 @@
     .reject-reasons { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; padding-left: 8px; }
     .reject-reasons label { font-size: 15px; font-weight: 400; display: flex; align-items: center; gap: 8px; cursor: pointer; }
     .reject-reasons input[type="radio"] { accent-color: var(--danger); width: 16px; height: 16px; cursor: pointer; }
+    .quick-fac-btn {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      color: #334155;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .quick-fac-btn:hover {
+      background: #eff6ff;
+      border-color: #3b82f6;
+      color: #1d4ed8;
+      transform: translateY(-1px);
+    }
+    .quick-fac-btn.selected {
+      background: #2563eb;
+      border-color: #2563eb;
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(37,99,235,0.2);
+    }
 
     @media (max-width:768px){
       .info-grid,
@@ -406,6 +432,7 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
         <input type="text" id="facilitySearch" placeholder="請輸入機構名稱或簡稱搜尋" autocomplete="off" />
         <div id="facilityDropdown" class="facility-dropdown"></div>
         <div class="helper-text">可直接搜尋機構簡稱或完整名稱，最後一項提供「其他（自行輸入）」。</div>
+        <div id="quickSelectContainer" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;"></div>
       </div>
 
       <div class="field hidden" id="facilityOtherWrap">
@@ -562,6 +589,52 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
           area: ""
         });
       }
+
+      renderQuickSelect();
+    }
+
+    function renderQuickSelect() {
+      const container = $("quickSelectContainer");
+      if (!container) return;
+      
+      const targetList = FACILITIES.filter(f => f.id !== 'other');
+      if (targetList.length === 0) {
+        container.innerHTML = `<span style="font-size: 13px; color: var(--danger); font-weight: 800; display: block; margin-top: 8px;">⚠️ 此案件已無待回覆的指派機構，或此連結已失效。</span>`;
+        return;
+      }
+      
+      container.innerHTML = `
+        <div style="font-size: 13px; color: var(--muted); font-weight: 800; margin-bottom: 8px; width: 100%; display: flex; align-items: center; gap: 4px;">
+          🎯 點選您的機構快速填入：
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; width: 100%;">
+          ${targetList.map(f => `
+            <button type="button" class="quick-fac-btn" id="quickFac_${f.id}" onclick="selectQuickFacility('${f.id}')">
+              🏥 ${f.short_name || f.name}
+            </button>
+          `).join("")}
+        </div>
+      `;
+      
+      // 如果剛好只有 1 間，就自動幫他選取！
+      if (targetList.length === 1) {
+        selectFacility(targetList[0]);
+        highlightQuickBtn(targetList[0].id);
+      }
+    }
+
+    window.selectQuickFacility = function(id) {
+      const found = FACILITIES.find(f => String(f.id) === String(id));
+      if (found) {
+        selectFacility(found);
+        highlightQuickBtn(id);
+      }
+    };
+    
+    function highlightQuickBtn(id) {
+      document.querySelectorAll('.quick-fac-btn').forEach(btn => btn.classList.remove('selected'));
+      const activeBtn = $("quickFac_" + id);
+      if (activeBtn) activeBtn.classList.add('selected');
     }
 
     const $ = (id) => document.getElementById(id);
@@ -748,6 +821,7 @@ ${formatServiceCodes(data.service_codes)}`;
         $("facilityOther").value = "";
       }
 
+      highlightQuickBtn(item.id);
       hideFacilityDropdown();
     }
 
