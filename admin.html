@@ -1386,8 +1386,17 @@
             <h4>病患評估</h4>
             <div><strong>病患姓名：</strong>${item.patient_name}</div>
             <div><strong>年齡 / 性別：</strong>${item.age} 歲 / ${item.gender}</div>
+            <div><strong>身高 / 體重：</strong>${item.height ? item.height + ' cm' : '--'} / ${item.weight ? item.weight + ' kg' : '--'}</div>
+            <div><strong>意識狀態：</strong>${item.consciousness || '未填'}</div>
             <div><strong>失能等級：</strong>CMS ${item.cms_level || '未填'}</div>
             <div><strong>行動能力：</strong>${item.mobility || '未填'}</div>
+            <div><strong>現居地址：</strong>${item.address || '未填'}</div>
+          </div>
+          <div class="detail-card full">
+            <h4>服務需求</h4>
+            <div><strong>服務類型：</strong>${item.service_type || '未填'}</div>
+            <div><strong>期待服務時段：</strong>${item.service_time || '未填'}</div>
+            <div><strong>長照服務碼：</strong>${Array.isArray(item.service_codes) && item.service_codes.length > 0 ? item.service_codes.join(', ') : '未選擇'}</div>
           </div>
           <div class="detail-card full">
             <h4>診斷與摘要</h4>
@@ -1436,6 +1445,21 @@
             <div class="edit-field"><label>轉介醫院</label><input name="hospital" value="${item.hospital}"></div>
             <div class="edit-field"><label>年齡</label><input type="number" name="age" value="${item.age}"></div>
             <div class="edit-field"><label>性別</label><select name="gender"><option value="男" ${item.gender==='男'?'selected':''}>男</option><option value="女" ${item.gender==='女'?'selected':''}>女</option></select></div>
+            <div class="edit-field"><label>身高 (cm)</label><input type="number" name="height" value="${item.height || ''}" placeholder="cm"></div>
+            <div class="edit-field"><label>體重 (kg)</label><input type="number" name="weight" value="${item.weight || ''}" placeholder="kg"></div>
+            <div class="edit-field"><label>意識狀態</label>
+              <select name="consciousness">
+                <option value="" ${!item.consciousness?'selected':''}>請選擇</option>
+                <option value="清楚" ${item.consciousness==='清楚'?'selected':''}>清楚</option>
+                <option value="混亂" ${item.consciousness==='混亂'?'selected':''}>混亂</option>
+                <option value="木僵" ${item.consciousness==='木僵'?'selected':''}>木僵</option>
+              </select>
+            </div>
+            <div class="edit-field"><label>CMS 等級</label><input name="cms_level" value="${item.cms_level || ''}" placeholder="例：第 6 級"></div>
+            <div class="edit-field"><label>行動能力</label><input name="mobility" value="${item.mobility || ''}" placeholder="例如：輪椅、臥床"></div>
+            <div class="edit-field"><label>服務類型</label><input name="service_type" value="${item.service_type || ''}" placeholder="例如：長照服務"></div>
+            <div class="edit-field"><label>期待服務時段</label><input name="service_time" value="${item.service_time || ''}" placeholder="例如：平日白天"></div>
+            <div class="edit-field"><label>個管師</label><input name="case_manager" value="${item.case_manager || ''}"></div>
             <div class="edit-field"><label>狀態</label>
               <select name="status">
                 <option value="一輪媒合中" ${item.status==='一輪媒合中'?'selected':''}>一輪媒合中</option>
@@ -1443,10 +1467,7 @@
                 <option value="案件結案" ${item.status==='案件結案'?'selected':''}>案件結案</option>
               </select>
             </div>
-            <div class="edit-field"><label>個管師</label><input name="case_manager" value="${item.case_manager || ''}"></div>
-            <div class="edit-field"><label>CMS 等級</label><input type="number" name="cms_level" value="${item.cms_level || ''}" placeholder="1-8"></div>
-            <div class="edit-field"><label>行動能力</label><input name="mobility" value="${item.mobility || ''}" placeholder="例如：輪椅、臥床"></div>
-            <div class="edit-field"><label>服務類型</label><input name="service_type" value="${item.service_type || ''}" placeholder="例如：長照服務"></div>
+            <div class="edit-field full"><label>現居地址</label><input name="address" value="${item.address || ''}"></div>
             <div class="edit-field full"><label>主要診斷</label><textarea name="diagnosis" style="min-height:80px;">${item.diagnosis || ''}</textarea></div>
             <div class="edit-field full"><label>案況摘要</label><textarea name="case_summary" style="min-height:100px;">${item.case_summary || ''}</textarea></div>
             <div class="edit-field full"><label>特殊需求</label><textarea name="special_need" style="min-height:80px;">${item.special_need || ''}</textarea></div>
@@ -1466,6 +1487,8 @@
       const fd = new FormData(form);
       const updates = Object.fromEntries(fd);
       updates.age = parseInt(updates.age);
+      updates.height = updates.height ? parseInt(updates.height) : null;
+      updates.weight = updates.weight ? parseInt(updates.weight) : null;
       
       try {
         const { error } = await sb.from('cases').update(updates).eq('case_id', updates.case_id);
@@ -1774,10 +1797,6 @@
 
     // --- 初始化 ---
     document.addEventListener("DOMContentLoaded", () => {
-      if (!checkLogin()) {
-        // 如果沒登入，就不自動抓資料
-        return;
-      }
       $("drawerOverlay").onclick = closeDrawer;
       $("drawerClose").onclick = closeDrawer;
       $("btnReload").onclick = fetchData;
@@ -1785,6 +1804,11 @@
       $("statusFilter").onchange = renderTable;
       $("hospitalFilter").onchange = renderTable;
       $("sortFilter").onchange = renderTable;
+
+      if (!checkLogin()) {
+        // 如果沒登入，就不自動抓資料
+        return;
+      }
 
       loadFacilities().then(() => {
         fetchData();
