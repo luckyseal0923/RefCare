@@ -322,6 +322,36 @@
       color: #ffffff;
       box-shadow: 0 4px 12px rgba(37,99,235,0.2);
     }
+    .quick-fac-btn.replied-accept {
+      background: #f0fdf4;
+      border-color: #bbf7d0;
+      color: #166534;
+    }
+    .quick-fac-btn.replied-accept:hover {
+      background: #dcfce7;
+      border-color: #86efac;
+      color: #15803d;
+    }
+    .quick-fac-btn.replied-coordinate {
+      background: #fff7ed;
+      border-color: #fed7aa;
+      color: #9a3412;
+    }
+    .quick-fac-btn.replied-coordinate:hover {
+      background: #ffedd5;
+      border-color: #fdba74;
+      color: #c2410c;
+    }
+    .quick-fac-btn.replied-reject {
+      background: #fef2f2;
+      border-color: #fecaca;
+      color: #991b1b;
+    }
+    .quick-fac-btn.replied-reject:hover {
+      background: #fee2e2;
+      border-color: #fca5a5;
+      color: #b91c1c;
+    }
 
     @media (max-width:768px){
       .info-grid,
@@ -527,24 +557,30 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
     let TARGET_FACILITY_IDS = []; // 存儲該案件限定的名單
     let REPLIED_FACILITY_IDS = []; // 存儲已經回覆過的機構 ID
     let REPLIED_FACILITY_NAMES = []; // 存儲已經回覆過的機構名稱 (作為備援比對)
+    let REPLIED_MAP = {}; // 存儲各機構的回覆狀態 (ID/名稱 -> 狀態)
 
     async function loadFacilities(targetIds = [], caseId = null) {
       try {
+        REPLIED_MAP = {};
         if (window.supabaseClient) {
           // 1. 抓取所有機構資料
           const { data: allFacs, error: facError } = await window.supabaseClient.from('facilities').select('*');
           if (facError) throw facError;
           
-          // 2. 抓取該案件已有的回覆
+          // 2. 抓取該案件已有的回覆（包含回覆狀態）
           if (caseId) {
             const { data: existingReplies } = await window.supabaseClient
               .from('replies')
-              .select('facility_id, facility_name')
+              .select('facility_id, facility_name, reply_status')
               .eq('case_id', caseId);
             
             if (existingReplies) {
               REPLIED_FACILITY_IDS = existingReplies.map(r => String(r.facility_id));
               REPLIED_FACILITY_NAMES = existingReplies.map(r => r.facility_name);
+              existingReplies.forEach(r => {
+                if (r.facility_id) REPLIED_MAP[String(r.facility_id)] = r.reply_status;
+                if (r.facility_name) REPLIED_MAP[r.facility_name] = r.reply_status;
+              });
             }
           }
 
@@ -557,22 +593,20 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
               list = allFacs.filter(f => targetStrIds.includes(String(f.id)));
             }
 
-            // 4. 進階過濾：自動剔除已回覆過的機構 (同時比對 ID 與 名稱)
-            list = list.filter(f => {
-              const idMatched = REPLIED_FACILITY_IDS.includes(String(f.id));
-              const nameMatched = REPLIED_FACILITY_NAMES.includes(f.facility_name) || REPLIED_FACILITY_NAMES.includes(f.short_name);
-              return !idMatched && !nameMatched;
+            // ⚠️ 註：這裡不再直接過濾掉已回覆的機構，而是將狀態帶入，以便以不同顏色呈現快捷標籤！
+            FACILITIES = list.map(item => {
+              const replyStatus = REPLIED_MAP[String(item.id)] || REPLIED_MAP[item.facility_name] || REPLIED_MAP[item.short_name] || null;
+              return {
+                id: item.id,
+                short_name: item.short_name || '',
+                name: item.facility_name || '',
+                phone: item.phone || '',
+                area: item.service_area || '',
+                replied_status: replyStatus
+              };
             });
-
-            FACILITIES = list.map(item => ({
-              id: item.id,
-              short_name: item.short_name || '',
-              name: item.facility_name || '',
-              phone: item.phone || '',
-              area: item.service_area || ''
-            }));
             
-            console.log("Filtered Facilities count:", FACILITIES.length);
+            console.log("Loaded Facilities count:", FACILITIES.length);
           }
         }
       } catch (err) {
@@ -586,7 +620,8 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
           short_name: "其他",
           name: "其他（自行輸入）",
           phone: "",
-          area: ""
+          area: "",
+          replied_status: null
         });
       }
 
@@ -603,23 +638,35 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
         return;
       }
       
+      const getStatusSuffix = (status) => {
+        if (status === 'accept') return ' ✅';
+        if (status === 'coordinate') return ' ⚠️';
+        if (status === 'reject') return ' ❌';
+        return '';
+      };
+      
+      const getStatusClass = (status) => {
+        if (status) return ` replied-${status}`;
+        return '';
+      };
+      
       container.innerHTML = `
         <div style="font-size: 13px; color: var(--muted); font-weight: 800; margin-bottom: 8px; width: 100%; display: flex; align-items: center; gap: 4px;">
           🎯 點選您的機構快速填入：
         </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap; width: 100%;">
           ${targetList.map(f => `
-            <button type="button" class="quick-fac-btn" id="quickFac_${f.id}" onclick="selectQuickFacility('${f.id}')">
-              🏥 ${f.short_name || f.name}
+            <button type="button" class="quick-fac-btn${getStatusClass(f.replied_status)}" id="quickFac_${f.id}" onclick="selectQuickFacility('${f.id}')">
+              🏥 ${f.short_name || f.name}${getStatusSuffix(f.replied_status)}
             </button>
           `).join("")}
         </div>
       `;
       
-      // 如果剛好只有 1 間，就自動幫他選取！
-      if (targetList.length === 1) {
-        selectFacility(targetList[0]);
-        highlightQuickBtn(targetList[0].id);
+      // 如果剛好只有 1 間且尚未回覆，就自動選取！
+      const activeTargets = targetList.filter(f => !f.replied_status);
+      if (activeTargets.length === 1) {
+        selectFacility(activeTargets[0], true);
       }
     }
 
@@ -627,7 +674,6 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
       const found = FACILITIES.find(f => String(f.id) === String(id));
       if (found) {
         selectFacility(found);
-        highlightQuickBtn(id);
       }
     };
     
@@ -809,7 +855,18 @@ ${formatServiceCodes(data.service_codes)}`;
       $("facilityDropdown").style.display = "none";
     }
 
-    function selectFacility(item) {
+    function selectFacility(item, force = false) {
+      if (item.replied_status && !force) {
+        const statusMap = {
+          "accept": "可收案",
+          "coordinate": "需協調",
+          "reject": "無法收案"
+        };
+        if (!confirm(`此機構已於先前送出回覆為「${statusMap[item.replied_status]}」。您確定要再次修改回覆嗎？`)) {
+          return false;
+        }
+      }
+
       selectedFacility = item;
       $("facilitySearch").value = item.name;
 
@@ -823,6 +880,7 @@ ${formatServiceCodes(data.service_codes)}`;
 
       highlightQuickBtn(item.id);
       hideFacilityDropdown();
+      return true;
     }
 
     function getResolvedFacilityName() {
