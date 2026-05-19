@@ -99,6 +99,5 @@ CREATE TABLE IF NOT EXISTS public.platform_feedbacks (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 ALTER TABLE public.platform_feedbacks ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Allow anonymous insert platform_feedbacks" ON public.platform_feedbacks FOR INSERT WITH CHECK (true);
-CREATE POLICY "Allow authenticated full access platform_feedbacks" ON public.platform_feedbacks FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all for platform_feedbacks" ON public.platform_feedbacks FOR ALL USING (true) WITH CHECK (true);
 
