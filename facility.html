@@ -497,21 +497,22 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      color: rgba(255, 255, 255, 0.95);
+      color: #1d4ed8;
       text-decoration: none;
       font-size: 13px;
-      font-weight: 800;
-      padding: 6px 12px;
-      background: rgba(255, 255, 255, 0.15);
+      font-weight: 900;
+      padding: 8px 16px;
+      background: #ffffff;
       border-radius: 999px;
-      transition: all 0.2s ease;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
     }
     .feedback-link:hover {
-      background: rgba(255, 255, 255, 0.28);
-      color: #ffffff;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      background: #f8fafc;
+      color: #2563eb;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.2);
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
