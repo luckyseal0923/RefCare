@@ -84,3 +84,19 @@ CREATE POLICY "Allow anonymous read case_managers" ON public.case_managers FOR S
 CREATE POLICY "Allow anonymous insert case_managers" ON public.case_managers FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow anonymous update case_managers" ON public.case_managers FOR UPDATE USING (true);
 CREATE POLICY "Allow anonymous delete case_managers" ON public.case_managers FOR DELETE USING (true);
+
+-- ==========================================
+-- 5. 平台使用狀況回報資料表 (platform_feedbacks)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS public.platform_feedbacks (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    facility_name TEXT NOT NULL,
+    phone TEXT NOT NULL,
+    issue TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+ALTER TABLE public.platform_feedbacks ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow anonymous insert platform_feedbacks" ON public.platform_feedbacks FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow authenticated full access platform_feedbacks" ON public.platform_feedbacks FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
