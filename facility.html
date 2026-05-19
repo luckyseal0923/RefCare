@@ -514,6 +514,17 @@
       transform: translateY(-2px);
       box-shadow: 0 6px 18px rgba(15, 23, 42, 0.2);
     }
+    
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes bounceIn {
+      0% { opacity: 0; transform: scale(0.3); }
+      50% { opacity: 1; transform: scale(1.05); }
+      70% { transform: scale(0.9); }
+      100% { transform: scale(1); }
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
@@ -1167,8 +1178,29 @@ ${formatServiceCodes(data.service_codes)}`;
 
         showStatus(
           "success",
-          `已成功回覆：${statusMap[replyStatus]}\n案件編號：${payload.case_id}\n資料已存入 Supabase 資料庫。`
+          `已成功回覆：${statusMap[replyStatus]}！系統正為您轉跳感謝頁面...`
         );
+
+        setTimeout(() => {
+          document.querySelector(".wrap").innerHTML = `
+            <div class="card success-card" style="text-align: center; padding: 48px 32px; border-radius: 28px; box-shadow: var(--shadow); background: #ffffff; border: 1px solid #e2e8f0; margin-top: 40px; animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);">
+              <div style="font-size: 80px; margin-bottom: 24px; animation: bounceIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);">🎉</div>
+              <h1 style="color: var(--success); font-size: 28px; font-weight: 900; margin-bottom: 16px;">感謝您填寫回覆！</h1>
+              <p style="color: var(--muted); font-size: 16px; line-height: 1.8; margin-bottom: 32px; max-width: 480px; margin-left: auto; margin-right: auto;">
+                您的安置機構回覆已成功送出並同步存入資料庫。<br>
+                <strong>回覆結果：</strong><span style="color: var(--primary-dark); font-weight: 800;">${statusMap[replyStatus]}</span><br>
+                <strong>案件編號：</strong>${payload.case_id}<br><br>
+                系統已即時通知派案個管師，後續將由個管師與您進行對接與確認。謝謝您的協助與配合！
+              </p>
+              <div style="display: flex; flex-direction: column; gap: 14px; align-items: center;">
+                <button onclick="window.close()" style="background: var(--primary); color: white; border: none; padding: 14px 48px; border-radius: 14px; font-size: 16px; font-weight: 800; width: 100%; max-width: 240px; box-shadow: 0 4px 12px rgba(37,99,235,0.2); transition: all 0.2s; cursor: pointer;">
+                  🚪 關閉此視窗
+                </button>
+                <span style="font-size: 13px; color: #94a3b8;">如果關閉按鈕無反應，請直接關閉瀏覽器分頁。</span>
+              </div>
+            </div>
+          `;
+        }, 1200);
 
       } catch (err) {
         console.error("Submit Error:", err);
