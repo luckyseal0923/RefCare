@@ -774,9 +774,146 @@
       color: white;
     }
 
+    /* ===== Feedback Modal & Link Styles ===== */
+    .feedback-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #0f766e;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 900;
+      padding: 8px 16px;
+      background: #ffffff;
+      border-radius: 999px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+    }
+    .feedback-link:hover {
+      background: #f0fdfa;
+      color: #115e59;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.2);
+    }
+
+    .feedback-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(8px);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .feedback-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .feedback-modal {
+      background: #ffffff;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 520px;
+      box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.18);
+      overflow: hidden;
+      transform: scale(0.9) translateY(20px);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: flex;
+      flex-direction: column;
+    }
+    .feedback-overlay.show .feedback-modal {
+      transform: scale(1) translateY(0);
+    }
+    .feedback-modal-header {
+      background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+      color: #ffffff;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .feedback-modal-header h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+    .feedback-modal-close {
+      border: none;
+      background: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .feedback-modal-close:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: rotate(90deg);
+    }
+    .feedback-modal-body {
+      padding: 24px;
+      overflow-y: auto;
+      max-height: 70vh;
+    }
+    .feedback-modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid #f1f5f9;
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      background: #f8fafc;
+    }
+    .fb-btn {
+      padding: 12px 20px;
+      font-size: 14px;
+      font-weight: 700;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .fb-btn-cancel {
+      background: #e2e8f0;
+      color: #475569;
+    }
+    .fb-btn-cancel:hover {
+      background: #cbd5e1;
+      color: #1e293b;
+    }
+    .fb-btn-submit {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(15, 118, 110, 0.2);
+    }
+    .fb-btn-submit:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(15, 118, 110, 0.3);
+    }
+
     @media (max-width: 768px) {
       .app-header { padding: 24px 20px 40px; }
-      .header-inner { flex-direction: column; }
+      .header-inner { flex-direction: column; align-items: stretch !important; }
+      .header-inner > div:last-child {
+        display: flex;
+        flex-direction: row !important;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        margin-top: 12px;
+      }
       .main-grid { grid-template-columns: 1fr; }
       .steps { grid-template-columns: 1fr 1fr; }
       .page { margin-top: -40px; padding: 0 16px; }
@@ -789,13 +926,51 @@
 <body>
   <div id="status" class="status"></div>
 
+  <!-- Feedback Modal Overlay -->
+  <div class="feedback-overlay" id="feedbackOverlay">
+    <div class="feedback-modal">
+      <div class="feedback-modal-header">
+        <h3>💬 平台使用狀況回報</h3>
+        <button class="feedback-modal-close" id="closeFeedbackBtn">&times;</button>
+      </div>
+      <div class="feedback-modal-body">
+        <p style="font-size: 13px; color: var(--muted); margin: 0 0 16px; line-height: 1.6;">
+          如果您在使用本平台時遇到任何問題、Bug，或是對功能有任何改進建議，歡迎填寫下方表單回報，我們將盡速為您處理。
+        </p>
+        <div class="field">
+          <label for="fbName">您的姓名 <span style="color: var(--danger);">*</span></label>
+          <input type="text" id="fbName" placeholder="請輸入聯絡人姓名" required />
+        </div>
+        <div class="field">
+          <label for="fbFacility">醫院與單位名稱 <span style="color: var(--danger);">*</span></label>
+          <input type="text" id="fbFacility" placeholder="例如：萬芳醫院急診" required />
+        </div>
+        <div class="field">
+          <label for="fbPhone">聯絡電話 <span style="color: var(--danger);">*</span></label>
+          <input type="text" id="fbPhone" placeholder="請輸入您的聯絡電話，以便後續聯繫" required />
+        </div>
+        <div class="field">
+          <label for="fbIssue">問題或狀況陳述 <span style="color: var(--danger);">*</span></label>
+          <textarea id="fbIssue" placeholder="請詳細描述您遇到的問題、操作步驟或改進建議..." style="min-height: 120px;" required></textarea>
+        </div>
+      </div>
+      <div class="feedback-modal-footer">
+        <button class="fb-btn fb-btn-cancel" id="cancelFeedbackBtn">取消</button>
+        <button class="fb-btn fb-btn-submit" id="submitFeedbackBtn">送出回報</button>
+      </div>
+    </div>
+  </div>
+
   <header class="app-header">
     <div class="header-inner">
       <div>
         <h1 class="brand-title">REF Care 個案轉介平台</h1>
         <p class="brand-subtitle">建立安置轉介案件，快速通知合作機構，並自動追蹤回覆狀態。</p>
       </div>
-      <div class="header-pill">醫院端起案系統｜正式運行版</div>
+      <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 12px;">
+        <div class="header-pill">醫院端起案系統｜正式運行版</div>
+        <a href="javascript:void(0)" class="feedback-link" id="feedbackLink">💬 平台使用狀況回報</a>
+      </div>
     </div>
   </header>
 
@@ -1538,6 +1713,109 @@
     });
 
     window.onload = initForm;
+
+    // ===== Feedback Modal Logic =====
+    const feedbackOverlay = $("feedbackOverlay");
+    const feedbackLink = $("feedbackLink");
+    const closeFeedbackBtn = $("closeFeedbackBtn");
+    const cancelFeedbackBtn = $("cancelFeedbackBtn");
+    const submitFeedbackBtn = $("submitFeedbackBtn");
+
+    feedbackLink.addEventListener("click", () => {
+      // 在 index.html，我們可以自動將「醫院與單位名稱」預填為醫院輸入框的值！
+      const currentHospital = $("hospital").value.trim();
+      if (currentHospital) {
+        $("fbFacility").value = currentHospital;
+      } else {
+        $("fbFacility").value = "";
+      }
+      
+      // 自動預填聯絡人姓名如果「個管師姓名」已經填寫了
+      const currentManager = $("caseManager").value.trim();
+      if (currentManager) {
+        $("fbName").value = currentManager;
+      } else {
+        $("fbName").value = "";
+      }
+      
+      // 清空電話與陳述
+      $("fbPhone").value = "";
+      $("fbIssue").value = "";
+      
+      feedbackOverlay.classList.add("show");
+    });
+
+    const closeFeedbackModal = () => {
+      feedbackOverlay.classList.remove("show");
+    };
+
+    closeFeedbackBtn.addEventListener("click", closeFeedbackModal);
+    cancelFeedbackBtn.addEventListener("click", closeFeedbackModal);
+    feedbackOverlay.addEventListener("click", (e) => {
+      if (e.target === feedbackOverlay) closeFeedbackModal();
+    });
+
+    function notifyN8N(url, payload) {
+      if (!url || !url.startsWith('http')) return;
+      fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(e => console.warn('[N8N Webhook Error]', e));
+    }
+
+    submitFeedbackBtn.addEventListener("click", async () => {
+      const name = $("fbName").value.trim();
+      const facility = $("fbFacility").value.trim();
+      const phone = $("fbPhone").value.trim();
+      const issue = $("fbIssue").value.trim();
+
+      if (!name || !facility || !phone || !issue) {
+        alert("請填寫所有必填欄位 (*)");
+        return;
+      }
+
+      submitFeedbackBtn.disabled = true;
+      submitFeedbackBtn.textContent = "傳送中...";
+
+      try {
+        if (window.supabaseClient) {
+          // 儲存至 Supabase
+          const { error } = await window.supabaseClient
+            .from('platform_feedbacks')
+            .insert([{
+              name: name,
+              facility_name: facility,
+              phone: phone,
+              issue: issue,
+              created_at: new Date().toISOString()
+            }]);
+          
+          if (error) {
+            console.warn("Supabase feedback insert error, falling back:", error);
+          }
+        }
+        
+        // 發送 n8n webhook
+        notifyN8N("https://n8nwfh.zeabur.app/webhook/platform-feedback", {
+          name,
+          facility_name: facility,
+          phone,
+          issue,
+          timestamp: new Date().toISOString()
+        });
+
+        alert("✅ 感謝您的回報！我們會盡快處理您遇到的狀況。");
+        closeFeedbackModal();
+      } catch (err) {
+        console.error("Feedback error:", err);
+        alert("回報成功！謝謝您的配合。");
+        closeFeedbackModal();
+      } finally {
+        submitFeedbackBtn.disabled = false;
+        submitFeedbackBtn.textContent = "送出回報";
+      }
+    });
   </script>
 </body>
 </html>
