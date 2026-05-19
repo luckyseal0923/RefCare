@@ -787,6 +787,7 @@
           <div class="nav-item active" id="navDash" onclick="switchView('dashboard')">📊 儀表板</div>
           <div class="nav-item" id="navCases" onclick="switchView('cases')">📁 歷史案件</div>
           <div class="nav-item" id="navFacs" onclick="switchView('facilities')">🏥 機構與群組</div>
+          <div class="nav-item" id="navFeedbacks" onclick="switchView('feedbacks')">💬 平台問題回報</div>
           <div class="nav-item" id="navMgr" onclick="openManagerModal()">👥 帳號權限</div>
           <div class="nav-item" id="navReport" onclick="alert('報表功能開發中')">📤 報表匯出</div>
         </nav>
@@ -1012,6 +1013,50 @@
             <!-- 以卡片形式動態載入 -->
           </div>
         </div>
+      </div>
+
+      <!-- Feedback Management View (Hidden by default) -->
+      <div class="content" id="feedbacksView" style="display:none;">
+        <div class="panel-header" style="flex-direction:column; align-items:flex-start; gap:20px; padding: 20px 0;">
+          <div>
+            <h2 class="panel-title">平台問題與狀況回報</h2>
+            <p class="panel-subtitle">檢視並管理使用者提交的系統問題、Bug 與功能改進建議，並記錄處理狀態與處理進度。</p>
+          </div>
+        </div>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">回報清單</h2>
+              <p class="panel-subtitle" id="feedbackLoadedHint">正在讀取最新回報...</p>
+            </div>
+            <button class="btn btn-muted" onclick="loadFeedbacks()" style="font-weight:900;">🔄 重新整理</button>
+          </div>
+
+          <div class="table-scroll">
+            <table class="list-table">
+              <thead>
+                <tr>
+                  <th style="width: 150px;">時間</th>
+                  <th style="width: 120px;">姓名</th>
+                  <th style="width: 180px;">單位/機構</th>
+                  <th style="width: 140px;">聯絡電話</th>
+                  <th>狀況陳述</th>
+                  <th style="width: 135px;">處理狀態</th>
+                  <th style="width: 320px;">問題處理紀錄</th>
+                </tr>
+              </thead>
+              <tbody id="feedbackTableBody">
+                <!-- 動態載入 -->
+              </tbody>
+            </table>
+          </div>
+          <div id="feedbackEmptyState" style="display:none; padding:80px 20px; text-align:center;">
+            <div style="font-size:48px; margin-bottom:16px;">💬</div>
+            <div style="font-size:18px; font-weight:900; color:var(--text-strong);">目前沒有收到任何問題回報</div>
+            <p style="color:var(--muted); margin-top:8px;">平台運作非常正常！</p>
+          </div>
+        </section>
       </div>
 
     </main>
@@ -1772,9 +1817,11 @@
 
       if (currentUserRole === '個案管理師') {
         $("navFacs").style.display = "none";
+        $("navFeedbacks").style.display = "none";
         $("navMgr").style.display = "none";
       } else {
         $("navFacs").style.display = "flex";
+        $("navFeedbacks").style.display = "flex";
         $("navMgr").style.display = "flex";
       }
     }
@@ -1838,7 +1885,7 @@
     let currentViewMode = 'dashboard';
 
     function switchView(view) {
-      if (currentUserRole !== '系統管理員' && (view === 'facilities' || view === 'managers')) {
+      if (currentUserRole !== '系統管理員' && (view === 'facilities' || view === 'managers' || view === 'feedbacks')) {
         alert('您的權限不足以訪問此模組');
         return;
       }
@@ -1846,10 +1893,12 @@
       if (view === 'dashboard' || view === 'cases') {
         $("dashboardView").style.display = "block";
         $("facilitiesView").style.display = "none";
+        $("feedbacksView").style.display = "none";
         
         $("navDash").classList.toggle("active", view === 'dashboard');
         $("navCases").classList.toggle("active", view === 'cases');
         $("navFacs").classList.remove("active");
+        $("navFeedbacks").classList.remove("active");
         
         if (view === 'dashboard') {
           $("mainTableTitle").textContent = "進行中案件";
@@ -1869,10 +1918,21 @@
       } else if (view === 'facilities') {
         $("dashboardView").style.display = "none";
         $("facilitiesView").style.display = "block";
+        $("feedbacksView").style.display = "none";
         $("navDash").classList.remove("active");
         $("navCases").classList.remove("active");
         $("navFacs").classList.add("active");
+        $("navFeedbacks").classList.remove("active");
         switchFacSubView('facs');
+      } else if (view === 'feedbacks') {
+        $("dashboardView").style.display = "none";
+        $("facilitiesView").style.display = "none";
+        $("feedbacksView").style.display = "block";
+        $("navDash").classList.remove("active");
+        $("navCases").classList.remove("active");
+        $("navFacs").classList.remove("active");
+        $("navFeedbacks").classList.add("active");
+        loadFeedbacks();
       }
     }
 
@@ -2069,6 +2129,112 @@
         alert("機構已移除");
         loadFacilities().then(renderFacilitiesTable);
       } catch (err) { alert("移除失敗"); }
+    }
+
+    // ===== 平台問題回報管理邏輯 =====
+    let allFeedbacks = [];
+
+    async function loadFeedbacks() {
+      try {
+        $("feedbackLoadedHint").textContent = "正在讀取最新回報...";
+        const { data, error } = await sb.from('platform_feedbacks').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        allFeedbacks = data || [];
+        renderFeedbacksTable();
+      } catch (err) {
+        console.error("Load feedbacks error:", err);
+        $("feedbackLoadedHint").textContent = "讀取失敗：" + err.message;
+      }
+    }
+
+    function renderFeedbacksTable() {
+      $("feedbackLoadedHint").textContent = `目前載入 ${allFeedbacks.length} 筆回報紀錄`;
+      
+      const tbody = $("feedbackTableBody");
+      if (allFeedbacks.length === 0) {
+        tbody.innerHTML = "";
+        $("feedbackEmptyState").style.display = "block";
+        return;
+      }
+      
+      $("feedbackEmptyState").style.display = "none";
+      tbody.innerHTML = allFeedbacks.map((fb, idx) => {
+        const dateStr = fb.created_at ? new Date(fb.created_at).toLocaleString('zh-TW', { hour12: false }) : '--';
+        const currentStatus = fb.status || '待處理';
+        const currentNote = fb.admin_note || '';
+        
+        return `
+          <tr>
+            <td><div style="font-weight:700; color:var(--text-strong);">${dateStr}</div></td>
+            <td><div style="font-weight:700; color:var(--primary);">${fb.name}</div></td>
+            <td><div style="font-weight:700; color:var(--text-strong);">${fb.facility_name}</div></td>
+            <td><div style="font-weight:700;">${fb.phone}</div></td>
+            <td style="white-space: normal; word-break: break-all;">
+              <div style="color:var(--text-strong); line-height: 1.5; font-size:14px; max-width:420px;">
+                ${fb.issue}
+              </div>
+            </td>
+            <td>
+              <select onchange="updateFeedbackStatus('${fb.id}', this.value)" style="height:36px; padding:0 8px; border-radius:10px; font-size:13px; font-weight:800; border:1px solid var(--line); background:#fff;">
+                <option value="待處理" ${currentStatus === '待處理' ? 'selected' : ''}>⏳ 待處理</option>
+                <option value="處理中" ${currentStatus === '處理中' ? 'selected' : ''}>⚙️ 處理中</option>
+                <option value="已解決" ${currentStatus === '已解決' ? 'selected' : ''}>✅ 已解決</option>
+                <option value="已關閉" ${currentStatus === '已關閉' ? 'selected' : ''}>❌ 已關閉</option>
+              </select>
+            </td>
+            <td>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <input id="note-${fb.id}" type="text" value="${currentNote.replace(/"/g, '&quot;')}" placeholder="點此輸入處理進度/紀錄" style="height:36px; flex:1; padding:0 10px; border-radius:10px; font-size:13px; border:1px solid var(--line);" />
+                <button class="btn btn-primary" onclick="saveFeedbackNote('${fb.id}')" style="min-height:36px; height:36px; padding:0 12px; border-radius:10px; font-size:13px;">儲存</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    async function updateFeedbackStatus(id, statusVal) {
+      try {
+        const { error } = await sb.from('platform_feedbacks').update({ status: statusVal }).eq('id', id);
+        if (error) throw error;
+        
+        const fb = allFeedbacks.find(f => String(f.id) === String(id));
+        if (fb) fb.status = statusVal;
+        
+        const el = $("status");
+        if (el) {
+          el.className = "status success";
+          el.textContent = "狀態已更新！";
+          el.style.display = "block";
+          setTimeout(() => el.style.display = "none", 2500);
+        }
+      } catch (err) {
+        alert("更新狀態失敗：" + err.message);
+      }
+    }
+
+    async function saveFeedbackNote(id) {
+      const noteInput = $("note-" + id);
+      if (!noteInput) return;
+      const noteVal = noteInput.value.trim();
+      
+      try {
+        const { error } = await sb.from('platform_feedbacks').update({ admin_note: noteVal }).eq('id', id);
+        if (error) throw error;
+        
+        const fb = allFeedbacks.find(f => String(f.id) === String(id));
+        if (fb) fb.admin_note = noteVal;
+        
+        const el = $("status");
+        if (el) {
+          el.className = "status success";
+          el.textContent = "處理紀錄已成功儲存！";
+          el.style.display = "block";
+          setTimeout(() => el.style.display = "none", 2500);
+        }
+      } catch (err) {
+        alert("儲存紀錄失敗：" + err.message);
+      }
     }
   </script>
 </body>

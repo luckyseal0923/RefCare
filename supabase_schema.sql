@@ -94,6 +94,8 @@ CREATE TABLE IF NOT EXISTS public.platform_feedbacks (
     facility_name TEXT NOT NULL,
     phone TEXT NOT NULL,
     issue TEXT NOT NULL,
+    status TEXT DEFAULT '待處理',
+    admin_note TEXT DEFAULT '',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 ALTER TABLE public.platform_feedbacks ENABLE ROW LEVEL SECURITY;
