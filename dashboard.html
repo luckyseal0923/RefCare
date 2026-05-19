@@ -628,7 +628,9 @@
         .replace(/'/g, "&#39;");
     }
     function getReplyProgress(item) {
-      const total = item.total_targets || Math.max(item.replies.length, 1);
+      const total = (Array.isArray(item.target_facility_ids) && item.target_facility_ids.length > 0)
+        ? item.target_facility_ids.length
+        : (item.total_targets || Math.max(item.replies.length, 1));
       const replied = item.replies.length;
       const acceptCount = item.replies.filter(r => r.reply === "accept").length;
       const percent = Math.max(0, Math.min(100, Math.round((replied / total) * 100)));

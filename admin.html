@@ -1155,7 +1155,10 @@
       let totalTargets = 0;
       let totalReplies = 0;
       allCases.forEach(c => {
-        totalTargets += (c.total_targets || 0);
+        const cTotal = (Array.isArray(c.target_facility_ids) && c.target_facility_ids.length > 0)
+          ? c.target_facility_ids.length
+          : (c.total_targets || 0);
+        totalTargets += cTotal;
         totalReplies += (c.replies?.length || 0);
       });
       const rate = totalTargets > 0 ? Math.round((totalReplies / totalTargets) * 100) : 0;
@@ -1305,9 +1308,11 @@
     }
 
     function getReplyProgress(c) {
-      const total = c.total_targets || 12; // 預設 12
+      const total = (Array.isArray(c.target_facility_ids) && c.target_facility_ids.length > 0)
+        ? c.target_facility_ids.length
+        : (c.total_targets || 0);
       const replied = c.replies?.length || 0;
-      const percent = Math.min(100, Math.round((replied / total) * 100));
+      const percent = total > 0 ? Math.min(100, Math.round((replied / total) * 100)) : 0;
       return { total, replied, percent };
     }
 
@@ -1748,8 +1753,10 @@
         applyPermissions();
         $("adminLoginOverlay").style.display = "none";
         
-        fetchData();
-        renderFacilitiesTable();
+        loadFacilities().then(() => {
+          fetchData();
+          renderFacilitiesTable();
+        });
       } catch (err) {
         errEl.textContent = "系統連線異常";
         errEl.style.display = "block";
