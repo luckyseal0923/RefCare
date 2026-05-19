@@ -364,6 +364,18 @@
       h1{
         font-size:22px;
       }
+      .feedback-link-container {
+        position: static !important;
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 16px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+      }
+    }
+
+    .card.header {
+      position: relative;
     }
 
     /* ===== Feedback Modal Styles ===== */
@@ -474,11 +486,12 @@
     }
     
     .feedback-link-container {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 16px;
-      padding-top: 12px;
-      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      position: absolute;
+      top: 22px;
+      right: 22px;
+      margin-top: 0;
+      padding-top: 0;
+      border-top: none;
     }
     .feedback-link {
       display: inline-flex;
@@ -663,6 +676,41 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
       </div>
 
       <div id="statusBox" class="status"></div>
+    </div>
+  </div>
+
+  <!-- Feedback Modal Overlay -->
+  <div class="feedback-overlay" id="feedbackOverlay">
+    <div class="feedback-modal">
+      <div class="feedback-modal-header">
+        <h3>💬 平台使用狀況回報</h3>
+        <button class="feedback-modal-close" id="closeFeedbackBtn">&times;</button>
+      </div>
+      <div class="feedback-modal-body">
+        <p style="font-size: 13px; color: var(--muted); margin: 0 0 16px; line-height: 1.6;">
+          如果您在使用本平台時遇到任何問題、Bug，或是對功能有任何改進建議，歡迎填寫下方表單回報，我們將盡速為您處理。
+        </p>
+        <div class="field">
+          <label for="fbName">您的姓名 <span style="color: var(--danger);">*</span></label>
+          <input type="text" id="fbName" placeholder="請輸入聯絡人姓名" required />
+        </div>
+        <div class="field">
+          <label for="fbFacility">機構名稱 <span style="color: var(--danger);">*</span></label>
+          <input type="text" id="fbFacility" placeholder="請輸入您的機構名稱" required />
+        </div>
+        <div class="field">
+          <label for="fbPhone">聯絡電話 <span style="color: var(--danger);">*</span></label>
+          <input type="text" id="fbPhone" placeholder="請輸入您的聯絡電話，以便後續聯繫" required />
+        </div>
+        <div class="field">
+          <label for="fbIssue">問題或狀況陳述 <span style="color: var(--danger);">*</span></label>
+          <textarea id="fbIssue" placeholder="請詳細描述您遇到的問題、操作步驟或改進建議..." style="min-height: 120px;" required></textarea>
+        </div>
+      </div>
+      <div class="feedback-modal-footer">
+        <button class="fb-btn fb-btn-cancel" id="cancelFeedbackBtn">取消</button>
+        <button class="fb-btn fb-btn-submit" id="submitFeedbackBtn">送出回報</button>
+      </div>
     </div>
   </div>
 
@@ -1222,7 +1270,8 @@ ${formatServiceCodes(data.service_codes)}`;
               name: name,
               facility_name: facility,
               phone: phone,
-              issue: issue
+              issue: issue,
+              created_at: new Date().toISOString()
             }]);
           
           if (error) {
@@ -1254,40 +1303,5 @@ ${formatServiceCodes(data.service_codes)}`;
     // 初始化：先讀取案件資訊，再由 renderCaseInfo 觸發 loadFacilities
     renderCaseInfo();
   </script>
-
-  <!-- Feedback Modal Overlay -->
-  <div class="feedback-overlay" id="feedbackOverlay">
-    <div class="feedback-modal">
-      <div class="feedback-modal-header">
-        <h3>💬 平台使用狀況回報</h3>
-        <button class="feedback-modal-close" id="closeFeedbackBtn">&times;</button>
-      </div>
-      <div class="feedback-modal-body">
-        <p style="font-size: 13px; color: var(--muted); margin: 0 0 16px; line-height: 1.6;">
-          如果您在使用本平台時遇到任何問題、Bug，或是對功能有任何改進建議，歡迎填寫下方表單回報，我們將盡速為您處理。
-        </p>
-        <div class="field">
-          <label for="fbName">您的姓名 <span style="color: var(--danger);">*</span></label>
-          <input type="text" id="fbName" placeholder="請輸入聯絡人姓名" required />
-        </div>
-        <div class="field">
-          <label for="fbFacility">機構名稱 <span style="color: var(--danger);">*</span></label>
-          <input type="text" id="fbFacility" placeholder="請輸入您的機構名稱" required />
-        </div>
-        <div class="field">
-          <label for="fbPhone">聯絡電話 <span style="color: var(--danger);">*</span></label>
-          <input type="text" id="fbPhone" placeholder="請輸入您的聯絡電話，以便後續聯繫" required />
-        </div>
-        <div class="field">
-          <label for="fbIssue">問題或狀況陳述 <span style="color: var(--danger);">*</span></label>
-          <textarea id="fbIssue" placeholder="請詳細描述您遇到的問題、操作步驟或改進建議..." style="min-height: 120px;" required></textarea>
-        </div>
-      </div>
-      <div class="feedback-modal-footer">
-        <button class="fb-btn fb-btn-cancel" id="cancelFeedbackBtn">取消</button>
-        <button class="fb-btn fb-btn-submit" id="submitFeedbackBtn">送出回報</button>
-      </div>
-    </div>
-  </div>
 </body>
 </html>
