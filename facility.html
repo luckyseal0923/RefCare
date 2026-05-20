@@ -360,6 +360,10 @@
       .reply-actions{
         grid-template-columns:1fr;
       }
+      
+      #createdTimeWrap, #caseIdWrap {
+        grid-column: span 1 !important;
+      }
 
       h1{
         font-size:22px;
@@ -552,7 +556,35 @@
         <span class="summary-pill">服務類型：<span id="serviceTypePill">居家服務</span></span>
       </div>
 
-      <div class="sub-section-title">個案摘要</div>
+      <div class="sub-section-title" style="margin-top:18px;">起案與聯絡資訊</div>
+      <div class="info-grid-compact" style="margin-bottom:18px;">
+        <div class="info-item compact">
+          <div class="info-label">個管師姓名</div>
+          <div class="info-value" id="caseManagerView">--</div>
+        </div>
+        <div class="info-item compact">
+          <div class="info-label">聯絡電話</div>
+          <div class="info-value" id="caseManagerPhoneView">--</div>
+        </div>
+        <div class="info-item compact">
+          <div class="info-label">單位分機</div>
+          <div class="info-value" id="hospitalExtView">--</div>
+        </div>
+        <div class="info-item compact">
+          <div class="info-label">轉介單位</div>
+          <div class="info-value" id="hospitalView">--</div>
+        </div>
+        <div class="info-item compact" id="caseIdWrap" style="grid-column: span 2;">
+          <div class="info-label">案件編號</div>
+          <div class="info-value" id="caseIdView" style="font-family: monospace; font-weight: 800;">--</div>
+        </div>
+        <div class="info-item compact" id="createdTimeWrap" style="grid-column: span 2;">
+          <div class="info-label">起案時間</div>
+          <div class="info-value" id="createdTimeView">--</div>
+        </div>
+      </div>
+
+      <div class="sub-section-title" style="margin-top:18px;">個案摘要</div>
       <div class="info-grid-compact">
         <div class="info-item compact">
           <div class="info-label">姓名</div>
@@ -913,7 +945,11 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
           "BA11 肢體關節活動"
         ])),
         case_summary: params.get("case_summary") || "個案與女兒同住，主要照顧者白天需上班，返家前希望先銜接居家服務，協助清潔、移位與進食照顧。",
-        special: params.get("special") || params.get("special_need_long") || "高跌倒風險、需女性居服員"
+        special: params.get("special") || params.get("special_need_long") || "高跌倒風險、需女性居服員",
+        case_manager: params.get("case_manager") || "林個管",
+        case_manager_phone: params.get("case_manager_phone") || "0912-345678",
+        case_manager_ext: params.get("case_manager_ext") || "1234",
+        created_at: params.get("created_at") || new Date().toISOString()
       };
     }
 
@@ -966,6 +1002,52 @@ ${formatServiceCodes(data.service_codes)}`;
       $("specialView").textContent = data.special;
       $("serviceNeedView").textContent = serviceNeed;
       $("caseSummaryView").textContent = data.case_summary;
+
+      // 起案與聯絡資訊
+      let cmPhone = data.case_manager_phone || "";
+      let cmExt = data.case_manager_ext || "";
+
+      // 備援方案：若案件欄位中無資料，向 case_managers 表查詢
+      if ((!cmPhone || !cmExt) && window.supabaseClient && data.case_manager && data.hospital) {
+        try {
+          const { data: cmData } = await window.supabaseClient
+            .from('case_managers')
+            .select('phone, ext')
+            .eq('name', data.case_manager)
+            .eq('hospital', data.hospital)
+            .maybeSingle();
+            
+          if (cmData) {
+            if (!cmPhone) cmPhone = cmData.phone || "";
+            if (!cmExt) cmExt = cmData.ext || "";
+          }
+        } catch (cmErr) {
+          console.warn("Failed to fetch case manager contact fallback:", cmErr);
+        }
+      }
+
+      $("hospitalView").textContent = data.hospital || "--";
+      $("caseManagerView").textContent = data.case_manager || "--";
+      $("caseManagerPhoneView").textContent = cmPhone || "--";
+      $("hospitalExtView").textContent = cmExt ? `#${cmExt}` : "--";
+      $("createdTimeView").textContent = formatTaiwanDateTime(data.created_at);
+      $("caseIdView").textContent = data.case_id || "--";
+    }
+
+    function formatTaiwanDateTime(utcString) {
+      if (!utcString) return "--";
+      try {
+        const d = new Date(utcString);
+        if (isNaN(d.getTime())) return utcString;
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const date = String(d.getDate()).padStart(2, '0');
+        const h = String(d.getHours()).padStart(2, '0');
+        const min = String(d.getMinutes()).padStart(2, '0');
+        return `${y}-${m}-${date} ${h}:${min}`;
+      } catch (e) {
+        return utcString;
+      }
     }
 
     function formatServiceCodes(value) {
