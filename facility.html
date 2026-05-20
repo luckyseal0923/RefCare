@@ -550,13 +550,7 @@
     <div class="card">
       <h2 style="margin-top:0;">案件資訊</h2>
 
-      <div style="margin-bottom:14px;">
-        <span class="summary-pill">案件編號：<span id="caseIdPill">REF-20260330-WF79</span></span>
-        <span class="summary-pill">起案單位：<span id="hospitalPill">萬芳醫院急診</span></span>
-        <span class="summary-pill">服務類型：<span id="serviceTypePill">居家服務</span></span>
-      </div>
-
-      <div class="sub-section-title" style="margin-top:18px;">起案與聯絡資訊</div>
+      <div class="sub-section-title" style="margin-top:10px;">起案與聯絡資訊</div>
       <div class="info-grid-compact" style="margin-bottom:18px;">
         <div class="info-item compact">
           <div class="info-label">個管師姓名</div>
@@ -574,7 +568,11 @@
           <div class="info-label">轉介單位</div>
           <div class="info-value" id="hospitalView">--</div>
         </div>
-        <div class="info-item compact" id="caseIdWrap" style="grid-column: span 2;">
+        <div class="info-item compact">
+          <div class="info-label">服務類型</div>
+          <div class="info-value" id="serviceTypeView">--</div>
+        </div>
+        <div class="info-item compact" id="caseIdWrap">
           <div class="info-label">案件編號</div>
           <div class="info-value" id="caseIdView" style="font-family: monospace; font-weight: 800;">--</div>
         </div>
@@ -987,9 +985,7 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
       const serviceNeed = `${data.service_time || "--"}
 ${formatServiceCodes(data.service_codes)}`;
 
-      $("caseIdPill").textContent = data.case_id;
-      $("hospitalPill").textContent = data.hospital;
-      $("serviceTypePill").textContent = data.service_type;
+      $("serviceTypeView").textContent = data.service_type || "--";
       $("patientNameView").textContent = data.patient_name;
       $("basicView").textContent = `${data.age}歲 / ${data.gender}`;
       $("bodyView").textContent = bodyText;
