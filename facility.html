@@ -834,7 +834,7 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
               };
             });
             
-            console.log("Loaded Facilities count:", FACILITIES.length);
+            // Loaded Facilities count log removed
           }
         }
       } catch (err) {
@@ -965,7 +965,7 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
             .single();
           
           if (!error && sbData) {
-            console.log("Supabase case data loaded:", sbData);
+            // Supabase case data loaded log removed
             data = {
               ...queryData,
               ...sbData,

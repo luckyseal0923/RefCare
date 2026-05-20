@@ -1431,6 +1431,7 @@
             <div><strong>起案時間：</strong>${new Date(item.created_at).toLocaleString()}</div>
             <div><strong>醫院單位：</strong>${item.hospital}</div>
             <div><strong>個管人員：</strong>${item.case_manager || '未認證'}</div>
+            <div><strong>聯絡電話：</strong>${item.case_manager_phone || '--'}${item.case_manager_ext ? ' 分機 ' + item.case_manager_ext : ''}</div>
           </div>
           <div class="detail-card">
             <h4>病患評估</h4>
