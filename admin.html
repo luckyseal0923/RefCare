@@ -1403,6 +1403,7 @@
         let reporter = '未提供';
         let cleanNote = reply ? (reply.note || '無備註') : '尚未回覆';
         let replyTimeStr = '';
+        let replyTimestamp = 0; // 用於排序的新增欄位
 
         if (reply) {
           // 支援獨立的 reporter 欄位或從 note 中正則解析填報者
@@ -1418,7 +1419,9 @@
 
           if (reply.created_at) {
             try {
-              replyTimeStr = new Date(reply.created_at).toLocaleString('zh-TW', {
+              const d = new Date(reply.created_at);
+              replyTimestamp = d.getTime();
+              replyTimeStr = d.toLocaleString('zh-TW', {
                 hour12: false,
                 year: 'numeric',
                 month: '2-digit',
@@ -1439,9 +1442,35 @@
           note: cleanNote,
           reporter,
           replyTimeStr,
+          replyTimestamp,
           phone: fac ? fac.phone : '未知電話'
         };
       });
+
+      // 排序邏輯：已回覆以時間由新到舊排序 (replyTimestamp 降冪)，未回覆 (pending) 一律排在最後面
+      displayList.sort((a, b) => {
+        const aPending = a.status === 'pending';
+        const bPending = b.status === 'pending';
+        
+        if (aPending && !bPending) return 1;  // a 是未回覆，排到後面
+        if (!aPending && bPending) return -1; // b 是未回覆，a 排在前面
+        
+        if (!aPending && !bPending) {
+          return b.replyTimestamp - a.replyTimestamp; // 由新到舊
+        }
+        
+        // 如果都是未回覆，按機構名稱筆劃排序
+        return a.name.localeCompare(b.name, 'zh-TW');
+      });
+
+      // 計算各狀態家數統計
+      const counts = {
+        all: displayList.length,
+        pending: displayList.filter(r => r.status === 'pending').length,
+        accept: displayList.filter(r => r.status === 'accept').length,
+        coordinate: displayList.filter(r => r.status === 'coordinate').length,
+        reject: displayList.filter(r => r.status === 'reject').length
+      };
 
       const replyCardsHtml = displayList.map(r => `
         <div class="reply-item-card" data-status="${r.status}" style="margin-bottom:12px; padding:16px; background:#f8fafc; border-radius:16px; border:1px solid #edf2f7;">
@@ -1502,11 +1531,11 @@
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
               <h4 style="margin:0;">機構回覆進度</h4>
               <div class="reply-tabs" style="display:flex; gap:6px; flex-wrap:wrap;">
-                <button class="tab-btn active" onclick="filterReplies('all', this)">全部</button>
-                <button class="tab-btn" onclick="filterReplies('pending', this)">⌛ 待回覆</button>
-                <button class="tab-btn" onclick="filterReplies('accept', this)">✅ 可接案</button>
-                <button class="tab-btn" onclick="filterReplies('coordinate', this)">⚠️ 待協調</button>
-                <button class="tab-btn" onclick="filterReplies('reject', this)">❌ 無法接案</button>
+                <button class="tab-btn active" onclick="filterReplies('all', this)">全部 (${counts.all})</button>
+                <button class="tab-btn" onclick="filterReplies('pending', this)">⌛ 待回覆 (${counts.pending})</button>
+                <button class="tab-btn" onclick="filterReplies('accept', this)">✅ 可接案 (${counts.accept})</button>
+                <button class="tab-btn" onclick="filterReplies('coordinate', this)">⚠️ 待協調 (${counts.coordinate})</button>
+                <button class="tab-btn" onclick="filterReplies('reject', this)">❌ 無法接案 (${counts.reject})</button>
               </div>
             </div>
             <div id="repliesContainer">${replyCardsHtml}</div>
