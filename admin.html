@@ -1671,6 +1671,9 @@
         alert("更新成功");
         fetchData();
         closeDrawer();
+      } catch (err) { alert("更新失敗：" + err.message); }
+    }
+
     async function deleteSelectedCases() {
       if (selectedCaseIds.size === 0) {
         alert("請先選取要刪除的案件！");
