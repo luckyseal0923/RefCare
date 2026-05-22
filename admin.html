@@ -891,7 +891,7 @@
                   <button class="btn btn-muted" id="btnReload">重新整理</button>
                   <button class="btn btn-muted" id="btnReset">清除條件</button>
                   <button class="btn btn-primary">匯出 CSV</button>
-                  <button class="btn btn-danger">批次刪除</button>
+                  <button class="btn btn-danger" id="btnDeleteSelected" onclick="deleteSelectedCases()">案件刪除</button>
                 </div>
               </div>
               <div class="toolbar-body">
@@ -918,7 +918,7 @@
                 <table class="list-table">
                   <thead>
                     <tr>
-                      <th style="width:42px;"><input type="checkbox" /></th>
+                      <th style="width:42px;"><input type="checkbox" id="checkAll" onchange="toggleSelectAll(this)" /></th>
                       <th>起案時間 / 案件編號</th>
                       <th>個案資訊</th>
                       <th>個管師</th>
@@ -1131,6 +1131,42 @@
     let allFacilities = [];
     let currentRenderedList = [];
     let currentEditingIndex = null;
+    let selectedCaseIds = new Set();
+
+    // --- 選取狀態管理 ---
+    function updateSelectionSummary() {
+      const count = selectedCaseIds.size;
+      $("selectionSummary").innerHTML = `已選取 <strong style="color:var(--rose); font-size:16px;">${count}</strong> 筆｜已載入 ${allCases.length} 筆資料`;
+    }
+
+    function toggleCaseSelect(caseId, checked) {
+      if (checked) {
+        selectedCaseIds.add(caseId);
+      } else {
+        selectedCaseIds.delete(caseId);
+      }
+      updateSelectionSummary();
+      
+      const checkAllEl = $("checkAll");
+      if (checkAllEl) {
+        const currentRenderedIds = currentRenderedList.map(c => c.case_id);
+        checkAllEl.checked = currentRenderedIds.length > 0 && currentRenderedIds.every(id => selectedCaseIds.has(id));
+      }
+    }
+
+    function toggleSelectAll(el) {
+      const checked = el.checked;
+      currentRenderedList.forEach(c => {
+        if (checked) {
+          selectedCaseIds.add(c.case_id);
+        } else {
+          selectedCaseIds.delete(c.case_id);
+        }
+        const checkbox = document.querySelector(`.case-checkbox[value="${c.case_id}"]`);
+        if (checkbox) checkbox.checked = checked;
+      });
+      updateSelectionSummary();
+    }
 
     // --- 初始化 UI ---
     function initUI() {
@@ -1173,7 +1209,7 @@
       $("kpiMatching").textContent = allCases.filter(c => c.status === '二輪媒合中' || c.status === '三輪媒合中' || c.status === '指定機構').length;
       $("kpiDone").textContent = allCases.filter(c => c.status === '案件結案').length;
       $("loadedHint").textContent = `目前載入 ${allCases.length} 筆真實轉介案件`;
-      $("selectionSummary").textContent = `已載入 ${allCases.length} 筆資料｜每頁 20 筆`;
+      updateSelectionSummary();
       
       // 更新個管師篩選清單
       const hFilter = $("hospitalFilter").value;
@@ -1318,9 +1354,13 @@
           const badgeClass = getBadgeClass(c.status);
           const needTag = c.service_type || '未分類';
 
+          const actionBtn = c.status === '案件結案'
+            ? `<button class="icon-btn" style="color:#2563eb; background:#eff6ff; border-color:#dbeafe;" onclick="reopenCase('${c.case_id}')">再開</button>`
+            : `<button class="icon-btn" style="color:#059669; background:#ecfdf5; border-color:#d1fae5;" onclick="closeCase('${c.case_id}')">結案</button>`;
+
           return `
             <tr>
-              <td><input type="checkbox" /></td>
+              <td><input type="checkbox" class="case-checkbox" value="${c.case_id}" ${selectedCaseIds.has(c.case_id) ? 'checked' : ''} onchange="toggleCaseSelect('${c.case_id}', this.checked)" /></td>
               <td><div class="case-time">${dateStr}</div><div class="case-id">${c.case_id}</div></td>
               <td><div class="patient-name">${c.patient_name}</div><div class="patient-meta">${c.age}歲 / ${c.gender}</div></td>
               <td>
@@ -1342,13 +1382,19 @@
                 <div class="row-actions">
                   <button class="icon-btn primary" onclick="openDrawer(${idx})">查看</button>
                   <button class="icon-btn" onclick="openEditDrawer(${idx})">編輯</button>
-                  <button class="icon-btn" style="color:#059669; background:#ecfdf5; border-color:#d1fae5;" onclick="closeCase('${c.case_id}')">結案</button>
-                  <button class="icon-btn danger" onclick="deleteCase('${c.case_id}')">刪除</button>
+                  ${actionBtn}
                 </div>
               </td>
             </tr>
           `;
         }).join("");
+      }
+
+      // 同步 checkAll 狀態
+      const checkAllEl = $("checkAll");
+      if (checkAllEl) {
+        const currentRenderedIds = currentRenderedList.map(c => c.case_id);
+        checkAllEl.checked = currentRenderedIds.length > 0 && currentRenderedIds.every(id => selectedCaseIds.has(id));
       }
     }
 
@@ -1495,6 +1541,10 @@
         </div>
       `).join("");
 
+      const drawerActionBtn = item.status === '案件結案'
+        ? `<button class="btn btn-primary" style="flex:1; background:linear-gradient(135deg, #3b82f6, #2563eb); border:none;" onclick="reopenCase('${item.case_id}')">案件再開</button>`
+        : `<button class="btn btn-muted" style="flex:1;" onclick="closeCase('${item.case_id}')">正式結案</button>`;
+
       return `
         <div class="detail-grid">
           <div class="detail-card">
@@ -1543,7 +1593,7 @@
         </div>
         <div style="margin-top:20px; display:flex; gap:10px;">
           <button class="btn btn-primary" style="flex:1;" onclick="copyFacilityLink('${item.case_id}')">複製機構填寫連結</button>
-          <button class="btn btn-muted" style="flex:1;" onclick="closeCase('${item.case_id}')">正式結案</button>
+          ${drawerActionBtn}
         </div>
       `;
     }
@@ -1621,7 +1671,35 @@
         alert("更新成功");
         fetchData();
         closeDrawer();
-      } catch (err) { alert("更新失敗：" + err.message); }
+    async function deleteSelectedCases() {
+      if (selectedCaseIds.size === 0) {
+        alert("請先選取要刪除的案件！");
+        return;
+      }
+      if (!(await checkAdminPrivilege(true))) return;
+      if (!confirm(`確定刪除所選取的 ${selectedCaseIds.size} 筆案件？此操作將使案件從清單中隱藏，但資料仍會保留在後端系統中。`)) return;
+      try {
+        const ids = Array.from(selectedCaseIds);
+        const { error } = await sb.from('cases').update({ status: '系統刪除' }).in('case_id', ids);
+        if (error) throw error;
+        alert("案件已成功刪除（虛擬刪除）");
+        selectedCaseIds.clear();
+        updateSelectionSummary();
+        fetchData();
+      } catch (err) {
+        alert("刪除失敗：" + err.message);
+      }
+    }
+
+    async function reopenCase(id) {
+      if (!confirm("確定再開此案件？案件狀態將回復為「一輪媒合中」，並重新在「進行中案件」顯示。")) return;
+      try {
+        const { error } = await sb.from('cases').update({ status: '一輪媒合中' }).eq('case_id', id);
+        if (error) throw error;
+        alert("案件已再開");
+        fetchData();
+        closeDrawer();
+      } catch (err) { alert("案件再開失敗：" + err.message); }
     }
 
     async function deleteCase(id) {
@@ -1963,6 +2041,8 @@
         return;
       }
       currentViewMode = view;
+      selectedCaseIds.clear();
+      updateSelectionSummary();
       if (view === 'dashboard' || view === 'cases') {
         $("dashboardView").style.display = "block";
         $("facilitiesView").style.display = "none";
