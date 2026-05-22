@@ -648,6 +648,11 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
         <input type="text" id="facilityOther" placeholder="請輸入其他機構全名" />
       </div>
 
+      <div class="field" style="margin-top: 16px;">
+        <label for="reporterName">填報者姓名 <span style="color: var(--danger);">*</span></label>
+        <input type="text" id="reporterName" placeholder="請輸入您的姓名或職稱 (例：張社工)" autocomplete="off" required />
+      </div>
+
       <div class="field" style="margin-top: 24px; padding-top: 20px; border-top: 1px dashed #cbd5e1;">
         <label style="font-size: 18px; color: var(--primary-dark);">回覆結果</label>
         <div class="radio-group">
@@ -1172,6 +1177,7 @@ ${formatServiceCodes(data.service_codes)}`;
           : "",
         reply: replyStatus,
         reply_note: finalNote,
+        reporter: $("reporterName") ? $("reporterName").value.trim() : "",
         reply_time: new Date().toISOString()
       };
     }
@@ -1199,6 +1205,15 @@ ${formatServiceCodes(data.service_codes)}`;
         const text = $("rejectNote").value.trim();
         finalNote = [reason, text].filter(Boolean).join(" - ");
       }
+
+      const reporterName = $("reporterName") ? $("reporterName").value.trim() : "";
+      if (!reporterName) {
+        showStatus("error", "請輸入填報者姓名");
+        if ($("reporterName")) $("reporterName").focus();
+        return;
+      }
+
+      finalNote += (finalNote ? "\n" : "") + `填報者：${reporterName}`;
 
       const payload = getReplyPayload(replyStatus, finalNote);
 
