@@ -803,8 +803,15 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
           }
 
           if (allFacs && allFacs.length > 0) {
-            // Keep all facilities searchable in database
-            FACILITIES = allFacs.map(item => {
+            let list = allFacs;
+            
+            // 嚴格過濾：只顯示派案名單內的機構，非本次指定機構不顯示在搜尋名單中
+            if (targetIds && targetIds.length > 0) {
+              const targetStrIds = targetIds.map(id => String(id));
+              list = allFacs.filter(f => targetStrIds.includes(String(f.id)));
+            }
+
+            FACILITIES = list.map(item => {
               const replyStatus = REPLIED_MAP[String(item.id)] || REPLIED_MAP[item.facility_name] || REPLIED_MAP[item.short_name] || null;
               return {
                 id: item.id,
