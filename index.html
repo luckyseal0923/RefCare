@@ -919,6 +919,116 @@
       .page { margin-top: -40px; padding: 0 16px; }
       .form-grid.three { grid-template-columns: 1fr; }
     }
+    /* History Import Modal Overlay */
+    .history-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(8px);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .history-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .history-modal {
+      background: #ffffff;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 680px;
+      box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.18);
+      overflow: hidden;
+      transform: scale(0.9) translateY(20px);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: flex;
+      flex-direction: column;
+    }
+    .history-overlay.show .history-modal {
+      transform: scale(1) translateY(0);
+    }
+    .history-modal-header {
+      background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+      color: #ffffff;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .history-modal-header h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+    .history-modal-close {
+      border: none;
+      background: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .history-modal-close:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: rotate(90deg);
+    }
+    .history-modal-body {
+      padding: 24px;
+      overflow-y: auto;
+      max-height: 60vh;
+    }
+    .history-item-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .history-item-card:hover {
+      border-color: var(--primary);
+      background: #f0fdfa;
+      box-shadow: 0 4px 12px rgba(15, 118, 110, 0.08);
+      transform: translateY(-2px);
+    }
+    .history-item-info {
+      flex: 1;
+      margin-right: 16px;
+    }
+    .history-item-meta {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+    .history-item-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .history-item-detail {
+      font-size: 13px;
+      color: #475569;
+      line-height: 1.5;
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
@@ -957,6 +1067,22 @@
       <div class="feedback-modal-footer">
         <button class="fb-btn fb-btn-cancel" id="cancelFeedbackBtn">取消</button>
         <button class="fb-btn fb-btn-submit" id="submitFeedbackBtn">送出回報</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- History Import Modal Overlay -->
+  <div class="history-overlay" id="historyOverlay">
+    <div class="history-modal">
+      <div class="history-modal-header">
+        <h3>📥 帶入病患歷史起案資料</h3>
+        <button class="history-modal-close" onclick="closeHistoryModal()">&times;</button>
+      </div>
+      <div class="history-modal-body" id="historyModalBody">
+        <!-- 歷史資料列表將由 JS 動態產生 -->
+      </div>
+      <div class="feedback-modal-footer" style="padding: 16px 24px; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 12px; background: #f8fafc;">
+        <button class="fb-btn fb-btn-cancel" onclick="closeHistoryModal()">取消</button>
       </div>
     </div>
   </div>
@@ -1054,7 +1180,12 @@
             </div>
             <div class="field">
               <label>身分證字號</label>
-              <input type="text" id="patientId" placeholder="身分證字號" style="text-transform: uppercase;" maxlength="10" />
+              <div style="display: flex; gap: 8px;">
+                <input type="text" id="patientId" placeholder="身分證字號" style="text-transform: uppercase; flex: 1; min-width: 0;" maxlength="10" />
+                <button type="button" onclick="checkPatientHistory()" style="flex-shrink: 0; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: #fff; padding: 10px 14px; font-size: 13px; font-weight: 700; border-radius: 14px; display: flex; align-items: center; gap: 6px; border: none; box-shadow: 0 4px 12px rgba(15, 118, 110, 0.15); transition: all 0.2s; cursor: pointer;">
+                  🔍 帶入歷史資料
+                </button>
+              </div>
             </div>
             <div class="field">
               <label>性別 <span class="required">*</span></label>
@@ -1769,6 +1900,159 @@
     $("empPasswordAuth").addEventListener("keypress", e => {
       if (e.key === "Enter") { e.preventDefault(); authByEmpId(); }
     });
+
+    // ===== 病患歷史資料起案邏輯 =====
+    window.historyCases = [];
+
+    async function checkPatientHistory() {
+      const patientId = $("patientId").value.trim().toUpperCase();
+      if (!patientId) {
+        alert("請先輸入身分證字號");
+        return;
+      }
+
+      // 取得查詢按鈕
+      const searchBtn = document.querySelector('button[onclick="checkPatientHistory()"]');
+      let originalBtnContent = "";
+      if (searchBtn) {
+        originalBtnContent = searchBtn.innerHTML;
+        searchBtn.innerHTML = "🔍 查詢中...";
+        searchBtn.disabled = true;
+      }
+
+      try {
+        if (!window.supabaseClient) {
+          throw new Error("Supabase 未正確初始化");
+        }
+
+        const { data, error } = await window.supabaseClient
+          .from('cases')
+          .select('*')
+          .eq('patient_id', patientId)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+          alert("查無此身分證字號的歷史起案紀錄。");
+          return;
+        }
+
+        window.historyCases = data;
+
+        const listHtml = data.map((item, index) => {
+          const dateStr = item.created_at ? new Date(item.created_at).toLocaleString('zh-TW', { hour12: false }) : '無時間';
+          return `
+            <div class="history-item-card" onclick="importHistoryRecord(${index})">
+              <div class="history-item-info">
+                <div class="history-item-meta">起案時間：${dateStr} | 轉介單位：${item.hospital || '未知'}</div>
+                <div class="history-item-title">${item.patient_name || '無姓名'} (${item.gender || '未知'}, ${item.age || 0}歲)</div>
+                <div class="history-item-detail">
+                  <strong>臨床診斷：</strong>${item.diagnosis || '無'} <br/>
+                  <strong>服務類型：</strong>${item.service_type || '無'} | <strong>CMS等級：</strong>${item.cms_level || '無'}
+                </div>
+              </div>
+              <div style="color: var(--primary); font-weight: 800; font-size: 18px; margin-left: 8px;">
+                ➔
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        $("historyModalBody").innerHTML = `
+          <p style="font-size: 13px; color: var(--muted); margin: 0 0 16px; line-height: 1.6;">
+            🔍 找到該身分證字號共 ${data.length} 筆歷史起案紀錄。點擊下方案件卡片可直接將當時的資料帶入本次申請表單中。
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            ${listHtml}
+          </div>
+        `;
+
+        $("historyOverlay").classList.add("show");
+
+      } catch (err) {
+        console.error("查詢歷史紀錄失敗：", err);
+        alert("查詢歷史紀錄失敗，請稍後再試。原因：" + err.message);
+      } finally {
+        if (searchBtn) {
+          searchBtn.innerHTML = originalBtnContent;
+          searchBtn.disabled = false;
+        }
+      }
+    }
+
+    function closeHistoryModal() {
+      $("historyOverlay").classList.remove("show");
+    }
+
+    // 點擊 Modal 外側自動關閉
+    document.addEventListener("DOMContentLoaded", () => {
+      const historyOverlay = $("historyOverlay");
+      if (historyOverlay) {
+        historyOverlay.addEventListener("click", (e) => {
+          if (e.target === historyOverlay) {
+            closeHistoryModal();
+          }
+        });
+      }
+    });
+
+    function importHistoryRecord(index) {
+      const record = window.historyCases[index];
+      if (!record) return;
+
+      // 帶入病患基本生理資訊
+      $("patientName").value = record.patient_name || "";
+      $("gender").value = record.gender || "";
+      $("age").value = record.age || 0;
+      $("height").value = record.height !== null ? record.height : "";
+      $("weight").value = record.weight !== null ? record.weight : "";
+
+      // 帶入結構化現居地址
+      const details = record.address_detail || {};
+      $("addrCounty").value = details.county || "";
+      $("addrDistrict").value = details.district || "";
+      
+      if (record.address_detail) {
+        $("addrRoad").value = details.road || "";
+        $("addrLane").value = details.lane || "";
+        $("addrAlley").value = details.alley || "";
+        $("addrNo").value = details.no || "";
+        $("addrNoExt").value = details.noExt || "";
+        $("addrFloor").value = details.floor || "";
+        $("addrFloorExt").value = details.floorExt || "";
+      } else {
+        // 舊款單一文字地址相容方案
+        $("addrRoad").value = record.address || "";
+        $("addrLane").value = "";
+        $("addrAlley").value = "";
+        $("addrNo").value = "";
+        $("addrNoExt").value = "";
+        $("addrFloor").value = "";
+        $("addrFloorExt").value = "";
+      }
+
+      // 臨床與其他資訊
+      $("diagnosis").value = record.diagnosis || "";
+      $("caseSummary").value = record.case_summary || "";
+      $("specialNeeds").value = record.special_need || "";
+      $("cmsLevel").value = record.cms_level || "";
+      $("mobility").value = record.mobility || "";
+      $("consciousness").value = record.consciousness || "";
+      $("serviceType").value = record.service_type || "";
+      $("serviceTime").value = record.service_time || "";
+
+      // 服務代碼
+      selectedServiceCodes = new Set(record.service_codes || []);
+      $("selectedServicesDisplay").textContent = selectedServiceCodes.size > 0 
+        ? Array.from(selectedServiceCodes).sort().join(", ") 
+        : "尚未選擇";
+
+      // 更新側邊欄與頁面狀態
+      updateSidebar();
+      closeHistoryModal();
+      showStatus("success", `✅ 已成功帶入「${record.patient_name}」的歷史資料！`);
+    }
 
     window.onload = initForm;
 
