@@ -633,7 +633,7 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
       <h2 style="margin-top:0;">機構回覆</h2>
 
       <div class="field">
-        <label for="facilitySearch">機構名稱</label>
+        <label for="facilitySearch">本案件指定派案機構</label>
         <input type="text" id="facilitySearch" placeholder="請輸入機構名稱或簡稱搜尋" autocomplete="off" />
         <div id="facilityDropdown" class="facility-dropdown"></div>
         <div id="designationWarning" style="color: #dc2626; font-size: 13px; font-weight: 800; margin-top: 6px; display: none;">
@@ -699,8 +699,8 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
       </div>
 
       <div class="field" style="margin-top: 24px; padding-top: 20px; border-top: 1px dashed #cbd5e1;">
-        <label for="reporterName">填報者姓名 <span style="color: var(--danger);">*</span></label>
-        <input type="text" id="reporterName" placeholder="請輸入您的姓名或職稱 (例：張社工)" autocomplete="off" required />
+        <label for="reporterName">填報者姓名</label>
+        <input type="text" id="reporterName" placeholder="請輸入您的姓名或職稱 (例：張社工)" autocomplete="off" />
       </div>
 
       <div class="reply-actions" style="grid-template-columns: 1fr;">
@@ -1214,13 +1214,9 @@ ${formatServiceCodes(data.service_codes)}`;
       }
 
       const reporterName = $("reporterName") ? $("reporterName").value.trim() : "";
-      if (!reporterName) {
-        showStatus("error", "請輸入填報者姓名");
-        if ($("reporterName")) $("reporterName").focus();
-        return;
+      if (reporterName) {
+        finalNote += (finalNote ? "\n" : "") + `填報者：${reporterName}`;
       }
-
-      finalNote += (finalNote ? "\n" : "") + `填報者：${reporterName}`;
 
       const payload = getReplyPayload(replyStatus, finalNote);
 
