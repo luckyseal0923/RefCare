@@ -1053,6 +1053,10 @@
               <input type="text" id="patientName" placeholder="王○○" />
             </div>
             <div class="field">
+              <label>身分證字號</label>
+              <input type="text" id="patientId" placeholder="身分證字號" style="text-transform: uppercase;" maxlength="10" />
+            </div>
+            <div class="field">
               <label>性別 <span class="required">*</span></label>
               <select id="gender">
                 <option value="">請選擇</option>
@@ -1075,7 +1079,33 @@
             </div>
             <div class="field full">
               <label>現居地址</label>
-              <input type="text" id="address" placeholder="請輸入個案目前居住地址" />
+              <!-- 第一列：縣市、鄉鎮市區、路/街/段 -->
+              <div class="address-row" style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; width: 100%;">
+                <input type="text" id="addrCounty" placeholder="縣市 (例: 台北市)" style="flex: 1; min-width: 100px; padding: 10px 12px; font-size: 14px;" />
+                <input type="text" id="addrDistrict" placeholder="鄉鎮市區 (例: 文山區)" style="flex: 1; min-width: 100px; padding: 10px 12px; font-size: 14px;" />
+                <input type="text" id="addrRoad" placeholder="路/街/段 (例: 興隆路三段)" style="flex: 2; min-width: 150px; padding: 10px 12px; font-size: 14px;" />
+              </div>
+              <!-- 第二列：巷、弄、號之、樓之 -->
+              <div class="address-row" style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 12px; background: #f8fafc; border: 1px dashed var(--border); border-radius: 14px; width: 100%;">
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <input type="text" id="addrLane" placeholder="" style="width: 50px; text-align: center; padding: 8px 6px; font-size: 14px;" />
+                  <span style="font-weight: bold; font-size: 13px; color: var(--muted);">巷</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <input type="text" id="addrAlley" placeholder="" style="width: 50px; text-align: center; padding: 8px 6px; font-size: 14px;" />
+                  <span style="font-weight: bold; font-size: 13px; color: var(--muted);">弄</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <input type="text" id="addrNo" placeholder="" style="width: 50px; text-align: center; padding: 8px 6px; font-size: 14px;" />
+                  <span style="font-weight: bold; font-size: 13px; color: var(--muted);">號之</span>
+                  <input type="text" id="addrNoExt" placeholder="" style="width: 45px; text-align: center; padding: 8px 6px; font-size: 14px;" />
+                </div>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <input type="text" id="addrFloor" placeholder="" style="width: 50px; text-align: center; padding: 8px 6px; font-size: 14px;" />
+                  <span style="font-weight: bold; font-size: 13px; color: var(--muted);">樓之</span>
+                  <input type="text" id="addrFloorExt" placeholder="" style="width: 45px; text-align: center; padding: 8px 6px; font-size: 14px;" />
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -1656,11 +1686,37 @@
         case_manager_phone: $("caseManagerPhone").value.trim(),
         case_manager_ext: $("hospitalExt").value.trim(),
         patient_name: $("patientName").value.trim(),
+        patient_id: $("patientId").value.trim(),
         gender: $("gender").value,
         age: parseInt($("age").value) || 0,
         height: parseInt($("height").value) || null,
         weight: parseInt($("weight").value) || null,
-        address: $("address").value.trim(),
+        address: (function() {
+          const county = $("addrCounty").value.trim();
+          const district = $("addrDistrict").value.trim();
+          const road = $("addrRoad").value.trim();
+          const lane = $("addrLane").value.trim();
+          const alley = $("addrAlley").value.trim();
+          const no = $("addrNo").value.trim();
+          const noExt = $("addrNoExt").value.trim();
+          const floor = $("addrFloor").value.trim();
+          const floorExt = $("addrFloorExt").value.trim();
+          return (county || '') + (district || '') + (road || '') + 
+                 (lane ? lane + '巷' : '') + (alley ? alley + '弄' : '') + 
+                 (no ? no + '號' : '') + (noExt ? '之' + noExt : '') + 
+                 (floor ? floor + '樓' : '') + (floorExt ? '之' + floorExt : '');
+        })(),
+        address_detail: {
+          county: $("addrCounty").value.trim(),
+          district: $("addrDistrict").value.trim(),
+          road: $("addrRoad").value.trim(),
+          lane: $("addrLane").value.trim(),
+          alley: $("addrAlley").value.trim(),
+          no: $("addrNo").value.trim(),
+          noExt: $("addrNoExt").value.trim(),
+          floor: $("addrFloor").value.trim(),
+          floorExt: $("addrFloorExt").value.trim()
+        },
         cms_level: $("cmsLevel").value,
         mobility: $("mobility").value,
         consciousness: $("consciousness").value,

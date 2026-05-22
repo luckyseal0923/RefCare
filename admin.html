@@ -1122,6 +1122,44 @@
     // --- 核心邏輯 ---
     const sb = window.supabaseClient;
     const $ = (id) => document.getElementById(id);
+    const maskNationalId = (id) => {
+      if (!id) return '未填寫';
+      const clean = id.trim();
+      if (clean.length < 5) return clean;
+      return clean.substring(0, 2) + '*'.repeat(clean.length - 5) + clean.substring(clean.length - 3);
+    };
+
+    const getAddressFields = (item) => {
+      if (item.address_detail) {
+        try {
+          const detail = typeof item.address_detail === 'string' ? JSON.parse(item.address_detail) : item.address_detail;
+          return {
+            county: detail.county || '',
+            district: detail.district || '',
+            road: detail.road || '',
+            lane: detail.lane || '',
+            alley: detail.alley || '',
+            no: detail.no || '',
+            noExt: detail.noExt || '',
+            floor: detail.floor || '',
+            floorExt: detail.floorExt || ''
+          };
+        } catch(e) {
+          console.error(e);
+        }
+      }
+      return {
+        county: '',
+        district: '',
+        road: item.address || '',
+        lane: '',
+        alley: '',
+        no: '',
+        noExt: '',
+        floor: '',
+        floorExt: ''
+      };
+    };
     const N8N_WEBHOOKS = {
       closeCase: "https://chihwei.zeabur.app/webhook/case_closed",
       updateCase: "https://chihwei.zeabur.app/webhook/case_updated"
@@ -1558,6 +1596,7 @@
           <div class="detail-card">
             <h4>病患評估</h4>
             <div><strong>病患姓名：</strong>${item.patient_name}</div>
+            <div><strong>身分證字號：</strong>${maskNationalId(item.patient_id)}</div>
             <div><strong>年齡 / 性別：</strong>${item.age} 歲 / ${item.gender}</div>
             <div><strong>身高 / 體重：</strong>${item.height ? item.height + ' cm' : '--'} / ${item.weight ? item.weight + ' kg' : '--'}</div>
             <div><strong>意識狀態：</strong>${item.consciousness || '未填'}</div>
@@ -1611,12 +1650,14 @@
       const item = currentRenderedList[idx];
       if (!item) return;
       currentEditingIndex = idx;
+      const addr = getAddressFields(item);
       $("drawerPatientName").textContent = `編輯案件：${item.patient_name}`;
       $("drawerContent").innerHTML = `
         <div class="detail-card full">
           <form id="editForm" class="edit-form">
             <input type="hidden" name="case_id" value="${item.case_id}">
             <div class="edit-field"><label>姓名</label><input name="patient_name" value="${item.patient_name}"></div>
+            <div class="edit-field"><label>身分證字號</label><input name="patient_id" value="${item.patient_id || ''}" placeholder="身分證字號" style="text-transform: uppercase;" maxlength="10"></div>
             <div class="edit-field"><label>轉介醫院</label><input name="hospital" value="${item.hospital}"></div>
             <div class="edit-field"><label>年齡</label><input type="number" name="age" value="${item.age}"></div>
             <div class="edit-field"><label>性別</label><select name="gender"><option value="男" ${item.gender==='男'?'selected':''}>男</option><option value="女" ${item.gender==='女'?'selected':''}>女</option></select></div>
@@ -1642,7 +1683,34 @@
                 <option value="案件結案" ${item.status==='案件結案'?'selected':''}>案件結案</option>
               </select>
             </div>
-            <div class="edit-field full"><label>現居地址</label><input name="address" value="${item.address || ''}"></div>
+            <div class="edit-field full" style="display:flex; flex-direction:column; gap:8px;">
+              <label>現居地址</label>
+              <div style="display: flex; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; width: 100%;">
+                <input type="text" name="addr_county" value="${addr.county || ''}" placeholder="縣市" style="flex: 1; min-width: 100px; padding: 8px 10px; font-size: 14px;" />
+                <input type="text" name="addr_district" value="${addr.district || ''}" placeholder="鄉鎮市區" style="flex: 1; min-width: 100px; padding: 8px 10px; font-size: 14px;" />
+                <input type="text" name="addr_road" value="${addr.road || ''}" placeholder="路/街/段" style="flex: 2; min-width: 150px; padding: 8px 10px; font-size: 14px;" />
+              </div>
+              <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 10px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px; width: 100%;">
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <input type="text" name="addr_lane" value="${addr.lane || ''}" style="width: 50px; text-align: center; padding: 8px 6px; font-size: 14px;" />
+                  <span style="font-weight: bold; font-size: 13px; color: #475569;">巷</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <input type="text" name="addr_alley" value="${addr.alley || ''}" style="width: 50px; text-align: center; padding: 8px 6px; font-size: 14px;" />
+                  <span style="font-weight: bold; font-size: 13px; color: #475569;">弄</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <input type="text" name="addr_no" value="${addr.no || ''}" style="width: 50px; text-align: center; padding: 8px 6px; font-size: 14px;" />
+                  <span style="font-weight: bold; font-size: 13px; color: #475569;">號之</span>
+                  <input type="text" name="addr_noExt" value="${addr.noExt || ''}" style="width: 45px; text-align: center; padding: 8px 6px; font-size: 14px;" />
+                </div>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <input type="text" name="addr_floor" value="${addr.floor || ''}" style="width: 50px; text-align: center; padding: 8px 6px; font-size: 14px;" />
+                  <span style="font-weight: bold; font-size: 13px; color: #475569;">樓之</span>
+                  <input type="text" name="addr_floorExt" value="${addr.floorExt || ''}" style="width: 45px; text-align: center; padding: 8px 6px; font-size: 14px;" />
+                </div>
+              </div>
+            </div>
             <div class="edit-field full"><label>主要診斷</label><textarea name="diagnosis" style="min-height:80px;">${item.diagnosis || ''}</textarea></div>
             <div class="edit-field full"><label>案況摘要</label><textarea name="case_summary" style="min-height:100px;">${item.case_summary || ''}</textarea></div>
             <div class="edit-field full"><label>特殊需求</label><textarea name="special_need" style="min-height:80px;">${item.special_need || ''}</textarea></div>
@@ -1664,6 +1732,41 @@
       updates.age = parseInt(updates.age);
       updates.height = updates.height ? parseInt(updates.height) : null;
       updates.weight = updates.weight ? parseInt(updates.weight) : null;
+      
+      const address_detail = {
+        county: updates.addr_county || '',
+        district: updates.addr_district || '',
+        road: updates.addr_road || '',
+        lane: updates.addr_lane || '',
+        alley: updates.addr_alley || '',
+        no: updates.addr_no || '',
+        noExt: updates.addr_noExt || '',
+        floor: updates.addr_floor || '',
+        floorExt: updates.addr_floorExt || ''
+      };
+
+      const flatAddress = (address_detail.county || '') + 
+                          (address_detail.district || '') + 
+                          (address_detail.road || '') + 
+                          (address_detail.lane ? address_detail.lane + '巷' : '') + 
+                          (address_detail.alley ? address_detail.alley + '弄' : '') + 
+                          (address_detail.no ? address_detail.no + '號' : '') + 
+                          (address_detail.noExt ? '之' + address_detail.noExt : '') + 
+                          (address_detail.floor ? address_detail.floor + '樓' : '') + 
+                          (address_detail.floorExt ? '之' + address_detail.floorExt : '');
+
+      updates.address = flatAddress;
+      updates.address_detail = address_detail;
+
+      delete updates.addr_county;
+      delete updates.addr_district;
+      delete updates.addr_road;
+      delete updates.addr_lane;
+      delete updates.addr_alley;
+      delete updates.addr_no;
+      delete updates.addr_noExt;
+      delete updates.addr_floor;
+      delete updates.addr_floorExt;
       
       try {
         const { error } = await sb.from('cases').update(updates).eq('case_id', updates.case_id);
