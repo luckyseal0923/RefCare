@@ -297,9 +297,9 @@
     .reject-reasons label { font-size: 15px; font-weight: 400; display: flex; align-items: center; gap: 8px; cursor: pointer; }
     .reject-reasons input[type="radio"] { accent-color: var(--danger); width: 16px; height: 16px; cursor: pointer; }
     .quick-fac-btn {
-      background: #f1f5f9;
-      border: 1px solid #cbd5e1;
-      color: #334155;
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      color: #1e293b;
       padding: 8px 14px;
       border-radius: 999px;
       font-size: 13px;
@@ -322,35 +322,17 @@
       color: #ffffff;
       box-shadow: 0 4px 12px rgba(37,99,235,0.2);
     }
-    .quick-fac-btn.replied-accept {
-      background: #f0fdf4;
-      border-color: #bbf7d0;
-      color: #166534;
+    .quick-fac-btn.replied {
+      background: #f8fafc;
+      border: 1.5px dashed #cbd5e1;
+      color: #94a3b8;
+      opacity: 0.75;
     }
-    .quick-fac-btn.replied-accept:hover {
-      background: #dcfce7;
-      border-color: #86efac;
-      color: #15803d;
-    }
-    .quick-fac-btn.replied-coordinate {
-      background: #fff7ed;
-      border-color: #fed7aa;
-      color: #9a3412;
-    }
-    .quick-fac-btn.replied-coordinate:hover {
-      background: #ffedd5;
-      border-color: #fdba74;
-      color: #c2410c;
-    }
-    .quick-fac-btn.replied-reject {
-      background: #fef2f2;
-      border-color: #fecaca;
-      color: #991b1b;
-    }
-    .quick-fac-btn.replied-reject:hover {
-      background: #fee2e2;
-      border-color: #fca5a5;
-      color: #b91c1c;
+    .quick-fac-btn.replied:hover {
+      background: #f1f5f9;
+      border-color: #94a3b8;
+      color: #64748b;
+      opacity: 0.9;
     }
 
     @media (max-width:768px){
@@ -654,6 +636,9 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
         <label for="facilitySearch">機構名稱</label>
         <input type="text" id="facilitySearch" placeholder="請輸入機構名稱或簡稱搜尋" autocomplete="off" />
         <div id="facilityDropdown" class="facility-dropdown"></div>
+        <div id="designationWarning" style="color: #dc2626; font-size: 13px; font-weight: 800; margin-top: 6px; display: none;">
+          ⚠️ 非本次指定回復機構
+        </div>
         <div class="helper-text">可直接搜尋機構簡稱或完整名稱，最後一項提供「其他（自行輸入）」。</div>
         <div id="quickSelectContainer" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;"></div>
       </div>
@@ -813,16 +798,8 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
           }
 
           if (allFacs && allFacs.length > 0) {
-            let list = allFacs;
-            
-            // 3. 嚴格過濾：只顯示派案名單內的
-            if (targetIds && targetIds.length > 0) {
-              const targetStrIds = targetIds.map(id => String(id));
-              list = allFacs.filter(f => targetStrIds.includes(String(f.id)));
-            }
-
-            // ⚠️ 註：這裡不再直接過濾掉已回覆的機構，而是將狀態帶入，以便以不同顏色呈現快捷標籤！
-            FACILITIES = list.map(item => {
+            // Keep all facilities searchable in database
+            FACILITIES = allFacs.map(item => {
               const replyStatus = REPLIED_MAP[String(item.id)] || REPLIED_MAP[item.facility_name] || REPLIED_MAP[item.short_name] || null;
               return {
                 id: item.id,
@@ -833,8 +810,6 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
                 replied_status: replyStatus
               };
             });
-            
-            // Loaded Facilities count log removed
           }
         }
       } catch (err) {
@@ -860,21 +835,22 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
       const container = $("quickSelectContainer");
       if (!container) return;
       
-      const targetList = FACILITIES.filter(f => f.id !== 'other');
+      // Only display designated facilities matching TARGET_FACILITY_IDS
+      const targetStrIds = TARGET_FACILITY_IDS.map(id => String(id));
+      const targetList = FACILITIES.filter(f => f.id !== 'other' && targetStrIds.includes(String(f.id)));
+      
       if (targetList.length === 0) {
         container.innerHTML = `<span style="font-size: 13px; color: var(--danger); font-weight: 800; display: block; margin-top: 8px;">⚠️ 此案件已無待回覆的指派機構，或此連結已失效。</span>`;
         return;
       }
       
-      const getStatusSuffix = (status) => {
-        if (status === 'accept') return ' ✅';
-        if (status === 'coordinate') return ' ⚠️';
-        if (status === 'reject') return ' ❌';
-        return '';
+      const getStatusIcon = (status) => {
+        if (status) return '✓';
+        return '🏥';
       };
       
       const getStatusClass = (status) => {
-        if (status) return ` replied-${status}`;
+        if (status) return ' replied';
         return '';
       };
       
@@ -885,7 +861,7 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
         <div style="display:flex; gap:8px; flex-wrap:wrap; width: 100%;">
           ${targetList.map(f => `
             <button type="button" class="quick-fac-btn${getStatusClass(f.replied_status)}" id="quickFac_${f.id}" onclick="selectQuickFacility('${f.id}')">
-              🏥 ${f.short_name || f.name}${getStatusSuffix(f.replied_status)}
+              ${getStatusIcon(f.replied_status)} ${f.short_name || f.name}
             </button>
           `).join("")}
         </div>
@@ -1154,6 +1130,17 @@ ${formatServiceCodes(data.service_codes)}`;
         $("facilityOther").value = "";
       }
 
+      // Check designation status
+      const designationWarning = $("designationWarning");
+      if (designationWarning) {
+        const isDesignated = TARGET_FACILITY_IDS.map(id => String(id)).includes(String(item.id)) || item.id === 'other';
+        if (!isDesignated) {
+          designationWarning.style.display = "block";
+        } else {
+          designationWarning.style.display = "none";
+        }
+      }
+
       highlightQuickBtn(item.id);
       hideFacilityDropdown();
       return true;
@@ -1221,8 +1208,10 @@ ${formatServiceCodes(data.service_codes)}`;
       }
 
       // 限定名單檢查
-      if (TARGET_FACILITY_IDS.length > 0 && (!selectedFacility || !TARGET_FACILITY_IDS.includes(String(selectedFacility.id)))) {
-        showStatus("error", "抱歉，您的機構不在本次案件的派案名單中，無法送出回覆。");
+      const targetStrIds = TARGET_FACILITY_IDS.map(id => String(id));
+      const isDesignated = selectedFacility && targetStrIds.includes(String(selectedFacility.id));
+      if (!isDesignated) {
+        showStatus("error", "非本次指定回復機構，無法送出回覆。如果疑似系統問題，請立即回報。");
         return;
       }
 
@@ -1297,6 +1286,8 @@ ${formatServiceCodes(data.service_codes)}`;
       selectedFacility = null;
       $("facilityOtherWrap").classList.add("hidden");
       $("facilityOther").value = "";
+      const designationWarning = $("designationWarning");
+      if (designationWarning) designationWarning.style.display = "none";
       renderFacilityDropdown(e.target.value);
     });
 
