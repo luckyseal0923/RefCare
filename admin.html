@@ -1399,11 +1399,46 @@
       displayList = Array.from(allTargetIds).map(id => {
         const fac = allFacilities.find(f => String(f.id) === id);
         const reply = replies.find(r => String(r.facility_id) === id || (fac && r.facility_name === fac.name));
+        
+        let reporter = '未提供';
+        let cleanNote = reply ? (reply.note || '無備註') : '尚未回覆';
+        let replyTimeStr = '';
+
+        if (reply) {
+          // 支援獨立的 reporter 欄位或從 note 中正則解析填報者
+          if (reply.reporter) {
+            reporter = reply.reporter;
+          } else if (reply.note) {
+            const match = reply.note.match(/填報者：\s*(.+)$/);
+            if (match) {
+              reporter = match[1].trim();
+              cleanNote = reply.note.replace(/\n?填報者：\s*(.+)$/, '').trim() || '無備註';
+            }
+          }
+
+          if (reply.created_at) {
+            try {
+              replyTimeStr = new Date(reply.created_at).toLocaleString('zh-TW', {
+                hour12: false,
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+              });
+            } catch (e) {
+              replyTimeStr = '';
+            }
+          }
+        }
+
         return {
           id,
           name: fac ? fac.name : (reply ? reply.facility_name : '未知機構'),
           status: reply ? reply.reply_status : 'pending',
-          note: reply ? (reply.note || '無備註') : '尚未回覆',
+          note: cleanNote,
+          reporter,
+          replyTimeStr,
           phone: fac ? fac.phone : '未知電話'
         };
       });
@@ -1418,8 +1453,16 @@
                 r.status==='coordinate' ? '<span style="color:var(--amber);">⚠️ 待協調</span>' : '<span style="color:var(--muted);">⌛ 待回覆</span>'}
             </span>
           </div>
-          <div style="font-size:13px; color:var(--muted); margin-top:4px;">電話：${r.phone}</div>
-          <div style="margin-top:10px; background:#fff; padding:10px; border-radius:10px; font-size:13px; border:1px solid #eef2f7;">${r.note}</div>
+          <div style="font-size:13px; color:var(--muted); margin-top:6px; display:flex; flex-direction:column; gap:4px;">
+            <div>📞 電話：${r.phone}</div>
+            ${r.status !== 'pending' ? `
+              <div style="display:flex; align-items:center; gap:12px; margin-top:2px; font-weight:800; color:#3b82f6;">
+                <span>🕒 回覆時間：${r.replyTimeStr || '--'}</span>
+                <span>👤 填報者：${r.reporter}</span>
+              </div>
+            ` : ''}
+          </div>
+          <div style="margin-top:10px; background:#fff; padding:10px; border-radius:10px; font-size:13px; border:1px solid #eef2f7; white-space:pre-wrap;">${r.note}</div>
         </div>
       `).join("");
 
