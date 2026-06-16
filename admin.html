@@ -771,6 +771,31 @@
       <div id="loginError" style="margin-top: 16px; color: var(--rose); font-size: 13px; text-align: center; font-weight: 800; display: none;"></div>
     </div>
   </div>
+  <!-- Close Case Auth Overlay -->
+  <div id="closeCaseAuthOverlay" class="admin-login-overlay" style="display: none;">
+    <div class="admin-login-card">
+      <div class="login-brand">
+        <div class="login-logo">R</div>
+        <div>
+          <div style="font-weight: 950; font-size: 18px;">結案身分驗證</div>
+          <div style="font-size: 13px; color: #64748b;">結案前請再次輸入帳號密碼</div>
+        </div>
+      </div>
+      <div class="edit-field" style="margin-bottom: 16px;">
+        <label>管理員員編</label>
+        <input type="text" id="authEmpId" placeholder="請輸入員編">
+      </div>
+      <div class="edit-field" style="margin-bottom: 24px;">
+        <label>登入密碼</label>
+        <input type="password" id="authPassword" placeholder="請輸入密碼">
+      </div>
+      <div style="display: flex; gap: 12px;">
+        <button class="btn btn-muted" style="flex: 1; height: 50px; font-size: 16px;" onclick="cancelCloseCaseAuth()">取消</button>
+        <button class="btn btn-primary" style="flex: 1; height: 50px; font-size: 16px;" onclick="confirmCloseCaseAuth()">確認結案</button>
+      </div>
+      <div id="authError" style="margin-top: 16px; color: var(--rose); font-size: 13px; text-align: center; font-weight: 800; display: none;"></div>
+    </div>
+  </div>
   <div class="admin-shell">
     <aside class="sidebar">
       <div class="brand">
@@ -1819,15 +1844,59 @@
       } catch (err) { alert("刪除失敗：" + err.message); }
     }
 
-    async function closeCase(id) {
-      if (!confirm("確定結案？系統將發送通知給醫院個管師。")) return;
+    let pendingCloseCaseId = null;
+    function closeCase(id) {
+      pendingCloseCaseId = id;
+      $("authEmpId").value = "";
+      $("authPassword").value = "";
+      $("authError").style.display = "none";
+      $("closeCaseAuthOverlay").style.display = "flex";
+    }
+
+    function cancelCloseCaseAuth() {
+      pendingCloseCaseId = null;
+      $("closeCaseAuthOverlay").style.display = "none";
+    }
+
+    async function confirmCloseCaseAuth() {
+      if (!pendingCloseCaseId) return;
+      const eid = $("authEmpId").value.trim();
+      const pwd = $("authPassword").value.trim();
+      if (!eid || !pwd) {
+        $("authError").textContent = "請輸入員編與密碼";
+        $("authError").style.display = "block";
+        return;
+      }
+
+      const errEl = $("authError");
+      errEl.style.display = "none";
+
       try {
-        const { error } = await sb.from('cases').update({ status: '案件結案' }).eq('case_id', id);
-        if (error) throw error;
+        const { data, error } = await sb.from('case_managers')
+          .select('*')
+          .eq('emp_id', eid)
+          .eq('password', pwd)
+          .single();
+        
+        if (error || !data) {
+          errEl.textContent = "員編或密碼錯誤，請重新輸入";
+          errEl.style.display = "block";
+          return;
+        }
+
+        // Auth success, close overlay and update status
+        $("closeCaseAuthOverlay").style.display = "none";
+        
+        const { error: updateErr } = await sb.from('cases').update({ status: '案件結案' }).eq('case_id', pendingCloseCaseId);
+        if (updateErr) throw updateErr;
+        
         alert("已結案");
+        pendingCloseCaseId = null;
         fetchData();
         closeDrawer();
-      } catch (err) { alert("結案失敗"); }
+      } catch (err) { 
+        alert("結案失敗：" + err.message); 
+      }
     }
 
     function copyFacilityLink(id) {
