@@ -487,6 +487,7 @@
     .status-badge.matching { background: #fff7ed; color: #c2410c; border: 1px solid #fdba74; }
     .status-badge.done { background: #f5f3ff; color: #7c3aed; border: 1px solid #c4b5fd; }
     .status-badge.closed { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; }
+    .status-badge.danger { background: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; }
 
     .reply-block { min-width: 160px; }
     .reply-text { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; margin-bottom: 8px; color: #475569; font-weight: 800; white-space: nowrap; }
@@ -1074,7 +1075,7 @@
               <div class="toolbar-body">
                 <div class="filter-grid">
                   <div class="field"><input id="searchInput" placeholder="搜尋案件編號、個案姓名、機構或關鍵字" /></div>
-                  <div class="field"><select id="statusFilter"><option value="all">全部狀態</option><option value="一輪媒合中">一輪媒合中</option><option value="二輪媒合中">二輪媒合中</option><option value="三輪媒合中">三輪媒合中</option><option value="案件結案">案件結案</option></select></div>
+                  <div class="field"><select id="statusFilter"><option value="all">全部派案模式</option><option value="指定機構">指定機構</option><option value="合作機構(一輪)">合作機構(一輪)</option><option value="全區機構(二輪)">全區機構(二輪)</option><option value="困難派案(三輪)">困難派案(三輪)</option><option value="案件結案">案件結案</option></select></div>
                   <div class="field"><select id="hospitalFilter"><option value="all">全部個管師</option></select></div>
                   <div class="field"><select id="sortFilter"><option value="newest">時間：新到舊</option><option value="oldest">時間：舊到新</option></select></div>
                   <div class="field"><button class="btn btn-muted" style="width:100%; height:46px;" onclick="resetFilters()">重設篩選</button></div>
@@ -1100,7 +1101,7 @@
                       <th>個案資訊</th>
                       <th>個管師</th>
                       <th style="width: 220px; max-width: 220px;">個案摘要</th>
-                      <th>媒合狀態</th>
+                      <th>派案模式</th>
                       <th>機構回覆進度</th>
                       <th>管理操作</th>
                     </tr>
@@ -1544,12 +1545,19 @@
       const hFilter = $("hospitalFilter").value;
       const fSort = $("sortFilter").value;
 
-      const filtered = allCases.filter(c => {
+      let filtered = allCases.filter(c => {
         const matchQ = c.patient_name.toLowerCase().includes(q) || c.case_id.toLowerCase().includes(q) || c.diagnosis.toLowerCase().includes(q);
-        const matchStatus = sFilter === 'all' || c.status === sFilter;
         const matchManager = hFilter === 'all' || c.case_manager === hFilter;
         
-        // 邏輯調整：儀表板僅顯示未結案，歷史案件僅顯示已結案
+        let matchStatus = true;
+        if (sFilter !== 'all') {
+          if (sFilter === '案件結案') {
+            matchStatus = c.status === '案件結案';
+          } else {
+            matchStatus = c.target_group === sFilter || (!c.target_group && sFilter === '指定機構');
+          }
+        }
+        
         const isClosed = c.status === '案件結案';
         const matchView = (currentViewMode === 'dashboard' && !isClosed) || (currentViewMode === 'cases' && isClosed);
         
@@ -1571,7 +1579,8 @@
         $("tableBody").innerHTML = filtered.map((c, idx) => {
           const dateStr = new Date(c.created_at).toLocaleString('zh-TW', { hour12: false, year: 'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
           const progress = getReplyProgress(c);
-          const badgeClass = getBadgeClass(c.status);
+          const badgeClass = getGroupBadgeClass(c.target_group, c.status);
+          const displayGroup = c.status === '案件結案' ? '案件結案' : (c.target_group || '指定機構');
           const needTag = c.service_type || '未分類';
 
           const actionBtn = c.status === '案件結案'
@@ -1591,7 +1600,7 @@
                   ${c.case_summary || c.diagnosis || '無摘要'}
                 </div>
               </td>
-              <td><span class="status-badge ${badgeClass}">● ${c.status}</span></td>
+              <td><span class="status-badge ${badgeClass}">● ${displayGroup}</span></td>
               <td>
                 <div class="reply-block">
                   <div class="reply-text"><span>已回覆</span><strong>${progress.replied} / ${progress.total}</strong></div>
@@ -1627,11 +1636,13 @@
       return { total, replied, percent };
     }
 
-    function getBadgeClass(s) {
-      if (s === '一輪媒合中' || s === '合作機構(一輪)') return 'pending';
-      if (s === '二輪媒合中' || s === '三輪媒合中' || s === '指定機構') return 'matching';
+    function getGroupBadgeClass(g, s) {
       if (s === '案件結案') return 'closed';
-      return 'done';
+      if (g === '合作機構(一輪)') return 'pending'; // blue
+      if (g === '全區機構(二輪)') return 'done'; // purple
+      if (g === '困難派案(三輪)') return 'danger'; // red
+      if (g === '指定機構') return 'matching'; // orange
+      return 'matching'; // orange (default fallback)
     }
 
     // --- 查看詳情 ---
