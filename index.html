@@ -2096,7 +2096,11 @@
         target_group_line_id: targetGroupLineId,
         target_facility_ids: Array.from(selectedFacIds),
         total_targets: selectedFacIds.size,
-        status: "一輪媒合中"
+        status: (function() {
+          if (targetGroupVal === "全區機構(二輪)") return "二輪媒合中";
+          if (targetGroupVal === "困難派案(三輪)") return "三輪媒合中";
+          return "一輪媒合中";
+        })()
       };
 
       if (!formData.hospital || !formData.case_manager || !formData.gender || !formData.age || !formData.service_type) {
