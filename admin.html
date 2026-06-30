@@ -1297,6 +1297,38 @@
     </div>
   </div>
 
+  <!-- Edit Manager Modal -->
+  <div class="mgr-overlay" id="editMgrOverlay" onclick="if(event.target===this)closeEditMgrModal()" style="z-index: 2500;">
+    <div class="mgr-modal" style="max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;">
+      <div class="mgr-modal-head">
+        <h2>✏️ 編輯帳號資料</h2>
+        <button class="mgr-modal-close" onclick="closeEditMgrModal()">×</button>
+      </div>
+      <div class="mgr-modal-body" style="padding: 20px;">
+        <div class="mgr-form-grid" style="grid-template-columns: 1fr; gap: 15px;">
+          <div class="field"><label>姓名</label><input type="text" id="editMName" placeholder="全名"></div>
+          <div class="field"><label>登入員編</label><input type="text" id="editMEmpId" placeholder="員編 (必填)"></div>
+          <div class="field"><label>登入密碼</label><input type="text" id="editMPassword" placeholder="密碼 (必填)"></div>
+          <div class="field">
+            <label>權限層級</label>
+            <select id="editMRole">
+              <option value="個案管理師">個案管理師</option>
+              <option value="系統管理員">系統管理員</option>
+            </select>
+          </div>
+          <div class="field"><label>電子信箱</label><input type="text" id="editMEmail" placeholder="電子信箱 (Email)"></div>
+          <div class="field"><label>手機號碼</label><input type="text" id="editMPhone" placeholder="手機門號"></div>
+          <div class="field"><label>所屬醫院/單位</label><input type="text" id="editMHospital" placeholder="例如：萬芳醫院急診"></div>
+          <div class="field"><label>院內 GSM 代碼</label><input type="text" id="editMExt" placeholder="GSM"></div>
+          <div style="display: flex; gap: 12px; margin-top: 10px; width: 100%;">
+            <button class="btn btn-primary" type="button" onclick="saveManagerEdit()" style="height:48px; flex:1; box-shadow: 0 4px 12px rgba(99,102,241,0.2);">儲存修改</button>
+            <button class="btn btn-light" type="button" onclick="closeEditMgrModal()" style="height:48px; flex:1; border: 1px solid #cbd5e1;">取消</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     // --- 核心邏輯 ---
     const sb = window.supabaseClient;
@@ -2159,56 +2191,30 @@
     }
 
     function openManagerModal() { $("mgrOverlay").classList.add("show"); loadManagers(); }
-    function closeMgrModal() { $("mgrOverlay").classList.remove("show"); cancelManagerEdit(); }
+    function closeMgrModal() { $("mgrOverlay").classList.remove("show"); }
 
     function startEditManager(id) {
       const m = managersList.find(item => item.id === id);
       if (!m) return;
       editingManagerId = id;
       
-      // Populate inputs
-      $("addMEmpId").value = m.emp_id || "";
-      $("addMPassword").value = m.password || "";
-      $("addMRole").value = m.role || "個案管理師";
-      $("addMName").value = m.name || "";
-      $("addMEmail").value = m.email || "";
-      $("addMPhone").value = m.phone || "";
-      $("addMHospital").value = m.hospital || "";
-      $("addMExt").value = m.ext || "";
+      // Populate inputs in Edit Modal
+      $("editMName").value = m.name || "";
+      $("editMEmpId").value = m.emp_id || "";
+      $("editMPassword").value = m.password || "";
+      $("editMRole").value = m.role || "個案管理師";
+      $("editMEmail").value = m.email || "";
+      $("editMPhone").value = m.phone || "";
+      $("editMHospital").value = m.hospital || "";
+      $("editMExt").value = m.ext || "";
 
-      // Change title
-      $("mgrAddTitle").innerHTML = `<span style="font-size:20px;">📝</span> 編輯帳號資料 (員編: ${m.emp_id})`;
-
-      // Change buttons
-      $("mgrBtnWrap").style.display = "flex";
-      $("mgrBtnWrap").style.gap = "10px";
-      $("mgrBtnWrap").innerHTML = `
-        <button class="btn btn-primary" type="button" onclick="saveManagerEdit()" style="height:48px; flex:1; box-shadow: 0 4px 12px rgba(99,102,241,0.2);">儲存修改</button>
-        <button class="btn btn-light" type="button" onclick="cancelManagerEdit()" style="height:48px; flex:1; border: 1px solid #cbd5e1;">取消</button>
-      `;
+      // Show Edit Modal
+      $("editMgrOverlay").classList.add("show");
     }
 
-    function cancelManagerEdit() {
+    function closeEditMgrModal() {
       editingManagerId = null;
-
-      // Clear inputs
-      $("addMEmpId").value = "";
-      $("addMPassword").value = "";
-      $("addMRole").value = "個案管理師";
-      $("addMName").value = "";
-      $("addMEmail").value = "";
-      $("addMPhone").value = "";
-      $("addMHospital").value = "";
-      $("addMExt").value = "";
-
-      // Restore title
-      $("mgrAddTitle").innerHTML = `<span style="font-size:20px;">＋</span> 建立新帳號`;
-
-      // Restore buttons
-      $("mgrBtnWrap").removeAttribute("style");
-      $("mgrBtnWrap").innerHTML = `
-        <button class="btn btn-primary" type="button" onclick="addManager()" style="height:48px; width:100%; box-shadow: 0 4px 12px rgba(99,102,241,0.2);">建立帳號</button>
-      `;
+      $("editMgrOverlay").classList.remove("show");
     }
 
     async function saveManagerEdit() {
@@ -2216,14 +2222,14 @@
       if (!(await checkAdminPrivilege())) return;
 
       const updates = {
-        emp_id: $("addMEmpId").value.trim(),
-        password: $("addMPassword").value.trim(),
-        role: $("addMRole").value,
-        name: $("addMName").value.trim(),
-        email: $("addMEmail").value.trim(),
-        phone: $("addMPhone").value.trim(),
-        hospital: $("addMHospital").value.trim(),
-        ext: $("addMExt").value.trim()
+        emp_id: $("editMEmpId").value.trim(),
+        password: $("editMPassword").value.trim(),
+        role: $("editMRole").value,
+        name: $("editMName").value.trim(),
+        email: $("editMEmail").value.trim(),
+        phone: $("editMPhone").value.trim(),
+        hospital: $("editMHospital").value.trim(),
+        ext: $("editMExt").value.trim()
       };
 
       if (!updates.emp_id || !updates.password || !updates.name) {
@@ -2238,7 +2244,7 @@
         if (error) throw error;
 
         alert("帳號資料修改成功！");
-        cancelManagerEdit();
+        closeEditMgrModal();
         loadManagers();
       } catch (err) {
         alert("儲存修改失敗：" + err.message);
