@@ -1266,7 +1266,7 @@
       </div>
       <div class="mgr-modal-body">
         <div class="mgr-add-section">
-          <div style="font-weight:900; margin-bottom:20px; display:flex; align-items:center; gap:8px;">
+          <div id="mgrAddTitle" style="font-weight:900; margin-bottom:20px; display:flex; align-items:center; gap:8px;">
             <span style="font-size:20px;">＋</span> 建立新帳號
           </div>
           <div class="mgr-form-grid">
@@ -1285,7 +1285,7 @@
             
             <div class="field"><label>所屬醫院/單位</label><input type="text" id="addMHospital" placeholder="例如：萬芳醫院急診"></div>
             <div class="field"><label>院內 GSM 代碼</label><input type="text" id="addMExt" placeholder="GSM"></div>
-            <div class="btn-wrap">
+            <div class="btn-wrap" id="mgrBtnWrap">
               <button class="btn btn-primary" type="button" onclick="addManager()" style="height:48px; width:100%; box-shadow: 0 4px 12px rgba(99,102,241,0.2);">建立帳號</button>
             </div>
           </div>
@@ -2115,11 +2115,14 @@
 
     // --- 帳號管理 ---
     let managersList = [];
+    let editingManagerId = null;
+
     async function loadManagers() {
       const { data } = await sb.from('case_managers').select('*').order('name');
       managersList = data || [];
       renderManagers();
     }
+
     function renderManagers() {
       $("managerTableBody").className = "mgr-grid";
       $("managerTableBody").innerHTML = managersList.map(m => {
@@ -2145,16 +2148,102 @@
               <div class="mgr-card-item"><span class="mgr-card-label">📟 GSM 代碼</span> <span class="mgr-card-val">${m.ext || '--'}</span></div>
               <div class="mgr-card-item"><span class="mgr-card-label">⚡ 啟用狀態</span> <span class="mgr-card-val">${statusBadge}</span></div>
             </div>
-            <div class="mgr-card-actions" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <div class="mgr-card-actions" style="display: flex; gap: 8px; justify-content: flex-end; align-items: center; width: 100%; flex-wrap: wrap;">
               ${approveAction}
+              <span class="mgr-del-link" style="color: #0f766e; cursor: pointer; font-weight: bold;" onclick="startEditManager('${m.id}')">✏️ 編輯</span>
               <span class="mgr-del-link" onclick="deleteManager('${m.id}')">⚠️ 註銷帳號</span>
             </div>
           </div>
         `;
       }).join("") || '<div style="grid-column: 1/-1; text-align:center; padding:40px; color:var(--muted);">目前無任何管理帳號。</div>';
     }
+
     function openManagerModal() { $("mgrOverlay").classList.add("show"); loadManagers(); }
-    function closeMgrModal() { $("mgrOverlay").classList.remove("show"); }
+    function closeMgrModal() { $("mgrOverlay").classList.remove("show"); cancelManagerEdit(); }
+
+    function startEditManager(id) {
+      const m = managersList.find(item => item.id === id);
+      if (!m) return;
+      editingManagerId = id;
+      
+      // Populate inputs
+      $("addMEmpId").value = m.emp_id || "";
+      $("addMPassword").value = m.password || "";
+      $("addMRole").value = m.role || "個案管理師";
+      $("addMName").value = m.name || "";
+      $("addMEmail").value = m.email || "";
+      $("addMPhone").value = m.phone || "";
+      $("addMHospital").value = m.hospital || "";
+      $("addMExt").value = m.ext || "";
+
+      // Change title
+      $("mgrAddTitle").innerHTML = `<span style="font-size:20px;">📝</span> 編輯帳號資料 (員編: ${m.emp_id})`;
+
+      // Change buttons
+      $("mgrBtnWrap").style.display = "flex";
+      $("mgrBtnWrap").style.gap = "10px";
+      $("mgrBtnWrap").innerHTML = `
+        <button class="btn btn-primary" type="button" onclick="saveManagerEdit()" style="height:48px; flex:1; box-shadow: 0 4px 12px rgba(99,102,241,0.2);">儲存修改</button>
+        <button class="btn btn-light" type="button" onclick="cancelManagerEdit()" style="height:48px; flex:1; border: 1px solid #cbd5e1;">取消</button>
+      `;
+    }
+
+    function cancelManagerEdit() {
+      editingManagerId = null;
+
+      // Clear inputs
+      $("addMEmpId").value = "";
+      $("addMPassword").value = "";
+      $("addMRole").value = "個案管理師";
+      $("addMName").value = "";
+      $("addMEmail").value = "";
+      $("addMPhone").value = "";
+      $("addMHospital").value = "";
+      $("addMExt").value = "";
+
+      // Restore title
+      $("mgrAddTitle").innerHTML = `<span style="font-size:20px;">＋</span> 建立新帳號`;
+
+      // Restore buttons
+      $("mgrBtnWrap").removeAttribute("style");
+      $("mgrBtnWrap").innerHTML = `
+        <button class="btn btn-primary" type="button" onclick="addManager()" style="height:48px; width:100%; box-shadow: 0 4px 12px rgba(99,102,241,0.2);">建立帳號</button>
+      `;
+    }
+
+    async function saveManagerEdit() {
+      if (!editingManagerId) return;
+      if (!(await checkAdminPrivilege())) return;
+
+      const updates = {
+        emp_id: $("addMEmpId").value.trim(),
+        password: $("addMPassword").value.trim(),
+        role: $("addMRole").value,
+        name: $("addMName").value.trim(),
+        email: $("addMEmail").value.trim(),
+        phone: $("addMPhone").value.trim(),
+        hospital: $("addMHospital").value.trim(),
+        ext: $("addMExt").value.trim()
+      };
+
+      if (!updates.emp_id || !updates.password || !updates.name) {
+        return alert("請填寫必填欄位");
+      }
+
+      try {
+        const { error } = await sb.from('case_managers')
+          .update(updates)
+          .eq('id', editingManagerId);
+
+        if (error) throw error;
+
+        alert("帳號資料修改成功！");
+        cancelManagerEdit();
+        loadManagers();
+      } catch (err) {
+        alert("儲存修改失敗：" + err.message);
+      }
+    }
     
     async function toggleManagerApproval(id, approvedState) {
       if (!(await checkAdminPrivilege())) return;
