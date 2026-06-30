@@ -2973,6 +2973,7 @@
               <div style="display:flex; gap:8px; align-items:center;">
                 <input id="note-${fb.id}" type="text" value="${currentNote.replace(/"/g, '&quot;')}" placeholder="點此輸入處理進度/紀錄" style="height:36px; flex:1; padding:0 10px; border-radius:10px; font-size:13px; border:1px solid var(--line);" />
                 <button class="btn btn-primary" onclick="saveFeedbackNote('${fb.id}')" style="min-height:36px; height:36px; padding:0 12px; border-radius:10px; font-size:13px;">儲存</button>
+                <button class="btn btn-danger" onclick="deleteFeedback('${fb.id}')" style="min-height:36px; height:36px; padding:0 12px; border-radius:10px; font-size:13px;">刪除</button>
               </div>
             </td>
           </tr>
@@ -3021,6 +3022,20 @@
         }
       } catch (err) {
         alert("儲存紀錄失敗：" + err.message);
+      }
+    }
+    async function deleteFeedback(id) {
+      if (!(await checkAdminPrivilege())) return;
+      if (!confirm("確定要刪除這筆回報紀錄嗎？此動作無法復原。")) return;
+      
+      try {
+        const { error } = await sb.from('platform_feedbacks').delete().eq('id', id);
+        if (error) throw error;
+        
+        alert("回報紀錄已成功刪除！");
+        loadFeedbacks();
+      } catch (err) {
+        alert("刪除失敗：" + err.message);
       }
     }
   </script>
