@@ -391,6 +391,17 @@
       font-size: 14px;
       white-space: nowrap;
       backdrop-filter: blur(4px);
+      color: #ffffff;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .header-pill:hover {
+      background: rgba(255, 255, 255, 0.25);
+      border-color: rgba(255, 255, 255, 0.4);
+      transform: translateY(-1px);
     }
 
     /* Layout */
@@ -1256,7 +1267,7 @@
         <p class="brand-subtitle">建立安置轉介案件，快速通知合作機構，並自動追蹤回覆狀態。</p>
       </div>
       <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 12px;">
-        <div class="header-pill">醫院端起案系統｜正式運行版</div>
+        <a href="admin.html" class="header-pill">⚙️ 後台管理系統</a>
         <a href="javascript:void(0)" class="feedback-link" id="feedbackLink">💬 平台使用狀況回報</a>
       </div>
     </div>
