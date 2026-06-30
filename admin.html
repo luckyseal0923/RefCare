@@ -1906,7 +1906,12 @@
       $("detailDrawer").classList.add("show");
     }
 
-    const N8N_WEBHOOK_URL = "https://n8nwfh.zeabur.app/webhook/case_bluiding";
+    const N8N_WEBHOOKS = {
+      individual: "https://n8nwfh.zeabur.app/webhook/case_individual",
+      cooperate: "https://n8nwfh.zeabur.app/webhook/case_cooperate",
+      all_areas: "https://n8nwfh.zeabur.app/webhook/case_all_areas",
+      difficult: "https://n8nwfh.zeabur.app/webhook/case_difficult"
+    };
 
     async function saveEdit(sendNotification) {
       if (sendNotification) {
@@ -1973,7 +1978,17 @@
             ...data,
             notify_type: "update"
           };
-          fetch(N8N_WEBHOOK_URL, {
+          
+          let webhookUrl = N8N_WEBHOOKS.individual;
+          if (data.target_group === "合作機構(一輪)") {
+            webhookUrl = N8N_WEBHOOKS.cooperate;
+          } else if (data.target_group === "全區機構(二輪)") {
+            webhookUrl = N8N_WEBHOOKS.all_areas;
+          } else if (data.target_group === "困難派案(三輪)") {
+            webhookUrl = N8N_WEBHOOKS.difficult;
+          }
+
+          fetch(webhookUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)

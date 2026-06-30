@@ -1879,7 +1879,8 @@
         }
         renderSelectedFacList();
       } else if (mode === '全區機構(二輪)' || mode === '困難派案(三輪)') {
-        const group = facGroups.find(g => g.name === '全區機構');
+        const targetDbName = mode === '全區機構(二輪)' ? '全區機構' : '困難派案(三輪)';
+        const group = facGroups.find(g => g.name === targetDbName);
         if (group && group.facility_ids) {
           selectedFacIds = new Set(group.facility_ids.map(id => String(id)));
         } else {
@@ -2026,8 +2027,10 @@
       let dbGroupName = "";
       if (targetGroupVal === "合作機構(一輪)") {
         dbGroupName = "北區合作機構";
-      } else if (targetGroupVal === "全區機構(二輪)" || targetGroupVal === "困難派案(三輪)") {
+      } else if (targetGroupVal === "全區機構(二輪)") {
         dbGroupName = "全區機構";
+      } else if (targetGroupVal === "困難派案(三輪)") {
+        dbGroupName = "困難派案(三輪)";
       }
 
       if (dbGroupName) {
@@ -2102,7 +2105,17 @@
         if (error) throw error;
         
         showStatus("success", "✅ 案件建立成功！");
-        fetch(N8N_WEBHOOKS.createCase, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
+        // 依照派案模式路由到不同的 Webhook
+        let webhookUrl = N8N_WEBHOOKS.individual;
+        if (targetGroupVal === "合作機構(一輪)") {
+          webhookUrl = N8N_WEBHOOKS.cooperate;
+        } else if (targetGroupVal === "全區機構(二輪)") {
+          webhookUrl = N8N_WEBHOOKS.all_areas;
+        } else if (targetGroupVal === "困難派案(三輪)") {
+          webhookUrl = N8N_WEBHOOKS.difficult;
+        }
+        
+        fetch(webhookUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
         
         setTimeout(() => { location.reload(); }, 1500);
       } catch (err) {
