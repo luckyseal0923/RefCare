@@ -1340,7 +1340,11 @@
     };
     const N8N_WEBHOOKS = {
       closeCase: "https://chihwei.zeabur.app/webhook/case_closed",
-      updateCase: "https://chihwei.zeabur.app/webhook/case_updated"
+      updateCase: "https://chihwei.zeabur.app/webhook/case_updated",
+      individual: "https://n8nwfh.zeabur.app/webhook/case_individual",
+      cooperate: "https://n8nwfh.zeabur.app/webhook/case_cooperate",
+      all_areas: "https://n8nwfh.zeabur.app/webhook/case_all_areas",
+      difficult: "https://n8nwfh.zeabur.app/webhook/case_difficult"
     };
 
     let allCases = [];
@@ -1906,12 +1910,6 @@
       $("detailDrawer").classList.add("show");
     }
 
-    const N8N_WEBHOOKS = {
-      individual: "https://n8nwfh.zeabur.app/webhook/case_individual",
-      cooperate: "https://n8nwfh.zeabur.app/webhook/case_cooperate",
-      all_areas: "https://n8nwfh.zeabur.app/webhook/case_all_areas",
-      difficult: "https://n8nwfh.zeabur.app/webhook/case_difficult"
-    };
 
     async function saveEdit(sendNotification) {
       if (sendNotification) {
