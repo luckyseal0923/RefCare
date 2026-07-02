@@ -620,7 +620,7 @@
         <div class="info-item">
           <div class="info-label">服務時段 / 服務碼別</div>
           <div class="info-value" id="serviceNeedView">週一至週五白天
-BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
+BA01 基本身體清潔、BA04 協助餵食、BA12 肢體關節活動</div>
         </div>
         <div class="info-item">
           <div class="info-label">案況簡述</div>
@@ -928,7 +928,7 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
         service_codes: params.get("service_codes") || encodeURIComponent(JSON.stringify([
           "BA01 基本身體清潔",
           "BA04 協助餵食或灌食",
-          "BA11 肢體關節活動"
+          "BA12 肢體關節活動"
         ])),
         case_summary: params.get("case_summary") || "個案與女兒同住，主要照顧者白天需上班，返家前希望先銜接居家服務，協助清潔、移位與進食照顧。",
         special: params.get("special") || params.get("special_need_long") || "高跌倒風險、需女性居服員",
@@ -1005,12 +1005,12 @@ BA01 基本身體清潔、BA04 協助餵食、BA11 肢體關節活動</div>
 ${formatServiceCodes(data.service_codes)}`;
 
       $("serviceTypeView").textContent = data.service_type || "--";
-      $("patientNameView").textContent = data.patient_name;
+      $("patientNameView").textContent = maskName(data.patient_name);
       $("basicView").textContent = `${data.age}歲 / ${data.gender}`;
       $("bodyView").textContent = bodyText;
       $("consciousnessView").textContent = data.consciousness || "--";
       $("diagnosisView").textContent = data.diagnosis;
-      $("addressView").textContent = data.address || "--";
+      $("addressView").textContent = maskAddress(data.address || "--");
       $("cmsView").textContent = data.cms_level;
       $("mobilityView").textContent = data.mobility;
       $("consciousnessEvalView").textContent = data.consciousness || "--";
@@ -1049,6 +1049,45 @@ ${formatServiceCodes(data.service_codes)}`;
       $("caseIdView").textContent = data.case_id || "--";
     }
 
+    function maskName(name) {
+      if (!name) return "";
+      const len = name.trim().length;
+      if (len <= 1) return name;
+      if (len === 2) return name[0] + "○";
+      const mid = Math.floor(len / 2);
+      return name.substring(0, mid) + "○" + name.substring(mid + 1);
+    }
+
+    function maskAddress(addr) {
+      if (!addr) return "";
+      const haoIndex = addr.indexOf("號");
+      if (haoIndex === -1) return addr;
+      const beforeHao = addr.substring(0, haoIndex + 1);
+      const afterHao = addr.substring(haoIndex + 1);
+
+      // Mask numbers before "弄" and "號" in beforeHao
+      let maskedBefore = beforeHao
+        .replace(/(\d+|[一二三四五六七八九十百]+)(之(\d+|[一二三四五六七八九十百]+))?\s*(弄)/g, (m, p1, p2, p3, p4) => p2 ? "○之○弄" : "○弄")
+        .replace(/(\d+|[一二三四五六七八九十百]+)(之(\d+|[一二三四五六七八九十百]+))?\s*(號)/g, (m, p1, p2, p3, p4) => p2 ? "○之○號" : "○號");
+
+      // Mask details in afterHao but keep floor
+      let maskedAfter = "";
+      const floorRegex = /([0-9a-zA-Z一二三四五六七八九十百０-９]+)\s*(樓|F|f)/;
+      const match = afterHao.match(floorRegex);
+      if (match) {
+        const floorIndex = match.index;
+        const floorStr = match[0];
+        const prefix = afterHao.substring(0, floorIndex);
+        const suffix = afterHao.substring(floorIndex + floorStr.length);
+        const maskedPrefix = prefix.replace(/\S/g, "○");
+        const maskedSuffix = suffix.replace(/\S/g, "○");
+        maskedAfter = maskedPrefix + floorStr + maskedSuffix;
+      } else {
+        maskedAfter = afterHao.replace(/\S/g, "○");
+      }
+      return maskedBefore + maskedAfter;
+    }
+
     function formatTaiwanDateTime(utcString) {
       if (!utcString) return "--";
       try {
@@ -1066,7 +1105,7 @@ ${formatServiceCodes(data.service_codes)}`;
     }
 
     function formatServiceCodes(value) {
-      if (!value) return "BA01 基本身體清潔、BA04 餵食/灌食、BA11 關節活動";
+      if (!value) return "BA01 基本身體清潔、BA04 餵食/灌食、BA12 肢體關節活動";
 
       try {
         const decoded = decodeURIComponent(value);
@@ -1080,9 +1119,9 @@ ${formatServiceCodes(data.service_codes)}`;
 
         if (Array.isArray(parsed) && parsed.length) {
           const codeNameMap = {
-            "BA01": "基本身體清潔", "BA02": "基本日常照顧", "BA04": "餵食/灌食", "BA05": "餐食照顧", "BA07": "沐浴洗頭", "BA23": "協助洗頭", "BA24": "協助排泄", "BA10": "翻身拍背", "BA11": "關節活動",
-            "BA12": "上下樓", "BA13": "陪同外出", "BA14": "陪同就醫", "BA15-1": "家務（自用）", "BA15-2": "家務（共用）", "BA16": "代購/代送", "BA18": "安全看視", "BA20": "陪伴服務", "BA22": "巡視服務",
-            "BA03": "生命徵象", "BA17a": "氣道抽吸", "BA17b": "口鼻抽吸", "BA17c": "管路清潔", "BA17d": "血糖/通便", "BA17e": "藥盒管理", "BA08": "足部照護", "BA09": "沐浴車"
+            "BA01": "基本身體清潔", "BA02": "基本日常照顧", "BA04": "餵食/灌食", "BA05": "餐食照顧", "BA07": "沐浴洗頭", "BA23": "協助洗頭", "BA24": "協助排泄", "BA10": "翻身拍背", "BA11": "協助上下樓",
+            "BA12": "肢體關節活動", "BA13": "陪伴外出", "BA14": "陪伴就醫", "BA15-1": "家務（自用）", "BA15-2": "家務（共用）", "BA16": "代購/代送", "BA18": "安全看視", "BA20": "陪伴服務", "BA22": "巡視服務",
+            "BA03": "生命徵象", "BA17a": "氣道抽吸", "BA17b": "口鼻抽吸", "BA17c": "管路清潔", "BA17d": "血糖/通便", "BA17e": "藥盒管理", "BA08": "足部照護", "BA09": "沐浴車", "GA09": "居家喘息"
           };
 
           return parsed.map(item => {
