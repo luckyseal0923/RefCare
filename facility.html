@@ -1072,7 +1072,7 @@ ${formatServiceCodes(data.service_codes)}`;
       }
 
       $("hospitalView").textContent = data.hospital || "--";
-      $("caseManagerView").textContent = maskName(data.case_manager) || "--";
+      $("caseManagerView").textContent = data.case_manager || "--";
       $("caseManagerPhoneView").textContent = cmPhone || "--";
       $("hospitalExtView").textContent = cmExt ? `#${cmExt}` : "--";
       $("createdTimeView").textContent = formatTaiwanDateTime(data.created_at);

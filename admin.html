@@ -1408,7 +1408,8 @@
       individual: "https://n8nwfh.zeabur.app/webhook/case_individual",
       cooperate: "https://n8nwfh.zeabur.app/webhook/case_cooperate",
       all_areas: "https://n8nwfh.zeabur.app/webhook/case_all_areas",
-      difficult: "https://n8nwfh.zeabur.app/webhook/case_difficult"
+      difficult: "https://n8nwfh.zeabur.app/webhook/case_difficult",
+      remind: "https://n8nwfh.zeabur.app/webhook/case_reminder"
     };
 
     let allCases = [];
@@ -1899,7 +1900,7 @@
           </div>
         </div>
         <div style="margin-top:20px; display:flex; gap:10px;">
-          <button class="btn btn-primary" style="flex:1;" onclick="copyFacilityLink('${item.case_id}')">複製機構填寫連結</button>
+          <button class="btn btn-primary" style="flex:1;" onclick="copyFacilityLink('${item.case_id}')">發送催案提醒</button>
           ${drawerActionBtn}
         </div>
       `;
@@ -2267,9 +2268,71 @@
       }
     }
 
-    function copyFacilityLink(id) {
+    async function copyFacilityLink(id) {
       const url = window.location.origin + window.location.pathname.replace('admin.html', 'facility.html') + '?case_id=' + id;
-      navigator.clipboard.writeText(url).then(() => alert("連結已複製：\n" + url));
+      try {
+        await navigator.clipboard.writeText(url);
+      } catch (err) {
+        console.warn("Clipboard copy failed:", err);
+      }
+
+      const c = allCases.find(item => item.case_id === id);
+      if (!c) {
+        alert("找不到案件資訊");
+        return;
+      }
+
+      const targetIds = c.target_facility_ids || [];
+      const replies = c.replies || [];
+
+      const pendingFacilities = allFacilities.filter(f => {
+        const isTarget = targetIds.map(String).includes(String(f.id));
+        if (!isTarget) return false;
+        const hasReplied = replies.some(r => String(r.facility_id) === String(f.id) || r.facility_name === f.name);
+        return !hasReplied;
+      });
+
+      if (pendingFacilities.length === 0) {
+        alert("連結已複製至剪貼簿！此案件的所有目標機構皆已回覆。");
+        return;
+      }
+
+      const lineGroupIds = pendingFacilities.map(f => f.line_group_id).filter(Boolean);
+
+      if (lineGroupIds.length === 0) {
+        alert(`連結已複製至剪貼簿！\n共有 ${pendingFacilities.length} 家機構未回覆，但這些機構尚未設定 LINE 群組。`);
+        return;
+      }
+
+      const confirmSend = confirm(
+        `連結已複製至剪貼簿！\n偵測到此案件共有 ${pendingFacilities.length} 家機構尚未回覆，是否要立即透過 LINE 推送催案提醒？`
+      );
+
+      if (!confirmSend) return;
+
+      try {
+        const response = await fetch(N8N_WEBHOOKS.remind || "https://n8nwfh.zeabur.app/webhook/case_reminder", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            case_id: c.case_id,
+            hospital: c.hospital,
+            patient_name: c.patient_name,
+            gender: c.gender,
+            age: c.age,
+            service_type: c.service_type,
+            line_group_ids: lineGroupIds
+          })
+        });
+
+        if (response.ok) {
+          alert("催案提醒已成功發送！");
+        } else {
+          throw new Error("HTTP " + response.status);
+        }
+      } catch (err) {
+        alert("發送催案提醒失敗：" + err.message);
+      }
     }
 
     // --- 帳號管理 ---
