@@ -1,0 +1,4 @@
+-- 執行以下 SQL 以新增媒合成功與結案所需的欄位 (可在 Supabase SQL Editor 中執行)
+ALTER TABLE cases ADD COLUMN IF NOT EXISTS matched_facility TEXT;
+ALTER TABLE cases ADD COLUMN IF NOT EXISTS matched_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE cases ADD COLUMN IF NOT EXISTS closed_at TIMESTAMP WITH TIME ZONE;
