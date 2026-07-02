@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>REF Care｜個管師行動工作台</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-soft: #f1f5f9;
+      --text: #0f172a;
+      --text-soft: #475569;
+      --muted: #94a3b8;
+      --line: #e2e8f0;
+      --primary: #4f46e5;
+      --primary-soft: #eef2ff;
+      --indigo: #6366f1;
+      --indigo-soft: #eff6ff;
+      --green: #10b981;
+      --green-soft: #ecfdf5;
+      --amber: #f59e0b;
+      --amber-soft: #fffbeb;
+      --rose: #e11d48;
+      --rose-soft: #fff1f2;
+      --radius-lg: 20px;
+      --radius: 14px;
+      --radius-sm: 8px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Noto Sans TC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0f172a;
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    /* Mobile Container emulation */
+    .mobile-container {
+      width: 100%;
+      max-width: 480px;
+      background: var(--bg);
+      min-height: 100vh;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 0 40px rgba(0,0,0,0.5);
+    }
+
+    /* Warning Banner style */
+    .warning-banner {
+      background: #eff6ff;
+      border-bottom: 1px solid #dbeafe;
+      padding: 10px 16px;
+      font-size: 11px;
+      color: #1e40af;
+      line-height: 1.5;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      font-weight: 600;
+    }
+
+    .warning-banner svg {
+      width: 16px;
+      height: 16px;
+      fill: #1e40af;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* Header styling */
+    .app-header {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: white;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+    }
+
+    .brand-title {
+      font-weight: 900;
+      font-size: 18px;
+      letter-spacing: 0.5px;
+    }
+
+    .user-pill {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 4px 10px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-logout {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    /* Login Area */
+    .login-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 24px;
+      background: radial-gradient(circle at top, rgba(99, 102, 241, 0.1), transparent);
+    }
+
+    .login-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.05);
+      border: 1px solid var(--line);
+    }
+
+    .login-card h2 {
+      margin: 0 0 6px 0;
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    .login-card p {
+      margin: 0 0 24px 0;
+      font-size: 13px;
+      color: var(--text-soft);
+    }
+
+    .input-field {
+      margin-bottom: 16px;
+    }
+
+    .input-field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--text-soft);
+      margin-bottom: 6px;
+    }
+
+    .input-field input {
+      width: 100%;
+      height: 48px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 0 16px;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .input-field input:focus {
+      border-color: var(--indigo);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    .btn-submit {
+      width: 100%;
+      height: 50px;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.3);
+      transition: transform 0.1s;
+    }
+
+    .btn-submit:active {
+      transform: scale(0.98);
+    }
+
+    .error-msg {
+      color: var(--rose);
+      font-size: 12px;
+      font-weight: 800;
+      text-align: center;
+      margin-top: 12px;
+      display: none;
+    }
+
+    /* Main App Area */
+    .app-body {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+    }
+
+    .welcome-banner {
+      background: white;
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.02);
+      border: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .welcome-banner h3 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .welcome-banner p {
+      margin: 2px 0 0 0;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 900;
+      color: var(--text-soft);
+      margin: 0 0 12px 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Case Card styling */
+    .case-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.02);
+      border: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .case-card:active {
+      transform: scale(0.98);
+    }
+
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .patient-name {
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .patient-meta {
+      font-size: 12px;
+      color: var(--text-soft);
+      margin-top: 2px;
+    }
+
+    .badge {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 100px;
+      text-align: center;
+    }
+
+    .badge-primary { background: var(--primary-soft); color: var(--primary); }
+    .badge-amber { background: var(--amber-soft); color: var(--amber); }
+    .badge-green { background: var(--green-soft); color: var(--green); }
+    .badge-muted { background: var(--surface-soft); color: var(--text-soft); }
+
+    .card-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-soft);
+    }
+
+    /* Progress bar */
+    .progress-bar-container {
+      width: 100%;
+      background: var(--line);
+      height: 6px;
+      border-radius: 100px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--indigo);
+      border-radius: 100px;
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .btn-card-action {
+      flex: 1;
+      height: 36px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 850;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-card-action.primary {
+      background: var(--indigo-soft);
+      color: var(--indigo);
+    }
+    
+    .btn-card-action.amber {
+      background: var(--amber-soft);
+      color: var(--amber);
+    }
+
+    /* Bottom Sheet / Details panel */
+    .bottom-sheet-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .bottom-sheet-overlay.show {
+      display: block;
+      opacity: 1;
+    }
+
+    .bottom-sheet {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: var(--bg);
+      border-top-left-radius: var(--radius-lg);
+      border-top-right-radius: var(--radius-lg);
+      max-height: 85vh;
+      min-height: 50vh;
+      display: flex;
+      flex-direction: column;
+      z-index: 101;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 -10px 30px rgba(0,0,0,0.15);
+    }
+
+    .bottom-sheet.show {
+      transform: translateY(0);
+    }
+
+    .sheet-handle {
+      width: 36px;
+      height: 4px;
+      background: var(--muted);
+      border-radius: 100px;
+      margin: 12px auto 8px auto;
+      opacity: 0.5;
+    }
+
+    .sheet-header {
+      padding: 0 16px 12px 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .sheet-header h4 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .btn-close-sheet {
+      background: var(--surface-soft);
+      border: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      font-weight: 900;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sheet-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+
+    /* Info card layout inside sheet */
+    .sheet-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 14px;
+      margin-bottom: 12px;
+      border: 1px solid var(--line);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .sheet-card h5 {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text-soft);
+      border-bottom: 1px solid var(--line-soft);
+      padding-bottom: 6px;
+    }
+
+    /* Facility Reply List */
+    .reply-list-item {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line-soft);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .reply-list-item:last-child {
+      border-bottom: none;
+    }
+
+    .reply-list-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .reply-fac-name {
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .line-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 1px 6px;
+      font-size: 9px;
+      font-weight: 850;
+      color: #ffffff;
+      background: #06c755;
+      border-radius: 100px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    /* Form popup modals */
+    .dialog-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 110;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .dialog-card {
+      width: 100%;
+      max-width: 380px;
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+
+    .dialog-card h4 {
+      margin: 0 0 16px 0;
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .dialog-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .btn-dialog {
+      flex: 1;
+      height: 44px;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .btn-dialog.muted { background: var(--surface-soft); color: var(--text-soft); }
+    .btn-dialog.primary { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; }
+    .btn-dialog.amber { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+    .btn-dialog.green { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--muted);
+    }
+    
+    .empty-state svg {
+      width: 48px;
+      height: 48px;
+      fill: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .empty-state h4 {
+      margin: 0 0 6px 0;
+      color: var(--text-soft);
+      font-weight: 800;
+    }
+  </style>
+</head>
+<body>
+  <div class="mobile-container">
+    
+    <!-- Prominent Warning / Tip Banner -->
+    <div class="warning-banner">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+      </svg>
+      <div>
+        手機版為個管師行動專用，僅呈現「您的進行中個案與催辦/媒合操作」。<br/>
+        如需歷史案件、機構/群組管理、帳號維護等完整功能，請使用電腦登入網頁版。
+      </div>
+    </div>
+
+    <!-- Login Section -->
+    <div id="loginSection" class="login-wrapper">
+      <div class="login-card">
+        <h2>個管師行動登入</h2>
+        <p>請輸入您的管理員帳號與密碼</p>
+        
+        <div class="input-field">
+          <label>員工編號 (員編)</label>
+          <input type="text" id="empIdInput" placeholder="請輸入員編" autocomplete="username">
+        </div>
+        
+        <div class="input-field" style="margin-bottom: 24px;">
+          <label>登入密碼</label>
+          <input type="password" id="passwordInput" placeholder="請輸入密碼" autocomplete="current-password">
+        </div>
+        
+        <button class="btn-submit" onclick="handleLogin()">登入行動工作台</button>
+        <div id="loginErrorMsg" class="error-msg"></div>
+      </div>
+    </div>
+
+    <!-- Main App Section -->
+    <div id="appSection" style="display: none; flex: 1; flex-direction: column;">
+      
+      <!-- App Header -->
+      <header class="app-header">
+        <div class="brand-title">RefCare Mobile</div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div id="headerUserPill" class="user-pill">
+            <span id="headerUserName">--</span>
+          </div>
+          <button class="btn-logout" onclick="handleLogout()">登出</button>
+        </div>
+      </header>
+
+      <!-- App Content Area -->
+      <div class="app-body">
+        
+        <!-- Welcome Banner -->
+        <div class="welcome-banner">
+          <div>
+            <h3 id="welcomeTitle">歡迎回來，--</h3>
+            <p>目前顯示您負責的進行中案件</p>
+          </div>
+          <div class="badge badge-primary" style="font-size: 11px; padding: 6px 10px;">手機專用</div>
+        </div>
+
+        <div class="section-title">我的進行中案件</div>
+
+        <!-- Case Cards List Container -->
+        <div id="casesListContainer">
+          <!-- Dynamically populated -->
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Details Bottom Sheet -->
+    <div id="detailsOverlay" class="bottom-sheet-overlay" onclick="closeDetailsSheet()"></div>
+    <div id="detailsSheet" class="bottom-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h4 id="sheetPatientTitle">--</h4>
+        <button class="btn-close-sheet" onclick="closeDetailsSheet()">✕</button>
+      </div>
+      
+      <div class="sheet-content" id="sheetContentContainer">
+        <!-- Dynamically populated details -->
+      </div>
+    </div>
+
+    <!-- Dialog Modal: Match Success -->
+    <div id="matchSuccessDialog" class="dialog-overlay">
+      <div class="dialog-card">
+        <h4>登記媒合成功</h4>
+        <div class="input-field">
+          <label>選擇媒合機構</label>
+          <select id="dialogMatchFacilitySelect" style="width:100%; height:48px; border:1px solid var(--line); border-radius:var(--radius); padding:0 12px; font-size:14px; outline:none; background:white;"></select>
+        </div>
+        <div class="input-field">
+          <label>媒合成功時間</label>
+          <input type="datetime-local" id="dialogMatchSuccessTime">
+        </div>
+        <div id="dialogMatchError" style="color:var(--rose); font-size:12px; font-weight:800; margin-bottom:12px; display:none; text-align:center;"></div>
+        <div class="dialog-buttons">
+          <button class="btn-dialog muted" onclick="closeMatchDialog()">取消</button>
+          <button class="btn-dialog amber" onclick="submitMatchSuccess()">確認登記</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dialog Modal: Close Case -->
+    <div id="closeCaseDialog" class="dialog-overlay">
+      <div class="dialog-card">
+        <h4>案件結案身份驗證</h4>
+        <div style="font-size: 12px; color: var(--text-soft); margin-bottom: 16px; line-height: 1.4;">
+          結案前請再次驗證管理員密碼。
+        </div>
+        <div class="input-field">
+          <label>管理員員編</label>
+          <input type="text" id="dialogCloseEmpId" readonly style="background:#f1f5f9; color:#64748b;">
+        </div>
+        <div class="input-field">
+          <label>登入密碼</label>
+          <input type="password" id="dialogClosePassword" placeholder="請輸入密碼">
+        </div>
+        <div class="input-field">
+          <label>結案時間</label>
+          <input type="datetime-local" id="dialogCloseTime" onchange="assessTimeLimit()" oninput="assessTimeLimit()">
+          <div id="dialogCloseTimeAssessment" style="margin-top: 8px; font-size: 11px; font-weight: 800;"></div>
+        </div>
+        <div id="dialogCloseError" style="color:var(--rose); font-size:12px; font-weight:800; margin-bottom:12px; display:none; text-align:center;"></div>
+        <div class="dialog-buttons">
+          <button class="btn-dialog muted" onclick="closeCloseDialog()">取消</button>
+          <button class="btn-dialog green" onclick="submitCloseCase()">確認結案</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Supabase scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const sb = window.supabaseClient;
+
+    let allFacilities = [];
+    let myActiveCases = [];
+    let currentDetailCase = null;
+
+    // --- Check login status ---
+    window.onload = function() {
+      if (checkLoginStatus()) {
+        initApp();
+      }
+    };
+
+    function checkLoginStatus() {
+      const token = sessionStorage.getItem('admin_token');
+      const name = sessionStorage.getItem('admin_name');
+      const role = sessionStorage.getItem('admin_role');
+      
+      if (token && name && role) {
+        $("loginSection").style.display = "none";
+        $("appSection").style.display = "flex";
+        
+        $("headerUserName").textContent = name;
+        $("welcomeTitle").textContent = `歡迎回來，${name}`;
+        return true;
+      }
+      
+      $("loginSection").style.display = "flex";
+      $("appSection").style.display = "none";
+      return false;
+    }
+
+    // --- Authentication ---
+    async function handleLogin() {
+      const eid = $("empIdInput").value.trim();
+      const pwd = $("passwordInput").value.trim();
+      const errEl = $("loginErrorMsg");
+      errEl.style.display = "none";
+
+      if (!eid || !pwd) {
+        errEl.textContent = "請輸入員編與密碼";
+        errEl.style.display = "block";
+        return;
+      }
+
+      try {
+        const { data, error } = await sb.from('case_managers')
+          .select('*')
+          .eq('emp_id', eid)
+          .eq('password', pwd)
+          .single();
+
+        if (error || !data) {
+          errEl.textContent = "員編或密碼錯誤";
+          errEl.style.display = "block";
+          return;
+        }
+
+        if (data.approved !== true) {
+          errEl.textContent = "您的帳號尚未被管理員啟用";
+          errEl.style.display = "block";
+          return;
+        }
+
+        sessionStorage.setItem('admin_token', eid);
+        sessionStorage.setItem('admin_role', data.role || '個案管理師');
+        sessionStorage.setItem('admin_name', data.name || '管理員');
+        
+        checkLoginStatus();
+        initApp();
+      } catch (err) {
+        errEl.textContent = "登入失敗：" + err.message;
+        errEl.style.display = "block";
+      }
+    }
+
+    function handleLogout() {
+      if (confirm("確定要登出行動工作台嗎？")) {
+        sessionStorage.clear();
+        location.reload();
+      }
+    }
+
+    // --- App Initialization ---
+    async function initApp() {
+      await loadFacilities();
+      await fetchMyCases();
+      
+      // Listen to database changes for real-time sync
+      sb.channel('mobile_cases')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'cases' }, fetchMyCases)
+        .subscribe();
+    }
+
+    async function loadFacilities() {
+      const { data } = await sb.from('facilities').select('id, facility_name, short_name, phone, service_area, line_group_id');
+      if (data) {
+        allFacilities = data.map(f => ({
+          id: f.id,
+          name: f.facility_name,
+          short: f.short_name,
+          phone: f.phone,
+          area: f.service_area,
+          line_group_id: f.line_group_id
+        }));
+      }
+    }
+
+    // --- Case Operations ---
+    async function fetchMyCases() {
+      const myName = sessionStorage.getItem('admin_name');
+      try {
+        // Query all replies in parallel to merge them
+        const { data: replies } = await sb.from('replies').select('*');
+        const { data: cases, error } = await sb.from('cases')
+          .select('*')
+          .eq('case_manager', myName)
+          .neq('status', '案件結案')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        myActiveCases = (cases || []).map(c => {
+          const caseReplies = (replies || []).filter(r => r.case_id === c.case_id);
+          return { ...c, replies: caseReplies };
+        });
+
+        renderCasesList();
+        
+        // If details sheet is currently open, refresh its content
+        if (currentDetailCase) {
+          const updated = myActiveCases.find(c => c.case_id === currentDetailCase.case_id);
+          if (updated) {
+            currentDetailCase = updated;
+            renderDetailsContent();
+          } else {
+            closeDetailsSheet();
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching cases:", err);
+      }
+    }
+
+    function renderCasesList() {
+      const container = $("casesListContainer");
+      if (myActiveCases.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+            </svg>
+            <h4>您目前沒有進行中的案件</h4>
+            <p style="font-size:12px; margin:0;">有新個案分派給您時，將會顯示於此處</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = myActiveCases.map((c, idx) => {
+        const total = c.total_targets || 0;
+        const replied = (c.replies || []).length;
+        const progressPercent = total > 0 ? Math.min((replied / total) * 100, 100) : 0;
+        const dateStr = new Date(c.created_at).toLocaleDateString();
+
+        let badgeHtml = '';
+        if (c.status === '媒合成功') {
+          const shortName = getFacilityShortName(c.matched_facility);
+          badgeHtml = `<span class="badge badge-amber">🟠 媒合成功 (${shortName})</span>`;
+        } else {
+          badgeHtml = `<span class="badge badge-primary">${c.target_group || '指定機構'}</span>`;
+        }
+
+        return `
+          <div class="case-card" onclick="openDetailsSheet(${idx})">
+            <div class="card-head">
+              <div>
+                <span class="patient-name">${c.patient_name}</span>
+                <span class="patient-meta">｜${c.age}歲・${c.gender}</span>
+              </div>
+              ${badgeHtml}
+            </div>
+            
+            <div class="card-row">
+              <span>起案時間：${dateStr}</span>
+              <span>${c.service_type || '未填'}</span>
+            </div>
+
+            <div>
+              <div class="card-row" style="font-size:11px; margin-bottom: 2px;">
+                <span>媒合回覆進度</span>
+                <strong>已回覆 ${replied} / ${total}</strong>
+              </div>
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill" style="width: ${progressPercent}%;"></div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // --- Helper lookup ---
+    function getFacilityShortName(fullName) {
+      if (!fullName) return '';
+      const fac = allFacilities.find(f => f.name === fullName || f.short === fullName);
+      return fac ? (fac.short || fac.name) : fullName;
+    }
+
+    // --- Detail Sheet UI ---
+    function openDetailsSheet(idx) {
+      currentDetailCase = myActiveCases[idx];
+      if (!currentDetailCase) return;
+
+      $("sheetPatientTitle").textContent = `${currentDetailCase.patient_name} 的轉介案件詳情`;
+      renderDetailsContent();
+
+      $("detailsOverlay").classList.add("show");
+      $("detailsSheet").classList.add("show");
+    }
+
+    function closeDetailsSheet() {
+      currentDetailCase = null;
+      $("detailsOverlay").classList.remove("show");
+      $("detailsSheet").classList.remove("show");
+    }
+
+    function renderDetailsContent() {
+      const c = currentDetailCase;
+      const container = $("sheetContentContainer");
+      
+      const isMatched = c.status === '媒合成功' || c.status === '案件結案';
+      const replies = c.replies || [];
+      const targetIds = c.target_facility_ids || [];
+
+      // Merge targeted and replied facilities
+      const allTargetIds = new Set(targetIds.map(String));
+      replies.forEach(r => { if(r.facility_id) allTargetIds.add(String(r.facility_id)); });
+
+      const displayList = Array.from(allTargetIds).map(id => {
+        const fac = allFacilities.find(f => String(f.id) === id);
+        const reply = replies.find(r => String(r.facility_id) === id || (fac && r.facility_name === fac.name));
+        return {
+          name: fac ? fac.name : (reply ? reply.facility_name : '未知機構'),
+          phone: fac ? fac.phone : '未提供電話',
+          lineGroupId: fac ? fac.line_group_id : null,
+          status: reply ? reply.reply_status : 'pending',
+          note: reply ? (reply.note || '無備註') : '尚未回覆',
+          reporter: reply ? (reply.reporter || '未提供') : '未提供'
+        };
+      });
+
+      // Sort displayList: replied first, pending last
+      displayList.sort((a, b) => (a.status === 'pending') - (b.status === 'pending'));
+
+      const replyListHtml = displayList.map(r => `
+        <div class="reply-list-item">
+          <div class="reply-list-head">
+            <span class="reply-fac-name">
+              ${getFacilityShortName(r.name)}
+              ${r.lineGroupId ? `<span class="line-badge">LINE ID</span>` : ''}
+            </span>
+            <span>
+              ${r.status === 'accept' ? '<span style="color:var(--green); font-weight:800; font-size:12px;">✅ 可接案</span>' :
+                r.status === 'reject' ? '<span style="color:var(--rose); font-weight:800; font-size:12px;">❌ 無法接案</span>' :
+                r.status === 'coordinate' ? '<span style="color:var(--amber); font-weight:800; font-size:12px;">⚠️ 待協調</span>' :
+                '<span style="color:var(--muted); font-size:12px;">⌛ 待回覆</span>'}
+            </span>
+          </div>
+          <div style="font-size:11px; color:var(--text-soft);">📞 電話：${r.phone}</div>
+          ${r.status !== 'pending' ? `<div style="font-size:11px; color:#3b82f6; font-weight:700;">填報人：${r.reporter}</div>` : ''}
+          <div style="font-size:12px; background:var(--surface-soft); padding:6px 10px; border-radius:6px; margin-top:4px;">${r.note}</div>
+        </div>
+      `).join('');
+
+      // Actions section html
+      let actionButtonsHtml = '';
+      if (c.status === '媒合成功') {
+        actionButtonsHtml = `<button class="btn-submit" style="background: linear-gradient(135deg, #10b981, #059669);" onclick="openCloseCaseDialog()">🟢 正式結案</button>`;
+      } else {
+        actionButtonsHtml = `
+          <button class="btn-submit" style="background: linear-gradient(135deg, #f59e0b, #d97706); flex: 1.2;" onclick="openMatchDialog()">🟠 登記媒合成功</button>
+          <button class="btn-submit" style="background: linear-gradient(135deg, #6366f1, #4f46e5); flex: 1;" onclick="triggerLineReminder()">⚡ 催案提醒</button>
+        `;
+      }
+
+      // Check within 3 days logic for display
+      const isWithin3Days = (matchedAt, closedAt) => {
+        if (!matchedAt || !closedAt) return false;
+        const matchMs = new Date(matchedAt).getTime();
+        const closeMs = new Date(closedAt).getTime();
+        const diffMs = closeMs - matchMs;
+        return diffMs >= 0 && diffMs <= 3 * 24 * 60 * 60 * 1000;
+      };
+
+      container.innerHTML = `
+        <!-- Case Details Summary Card -->
+        <div class="sheet-card">
+          <h5>個案基本評估</h5>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+            <div><strong>性別/年齡：</strong>${c.gender} / ${c.age}歲</div>
+            <div><strong>失能等級：</strong>CMS ${c.cms_level || '未填'}</div>
+            <div><strong>行動能力：</strong>${c.mobility || '未填'}</div>
+            <div><strong>意識狀態：</strong>${c.consciousness || '未填'}</div>
+          </div>
+          <div style="margin-top:6px;"><strong>現居地址：</strong>${c.address || '未填'}</div>
+        </div>
+
+        <div class="sheet-card">
+          <h5>服務需求與長照服務碼</h5>
+          <div><strong>服務類型：</strong>${c.service_type || '未填'}</div>
+          <div><strong>期待時段：</strong>${c.service_time || '未填'}</div>
+          <div><strong>服務代碼：</strong>${Array.isArray(c.service_codes) && c.service_codes.length > 0 ? c.service_codes.join(', ') : '無'}</div>
+        </div>
+
+        <div class="sheet-card">
+          <h5>診斷與摘要說明</h5>
+          <div><strong>主要診斷：</strong>${c.diagnosis}</div>
+          <div style="margin-top:6px; background:#f8fafc; padding:8px; border-radius:6px; font-size:12px;"><strong>狀況描述：</strong>${c.case_summary}</div>
+          <div style="margin-top:4px;"><strong>特殊需求：</strong>${c.special_need || '無'}</div>
+        </div>
+
+        <!-- Dynamic Match Success Card -->
+        <div class="sheet-card" style="background:#fffbeb; border:1px solid #fef3c7;">
+          <h5 style="color:#d97706; border-bottom:1px solid #fef3c7; margin-bottom:8px;">🟠 媒合成功資訊</h5>
+          <div><strong>媒合機構：</strong>${c.matched_facility ? `${c.matched_facility} (${getFacilityShortName(c.matched_facility)})` : '未知'}</div>
+          <div><strong>成功時間：</strong>${c.matched_at ? new Date(c.matched_at).toLocaleString() : '未知'}</div>
+          <div><strong>結案時間：</strong>${c.closed_at ? new Date(c.closed_at).toLocaleString() : '未知'}</div>
+          <div style="display:flex; align-items:center; gap:6px; margin-top:4px;">
+            <strong>轉接時效：</strong>
+            ${(c.matched_at && c.closed_at) 
+              ? (isWithin3Days(c.matched_at, c.closed_at) 
+                ? '<span style="color:#16a34a; font-weight:800; background:#f0fdf4; padding:2px 8px; border-radius:100px; border:1px solid #bbf7d0; font-size:11px;">✅ 3日內轉接</span>' 
+                : '<span style="color:#dc2626; font-weight:800; background:#fef2f2; padding:2px 8px; border-radius:100px; border:1px solid #fecaca; font-size:11px;">❌ 超過3日</span>')
+              : '<span style="color:#64748b; font-weight:800; background:#f1f5f9; padding:2px 8px; border-radius:100px; border:1px solid #e2e8f0; font-size:11px;">-</span>'
+            }
+          </div>
+        </div>
+
+        <!-- Targeted Institutions Reply List -->
+        <div class="sheet-card">
+          <h5>目標機構回覆清單 (${replies.length} / ${targetIds.length})</h5>
+          <div style="max-height: 250px; overflow-y: auto;">
+            ${replyListHtml || '<div style="color:var(--muted); text-align:center; padding:12px;">無目標機構</div>'}
+          </div>
+        </div>
+
+        <!-- Action Drawer Buttons -->
+        <div style="display:flex; gap:10px; margin-top:16px;">
+          ${actionButtonsHtml}
+        </div>
+      `;
+    }
+
+    // --- Action dialog: Match Success ---
+    function openMatchDialog() {
+      if (!currentDetailCase) return;
+      const c = currentDetailCase;
+
+      const select = $("dialogMatchFacilitySelect");
+      // Filter list of targeted facilities or all facilities
+      const targetIds = c.target_facility_ids || [];
+      const targets = allFacilities.filter(f => targetIds.map(String).includes(String(f.id)));
+      
+      select.innerHTML = targets.map(f => `<option value="${f.name}">${f.name}</option>`).join('') || `<option value="">查無目標機構</option>`;
+      
+      const now = new Date();
+      const tzOffset = now.getTimezoneOffset() * 60000;
+      $("dialogMatchSuccessTime").value = (new Date(now.getTime() - tzOffset)).toISOString().slice(0, 16);
+      $("dialogMatchError").style.display = "none";
+      
+      $("matchSuccessDialog").style.display = "flex";
+    }
+
+    function closeMatchDialog() {
+      $("matchSuccessDialog").style.display = "none";
+    }
+
+    async function submitMatchSuccess() {
+      const facility = $("dialogMatchFacilitySelect").value;
+      const matchTime = $("dialogMatchSuccessTime").value;
+      const errEl = $("dialogMatchError");
+      errEl.style.display = "none";
+
+      if (!facility) {
+        errEl.textContent = "請選擇媒合成功之機構";
+        errEl.style.display = "block";
+        return;
+      }
+      if (!matchTime) {
+        errEl.textContent = "請選擇媒合成功時間";
+        errEl.style.display = "block";
+        return;
+      }
+
+      try {
+        const { error } = await sb.from('cases').update({
+          status: '媒合成功',
+          matched_facility: facility,
+          matched_at: matchTime
+        }).eq('case_id', currentDetailCase.case_id);
+
+        if (error) throw error;
+        alert("已登記媒合成功！");
+        closeMatchDialog();
+        fetchMyCases();
+      } catch (err) {
+        errEl.textContent = "登記失敗：" + err.message;
+        errEl.style.display = "block";
+      }
+    }
+
+    // --- Action dialog: Close Case ---
+    function openCloseCaseDialog() {
+      if (!currentDetailCase) return;
+      
+      $("dialogCloseEmpId").value = sessionStorage.getItem('admin_token');
+      $("dialogClosePassword").value = "";
+      $("dialogCloseError").style.display = "none";
+
+      const now = new Date();
+      const tzOffset = now.getTimezoneOffset() * 60000;
+      $("dialogCloseTime").value = (new Date(now.getTime() - tzOffset)).toISOString().slice(0, 16);
+
+      $("closeCaseDialog").style.display = "flex";
+      assessTimeLimit();
+    }
+
+    function closeCloseDialog() {
+      $("closeCaseDialog").style.display = "none";
+    }
+
+    function assessTimeLimit() {
+      const c = currentDetailCase;
+      if (!c || !c.matched_at) return;
+
+      const closeVal = $("dialogCloseTime").value;
+      const assessmentEl = $("dialogCloseTimeAssessment");
+      if (!closeVal) {
+        assessmentEl.style.display = "none";
+        return;
+      }
+
+      const matchMs = new Date(c.matched_at).getTime();
+      const closeMs = new Date(closeVal).getTime();
+      const diffMs = closeMs - matchMs;
+      const diffHours = (diffMs / (60 * 60 * 1000)).toFixed(1);
+      const isWithin3Days = diffMs >= 0 && diffMs <= 3 * 24 * 60 * 60 * 1000;
+
+      assessmentEl.style.display = "block";
+      if (isWithin3Days) {
+        assessmentEl.innerHTML = `<span style="color:#10b981;">🟢 符合 3 日內轉接 (相差 ${diffHours} 小時)</span>`;
+      } else {
+        if (diffMs < 0) {
+          assessmentEl.innerHTML = `<span style="color:#e11d48;">🔴 警告：結案時間早於媒合時間！</span>`;
+        } else {
+          assessmentEl.innerHTML = `<span style="color:#e11d48;">🔴 超過 3 日轉接 (相差 ${diffHours} 小時)</span>`;
+        }
+      }
+    }
+
+    async function submitCloseCase() {
+      const eid = $("dialogCloseEmpId").value;
+      const pwd = $("dialogClosePassword").value;
+      const closeTime = $("dialogCloseTime").value;
+      const errEl = $("dialogCloseError");
+      errEl.style.display = "none";
+
+      if (!pwd) {
+        errEl.textContent = "請輸入管理員密碼";
+        errEl.style.display = "block";
+        return;
+      }
+      if (!closeTime) {
+        errEl.textContent = "請選擇結案時間";
+        errEl.style.display = "block";
+        return;
+      }
+
+      try {
+        // Authenticate credentials
+        const { data, error } = await sb.from('case_managers')
+          .select('*')
+          .eq('emp_id', eid)
+          .eq('password', pwd)
+          .single();
+
+        if (error || !data) {
+          errEl.textContent = "密碼驗證失敗";
+          errEl.style.display = "block";
+          return;
+        }
+
+        // Close the case
+        const { error: updateErr } = await sb.from('cases').update({
+          status: '案件結案',
+          closed_at: closeTime
+        }).eq('case_id', currentDetailCase.case_id);
+
+        if (updateErr) throw updateErr;
+
+        alert("已成功完成結案！");
+        closeCloseDialog();
+        closeDetailsSheet();
+        fetchMyCases();
+      } catch (err) {
+        errEl.textContent = "結案失敗：" + err.message;
+        errEl.style.display = "block";
+      }
+    }
+
+    // --- Action: LINE reminder Webhook ---
+    async function triggerLineReminder() {
+      const c = currentDetailCase;
+      if (!c) return;
+
+      const targetIds = c.target_facility_ids || [];
+      const replies = c.replies || [];
+
+      // Filter unreplied facilities
+      const pendingFacilities = allFacilities.filter(f => {
+        const isTarget = targetIds.map(String).includes(String(f.id));
+        if (!isTarget) return false;
+        const hasReplied = replies.some(r => String(r.facility_id) === String(f.id) || r.facility_name === f.name);
+        return !hasReplied;
+      });
+
+      if (pendingFacilities.length === 0) {
+        alert("此個案之所有目標機構皆已回覆完畢。");
+        return;
+      }
+
+      const hasLineFacilities = pendingFacilities.filter(f => f.line_group_id);
+      const noLineFacilities = pendingFacilities.filter(f => !f.line_group_id);
+
+      let confirmSend = false;
+
+      if (hasLineFacilities.length > 0 && noLineFacilities.length > 0) {
+        const noLineNames = noLineFacilities.map(f => f.name || f.short).join("、");
+        confirmSend = confirm(
+          `個案連結已複製！\n\n` +
+          `共有 ${pendingFacilities.length} 家機構尚未回覆：\n` +
+          `• 📱 LINE 提醒發送：${hasLineFacilities.length} 家\n` +
+          `• 👤 無 LINE 群組（需人工聯繫）：${noLineFacilities.length} 家（${noLineNames}）\n\n` +
+          `是否要立即對這 ${hasLineFacilities.length} 家機構推送 LINE 催案提醒？`
+        );
+      } else if (hasLineFacilities.length === 0) {
+        const noLineNames = noLineFacilities.map(f => f.name || f.short).join("、");
+        alert(
+          `個案連結已複製！\n\n` +
+          `共有 ${pendingFacilities.length} 家機構未回覆，且「皆尚未設定 LINE 群組」。\n` +
+          `請以人工方式聯繫：\n${noLineNames}`
+        );
+        
+        // Copy link to clipboard
+        copyCaseLink(c.case_id);
+        return;
+      } else {
+        confirmSend = confirm(
+          `個案連結已複製！\n\n` +
+          `偵測到共有 ${pendingFacilities.length} 家機構尚未回覆（皆已設定 LINE 群組）。\n` +
+          `是否要立即透過 LINE 推送催案提醒？`
+        );
+      }
+
+      // Copy link to clipboard anyway
+      copyCaseLink(c.case_id);
+
+      if (!confirmSend) return;
+
+      const lineGroupIds = hasLineFacilities.map(f => f.line_group_id).filter(Boolean);
+
+      try {
+        const response = await fetch("https://n8nwfh.zeabur.app/webhook/case_reminder", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            case_id: c.case_id,
+            hospital: c.hospital,
+            patient_name: c.patient_name,
+            gender: c.gender,
+            age: c.age,
+            service_type: c.service_type,
+            line_group_ids: lineGroupIds
+          })
+        });
+
+        if (response.ok) {
+          alert("催案提醒已成功發送！");
+        } else {
+          throw new Error("HTTP " + response.status);
+        }
+      } catch (err) {
+        alert("LINE 發送失敗，但連結已複製。錯誤原因：" + err.message);
+      }
+    }
+
+    async function copyCaseLink(caseId) {
+      const url = window.location.origin + window.location.pathname.replace('mobile.html', 'facility.html') + '?case_id=' + caseId;
+      try {
+        await navigator.clipboard.writeText(url);
+      } catch (err) {
+        console.warn("Clipboard copy failed:", err);
+      }
+    }
+  </script>
+</body>
+</html>
