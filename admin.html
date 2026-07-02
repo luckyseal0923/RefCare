@@ -1793,7 +1793,8 @@
           reporter,
           replyTimeStr,
           replyTimestamp,
-          phone: fac ? fac.phone : '未知電話'
+          phone: fac ? fac.phone : '未知電話',
+          lineGroupId: fac ? fac.line_group_id : null
         };
       });
 
@@ -1833,7 +1834,15 @@
             </span>
           </div>
           <div style="font-size:13px; color:var(--muted); margin-top:6px; display:flex; flex-direction:column; gap:4px;">
-            <div>📞 電話：${r.phone}</div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span>📞 電話：${r.phone}</span>
+              ${r.lineGroupId ? `
+                <span style="display:inline-flex; align-items:center; gap:4px; padding:2px 8px; font-size:11px; font-weight:850; color:#16a34a; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:100px;">
+                  <span style="display:inline-block; width:6px; height:6px; background:#22c55e; border-radius:50%;"></span>
+                  LINE 群組
+                </span>
+              ` : ''}
+            </div>
             ${r.status !== 'pending' ? `
               <div style="display:flex; align-items:center; gap:12px; margin-top:2px; font-weight:800; color:#3b82f6;">
                 <span>🕒 回覆時間：${r.replyTimeStr || '--'}</span>
@@ -2297,18 +2306,39 @@
         return;
       }
 
-      const lineGroupIds = pendingFacilities.map(f => f.line_group_id).filter(Boolean);
+      const hasLineFacilities = pendingFacilities.filter(f => f.line_group_id);
+      const noLineFacilities = pendingFacilities.filter(f => !f.line_group_id);
 
-      if (lineGroupIds.length === 0) {
-        alert(`連結已複製至剪貼簿！\n共有 ${pendingFacilities.length} 家機構未回覆，但這些機構尚未設定 LINE 群組。`);
+      let confirmSend = false;
+
+      if (hasLineFacilities.length > 0 && noLineFacilities.length > 0) {
+        const noLineNames = noLineFacilities.map(f => f.name || f.short || '未知機構').join("、");
+        confirmSend = confirm(
+          `連結已複製至剪貼簿！\n\n` +
+          `偵測到此案件共有 ${pendingFacilities.length} 家機構尚未回覆：\n` +
+          `• 📱 可發送 LINE 提醒：${hasLineFacilities.length} 家\n` +
+          `• 👤 無 LINE 群組（需以人工聯繫）：${noLineFacilities.length} 家（${noLineNames}）\n\n` +
+          `是否要立即對這 ${hasLineFacilities.length} 家機構推送 LINE 催案提醒？`
+        );
+      } else if (hasLineFacilities.length === 0) {
+        const noLineNames = noLineFacilities.map(f => f.name || f.short || '未知機構').join("、");
+        alert(
+          `連結已複製至剪貼簿！\n\n` +
+          `偵測到此案件共有 ${pendingFacilities.length} 家機構尚未回覆，但這些機構「皆尚未設定 LINE 群組」。\n` +
+          `請改用人工方式聯繫：\n${noLineNames}`
+        );
         return;
+      } else {
+        confirmSend = confirm(
+          `連結已複製至剪貼簿！\n\n` +
+          `偵測到此案件共有 ${pendingFacilities.length} 家機構尚未回覆（皆已設定 LINE 群組）。\n` +
+          `是否要立即透過 LINE 推送催案提醒？`
+        );
       }
 
-      const confirmSend = confirm(
-        `連結已複製至剪貼簿！\n偵測到此案件共有 ${pendingFacilities.length} 家機構尚未回覆，是否要立即透過 LINE 推送催案提醒？`
-      );
-
       if (!confirmSend) return;
+
+      const lineGroupIds = hasLineFacilities.map(f => f.line_group_id).filter(Boolean);
 
       try {
         const response = await fetch(N8N_WEBHOOKS.remind || "https://n8nwfh.zeabur.app/webhook/case_reminder", {
