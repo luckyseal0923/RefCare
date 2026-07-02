@@ -2993,7 +2993,14 @@
           </div>
           <div class="fac-card-body">
             <div class="fac-card-info">📍 ${f.area || '全區服務'}</div>
-            <div class="fac-card-info">📞 ${f.phone || '未提供電話'}</div>
+            <div class="fac-card-info" style="display:flex; align-items:center; gap:8px;">
+              <span>📞 ${f.phone || '未提供電話'}</span>
+              ${f.line_group_id ? `
+                <span style="display:inline-flex; align-items:center; padding:2px 8px; font-size:11px; font-weight:850; color:#ffffff; background:#06c755; border-radius:100px; line-height:1.2; letter-spacing:0.5px; cursor:default;" title="此機構已設定 LINE 群組">
+                  LINE ID
+                </span>
+              ` : ''}
+            </div>
           </div>
           <div class="fac-card-foot">
             <button class="fac-card-btn btn-edit" onclick="openFacilityEditor('${f.id}')">⚙️ 編輯詳情</button>
