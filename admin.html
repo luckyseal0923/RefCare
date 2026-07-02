@@ -1837,9 +1837,10 @@
             <div style="display:flex; align-items:center; gap:8px;">
               <span>📞 電話：${r.phone}</span>
               ${r.lineGroupId ? `
-                <span style="display:inline-flex; align-items:center; gap:4px; padding:2px 8px; font-size:11px; font-weight:850; color:#16a34a; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:100px;">
-                  <span style="display:inline-block; width:6px; height:6px; background:#22c55e; border-radius:50%;"></span>
-                  LINE 群組
+                <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:#06c755; border-radius:3px; cursor:default;" title="此機構已設定 LINE 群組">
+                  <svg viewBox="0 0 448 512" style="width:11px; height:11px; fill:#ffffff;" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M272.1 204.1v71.1c0 4.6 3.7 8.2 8.2 8.2h37.5c4.6 0 8.2-3.7 8.2-8.2v-71.1c0-4.6-3.7-8.2-8.2-8.2h-37.5c-4.5.1-8.2 3.8-8.2 8.2zM218.6 204.1v71.1c0 4.6 3.7 8.2 8.2 8.2h37.5c4.6 0 8.2-3.7 8.2-8.2v-71.1c0-4.6-3.7-8.2-8.2-8.2h-37.5c-4.5.1-8.2 3.8-8.2 8.2zM120.1 247.1l-24-34.9v34.9c0 4.6-3.7 8.2-8.2 8.2H50.5c-4.6 0-8.2-3.7-8.2-8.2v-71.1c0-4.6 3.7-8.2 8.2-8.2h37.5c4.6 0 8.2 3.7 8.2 8.2v34.9l24-34.9c2.8-4 7.2-6.3 11.9-6.3h37.5c6.5 0 10.3 7.4 6.5 12.7l-35.3 51.2 37.3 54.2c3.8 5.5-.1 12.9-6.8 12.9H132c-4.7 0-9.2-2.4-11.9-6.4zM405.5 204.1v71.1c0 4.6-3.7 8.2-8.2 8.2h-75.1c-4.6 0-8.2-3.7-8.2-8.2v-71.1c0-4.6 3.7-8.2 8.2-8.2h75.1c4.5.1 8.2 3.8 8.2 8.2zM224 32C100.3 32 0 115.6 0 218.5c0 82.5 64 152.4 150.3 177.1 5.9 1.7 14 5.3 16 12.3l1.8 12.6c.6 4.3.4 11 .2 15.6-1.5 35.8-9 88.6-10.3 97.9-1 7.2 4.2 6.8 9 4.3 8.3-4.3 131.7-87.1 184.2-140.2 37.6-38 62.8-83.3 62.8-151.1C448 115.6 347.7 32 224 32z"/>
+                  </svg>
                 </span>
               ` : ''}
             </div>
