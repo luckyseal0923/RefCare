@@ -12,7 +12,8 @@ export default defineConfig({
         main: resolve(__dirname, 'index.html'),
         admin: resolve(__dirname, 'admin.html'),
         dashboard: resolve(__dirname, 'dashboard.html'),
-        facility: resolve(__dirname, 'facility.html')
+        facility: resolve(__dirname, 'facility.html'),
+        mobile: resolve(__dirname, 'mobile.html')
       }
     }
   }
