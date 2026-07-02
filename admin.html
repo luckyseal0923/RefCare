@@ -945,6 +945,7 @@
       <div class="edit-field" style="margin-bottom: 24px;">
         <label>結案時間 <span style="color:var(--rose);">*</span></label>
         <input type="datetime-local" id="closeCaseTimeInput">
+        <div id="closeCaseTimeAssessment" style="margin-top: 8px; font-size: 13px; font-weight: 800; display: none;"></div>
       </div>
       <div style="display: flex; gap: 12px;">
         <button class="btn btn-muted" style="flex: 1; height: 50px; font-size: 16px;" onclick="cancelCloseCaseAuth()">取消</button>
@@ -1646,10 +1647,15 @@
           const dateStr = new Date(c.created_at).toLocaleString('zh-TW', { hour12: false, year: 'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
           const progress = getReplyProgress(c);
            const badgeClass = getGroupBadgeClass(c.target_group, c.status);
+           const getFacShortName = (fullName) => {
+             if (!fullName) return '';
+             const fac = allFacilities.find(f => f.name === fullName || f.short === fullName);
+             return fac ? (fac.short || fac.name) : fullName;
+           };
            const displayGroup = c.status === '案件結案' 
-             ? `案件結案${c.matched_facility ? ` (${c.matched_facility})` : ''}` 
+             ? `案件結案${c.matched_facility ? ` (${getFacShortName(c.matched_facility)})` : ''}` 
              : (c.status === '媒合成功' 
-               ? `媒合成功${c.matched_facility ? ` (${c.matched_facility})` : ''}` 
+               ? `媒合成功${c.matched_facility ? ` (${getFacShortName(c.matched_facility)})` : ''}` 
                : (c.target_group || '指定機構'));
            const needTag = c.service_type || '未分類';
  
@@ -1853,6 +1859,35 @@
         </div>
       `).join("");
 
+      const isMatched = item.status === '媒合成功' || item.status === '案件結案';
+      const getFacShortName = (fullName) => {
+        if (!fullName) return '';
+        const fac = allFacilities.find(f => f.name === fullName || f.short === fullName);
+        return fac ? (fac.short || fac.name) : fullName;
+      };
+      const isWithin3Days = (matchedAt, closedAt) => {
+        if (!matchedAt || !closedAt) return false;
+        const matchMs = new Date(matchedAt).getTime();
+        const closeMs = new Date(closedAt).getTime();
+        const diffMs = closeMs - matchMs;
+        return diffMs >= 0 && diffMs <= 3 * 24 * 60 * 60 * 1000;
+      };
+      const matchSuccessCardHtml = isMatched ? `
+        <div class="detail-card full" style="background:#fffbeb; border:1px solid #fef3c7; border-radius:16px;">
+          <h4 style="color:#d97706; margin-top:0; margin-bottom:12px; font-weight:800; font-size:15px; display:flex; align-items:center; gap:8px;">
+            <span>🟠 媒合成功資訊</span>
+          </h4>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px; font-size:13px; color:var(--text-strong);">
+            <div><strong>媒合機構：</strong>${item.matched_facility ? `${item.matched_facility} (${getFacShortName(item.matched_facility)})` : '未提供'}</div>
+            <div><strong>媒合成功時間：</strong>${item.matched_at ? new Date(item.matched_at).toLocaleString() : '未提供'}</div>
+            ${item.status === '案件結案' && item.closed_at ? `
+              <div><strong>正式結案時間：</strong>${new Date(item.closed_at).toLocaleString()}</div>
+              <div style="display:flex; align-items:center; gap:6px;"><strong>轉接時效：</strong>${isWithin3Days(item.matched_at, item.closed_at) ? '<span style="color:#16a34a; font-weight:800; background:#f0fdf4; padding:2px 8px; border-radius:100px; border:1px solid #bbf7d0; font-size:11px;">✅ 3日內轉接</span>' : '<span style="color:#dc2626; font-weight:800; background:#fef2f2; padding:2px 8px; border-radius:100px; border:1px solid #fecaca; font-size:11px;">❌ 超過3日</span>'}</div>
+            ` : ''}
+          </div>
+        </div>
+      ` : '';
+
       const drawerActionBtn = item.status === '案件結案'
         ? `<button class="btn btn-primary" style="flex:1; background:linear-gradient(135deg, #3b82f6, #2563eb); border:none;" onclick="reopenCase('${item.case_id}')">案件再開</button>`
         : (item.status === '媒合成功'
@@ -1861,6 +1896,7 @@
 
       return `
         <div class="detail-grid">
+          ${matchSuccessCardHtml}
           <div class="detail-card">
             <h4>起案資訊</h4>
             <div><strong>案件編號：</strong>${item.case_id}</div>
@@ -2217,6 +2253,38 @@
       $("closeCaseTimeInput").value = localISOTime;
 
       $("closeCaseAuthOverlay").style.display = "flex";
+      updateCloseCaseAssessment();
+    }
+
+    function updateCloseCaseAssessment() {
+      const c = allCases.find(item => item.case_id === pendingCloseCaseId);
+      if (!c || !c.matched_at) {
+        $("closeCaseTimeAssessment").style.display = "none";
+        return;
+      }
+      const closeTimeVal = $("closeCaseTimeInput").value;
+      if (!closeTimeVal) {
+        $("closeCaseTimeAssessment").style.display = "none";
+        return;
+      }
+
+      const matchMs = new Date(c.matched_at).getTime();
+      const closeMs = new Date(closeTimeVal).getTime();
+      const diffMs = closeMs - matchMs;
+      const diffHours = (diffMs / (60 * 60 * 1000)).toFixed(1);
+      const isWithin3DaysVal = diffMs >= 0 && diffMs <= 3 * 24 * 60 * 60 * 1000;
+
+      const assessmentEl = $("closeCaseTimeAssessment");
+      assessmentEl.style.display = "block";
+      if (isWithin3DaysVal) {
+        assessmentEl.innerHTML = `<span style="color:#16a34a;">🟢 轉接時效評估：符合3日內轉接 (相差 ${diffHours} 小時)</span>`;
+      } else {
+        if (diffMs < 0) {
+          assessmentEl.innerHTML = `<span style="color:#dc2626;">🔴 警告：結案時間不可早於媒合成功時間！</span>`;
+        } else {
+          assessmentEl.innerHTML = `<span style="color:#dc2626;">🔴 轉接時效評估：超過3日 (相差 ${diffHours} 小時)</span>`;
+        }
+      }
     }
 
     function cancelCloseCaseAuth() {
@@ -2864,6 +2932,8 @@
       $("statusFilter").onchange = renderTable;
       $("hospitalFilter").onchange = renderTable;
       $("sortFilter").onchange = renderTable;
+      $("closeCaseTimeInput").oninput = updateCloseCaseAssessment;
+      $("closeCaseTimeInput").onchange = updateCloseCaseAssessment;
 
       if (!checkLogin()) {
         // 如果沒登入，就不自動抓資料
