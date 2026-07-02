@@ -1462,9 +1462,9 @@
 
     // --- 資料抓取 ---
     async function loadFacilities() {
-      const { data } = await sb.from('facilities').select('id, facility_name, short_name, phone, service_area, is_round_1');
+      const { data } = await sb.from('facilities').select('id, facility_name, short_name, phone, service_area, is_round_1, line_group_id');
       if (data) allFacilities = data.map(f => ({
-        id: f.id, name: f.facility_name, short: f.short_name, phone: f.phone, area: f.service_area, is_round_1: f.is_round_1
+        id: f.id, name: f.facility_name, short: f.short_name, phone: f.phone, area: f.service_area, is_round_1: f.is_round_1, line_group_id: f.line_group_id
       }));
     }
 
