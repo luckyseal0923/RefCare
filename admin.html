@@ -2099,6 +2099,18 @@
       currentEditingIndex = idx;
       const addr = getAddressFields(item);
       $("drawerPatientName").textContent = `編輯案件：${item.patient_name}`;
+      
+      const currentTargets = Array.isArray(item.target_facility_ids) ? item.target_facility_ids.map(id => String(id)) : [];
+      const facilityCheckboxes = allFacilities.map(f => {
+        const isChecked = currentTargets.includes(String(f.id));
+        return `
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; margin-bottom: 6px; cursor: pointer;">
+            <input type="checkbox" name="target_facility_ids" value="${f.id}" ${isChecked ? 'checked' : ''} style="width: auto; margin: 0;">
+            <span>${f.name} ${f.area ? `(${f.area})` : ''}</span>
+          </label>
+        `;
+      }).join("");
+
       $("drawerContent").innerHTML = `
         <div class="detail-card full">
           <form id="editForm" class="edit-form">
@@ -2122,15 +2134,30 @@
             <div class="edit-field"><label>行動能力</label><input name="mobility" value="${item.mobility || ''}" placeholder="例如：輪椅、臥床"></div>
             <div class="edit-field"><label>服務類型</label><input name="service_type" value="${item.service_type || ''}" placeholder="例如：長照服務"></div>
             <div class="edit-field"><label>期待服務時段</label><input name="service_time" value="${item.service_time || ''}" placeholder="例如：平日白天"></div>
-            <div class="edit-field"><label>個管師</label><input name="case_manager" value="${item.case_manager || ''}"></div>
+            
+            <div class="edit-field full">
+              <label>長照服務碼 (用逗號隔開)</label>
+              <input name="service_codes" value="${Array.isArray(item.service_codes) ? item.service_codes.join(', ') : ''}" placeholder="例如：BA01 基本身體清潔, BA04 協助餵食">
+            </div>
+
+            <div class="edit-field"><label>個管師姓名</label><input name="case_manager" value="${item.case_manager || ''}"></div>
+            <div class="edit-field"><label>個管師電話</label><input name="case_manager_phone" value="${item.case_manager_phone || ''}" placeholder="個管師聯絡電話"></div>
+            <div class="edit-field"><label>單位分機</label><input name="case_manager_ext" value="${item.case_manager_ext || ''}" placeholder="分機"></div>
+            
             <div class="edit-field"><label>狀態</label>
               <select name="status">
                 <option value="一輪媒合中" ${item.status==='一輪媒合中'?'selected':''}>一輪媒合中</option>
                 <option value="二輪媒合中" ${item.status==='二輪媒合中'?'selected':''}>二輪媒合中</option>
                 <option value="三輪媒合中" ${item.status==='三輪媒合中'?'selected':''}>三輪媒合中</option>
+                <option value="媒合成功" ${item.status==='媒合成功'?'selected':''}>媒合成功</option>
                 <option value="案件結案" ${item.status==='案件結案'?'selected':''}>案件結案</option>
               </select>
             </div>
+            
+            <div class="edit-field"><label>計畫審核通過日期</label><input type="date" name="care_plan_approved_at" value="${item.care_plan_approved_at || ''}"></div>
+            <div class="edit-field"><label>機構首次服務日期</label><input type="date" name="first_service_at" value="${item.first_service_at || ''}"></div>
+            <div class="edit-field"><label>起案時間</label><input type="datetime-local" name="created_at_input" value="${item.created_at ? new Date(item.created_at).toISOString().slice(0, 16) : ''}"></div>
+            
             <div class="edit-field full" style="display:flex; flex-direction:column; gap:8px;">
               <label>現居地址</label>
               <div style="display: flex; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; width: 100%;">
@@ -2159,6 +2186,19 @@
                 </div>
               </div>
             </div>
+
+            <div class="edit-field full" style="display:flex; flex-direction:column; gap:8px;">
+              <label>指派機構名單 (已選擇 ${currentTargets.length} 家)</label>
+              <details style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; background: #f8fafc; width: 100%;">
+                <summary style="font-size: 13px; font-weight: bold; color: #475569; cursor: pointer; outline: none; margin-bottom: 8px;">
+                  📁 展開/收合機構清單
+                </summary>
+                <div style="max-height: 200px; overflow-y: auto; padding-right: 6px; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px;">
+                  ${facilityCheckboxes}
+                </div>
+              </details>
+            </div>
+
             <div class="edit-field full"><label>主要診斷</label><textarea name="diagnosis" style="min-height:80px;">${item.diagnosis || ''}</textarea></div>
             <div class="edit-field full"><label>案況摘要</label><textarea name="case_summary" style="min-height:100px;">${item.case_summary || ''}</textarea></div>
             <div class="edit-field full"><label>特殊需求</label><textarea name="special_need" style="min-height:80px;">${item.special_need || ''}</textarea></div>
@@ -2216,6 +2256,27 @@
       updates.address = flatAddress;
       updates.address_detail = address_detail;
 
+      // 服務碼別反序列化
+      if (updates.service_codes) {
+        updates.service_codes = updates.service_codes.split(',').map(s => s.trim()).filter(Boolean);
+      } else {
+        updates.service_codes = [];
+      }
+
+      // 指派機構勾選資料反序列化
+      const checkedBoxes = form.querySelectorAll('input[name="target_facility_ids"]:checked');
+      updates.target_facility_ids = Array.from(checkedBoxes).map(cb => String(cb.value));
+
+      // 起案時間反序列化
+      if (updates.created_at_input) {
+        updates.created_at = new Date(updates.created_at_input).toISOString();
+      }
+      delete updates.created_at_input;
+
+      // 日期空值轉換
+      updates.care_plan_approved_at = updates.care_plan_approved_at || null;
+      updates.first_service_at = updates.first_service_at || null;
+
       delete updates.addr_county;
       delete updates.addr_district;
       delete updates.addr_road;
@@ -2261,7 +2322,9 @@
 
         fetchData();
         closeDrawer();
-      } catch (err) { alert("更新失敗：" + err.message); }
+      } catch (err) {
+        alert("更新失敗：" + err.message);
+      }
     }
 
     async function deleteSelectedCases() {
