@@ -980,11 +980,11 @@
       document.querySelector(".wrap").innerHTML = `
         <div class="card success-card" style="text-align: center; padding: 48px 32px; border-radius: 28px; box-shadow: var(--shadow); background: #ffffff; border: 1px solid #e2e8f0; margin-top: 40px; animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);">
           <div style="font-size: 80px; margin-bottom: 24px; animation: bounceIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);">📋</div>
-          <h1 style="color: #475569; font-size: 28px; font-weight: 900; margin-bottom: 16px;">本案件已結案</h1>
+          <h1 style="color: #475569; font-size: 28px; font-weight: 900; margin-bottom: 16px;">本案件已完成媒合</h1>
           <p style="color: var(--muted); font-size: 16px; line-height: 1.8; margin-bottom: 32px; max-width: 480px; margin-left: auto; margin-right: auto;">
-            本案（案件編號：${caseId}）媒合程序已結束並完成結案作業。<br>
+            本案（案件編號：${caseId}）已完成媒合。<br>
             系統已停止接收新的安置意願與機構回覆。<br><br>
-            感謝您的熱心協助與配合！
+            感謝各單位的協助！
           </p>
           <div style="display: flex; flex-direction: column; gap: 14px; align-items: center;">
             <button onclick="window.close()" style="background: #475569; color: white; border: none; padding: 14px 48px; border-radius: 14px; font-size: 16px; font-weight: 800; width: 100%; max-width: 240px; box-shadow: 0 4px 12px rgba(71,85,105,0.2); transition: all 0.2s; cursor: pointer;">
@@ -1003,10 +1003,9 @@
           <div style="font-size: 80px; margin-bottom: 24px; animation: bounceIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);">🤝</div>
           <h1 style="color: #d97706; font-size: 28px; font-weight: 900; margin-bottom: 16px;">本案件已媒合成功</h1>
           <p style="color: var(--muted); font-size: 16px; line-height: 1.8; margin-bottom: 32px; max-width: 480px; margin-left: auto; margin-right: auto;">
-            本案（案件編號：${caseId}）已於 <strong>${timeStr || "--"}</strong><br>
-            與 <strong>${matchedFacility || "其他機構"}</strong> 媒合成功！<br><br>
-            系統已停止接收新的安置意願與機構回覆。<br>
-            感謝您的參與與協助！
+            本案（案件編號：${caseId}）已完成媒合。<br>
+            系統已停止接收新的安置意願與機構回覆。<br><br>
+            感謝各單位的協助！
           </p>
           <div style="display: flex; flex-direction: column; gap: 14px; align-items: center;">
             <button onclick="window.close()" style="background: #d97706; color: white; border: none; padding: 14px 48px; border-radius: 14px; font-size: 16px; font-weight: 800; width: 100%; max-width: 240px; box-shadow: 0 4px 12px rgba(217,119,6,0.2); transition: all 0.2s; cursor: pointer;">
@@ -1024,10 +1023,6 @@
 
       if (data.status === '案件結案') {
         showClosedCaseView(data.case_id);
-        return;
-      }
-      if (data.status === '媒合成功') {
-        showMatchSuccessView(data.case_id, data.matched_facility, data.matched_at);
         return;
       }
 
@@ -1050,10 +1045,6 @@
             
             if (data.status === '案件結案') {
               showClosedCaseView(data.case_id);
-              return;
-            }
-            if (data.status === '媒合成功') {
-              showMatchSuccessView(data.case_id, data.matched_facility, data.matched_at);
               return;
             }
             
