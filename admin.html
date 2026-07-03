@@ -3331,6 +3331,8 @@
       } catch (err) {
         alert("更新狀態失敗：" + err.message);
       }
+    }
+
     async function saveCmNote(caseId, facilityId, replyId, val) {
       const trimmedVal = val.trim();
       const savedIndicator = document.getElementById(`cmNoteSaved_${caseId}_${facilityId}`);
