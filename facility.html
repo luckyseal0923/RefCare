@@ -1021,7 +1021,7 @@
       const queryData = getQueryParams();
       let data = queryData;
 
-      if (data.status === '案件結案') {
+      if (data.status === '案件結案' || data.status === '媒合成功') {
         showClosedCaseView(data.case_id);
         return;
       }
@@ -1043,7 +1043,7 @@
               special: sbData.special_need || queryData.special
             };
             
-            if (data.status === '案件結案') {
+            if (data.status === '案件結案' || data.status === '媒合成功') {
               showClosedCaseView(data.case_id);
               return;
             }
