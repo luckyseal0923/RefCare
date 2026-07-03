@@ -364,6 +364,32 @@
       position: relative;
     }
 
+    /* Collapsible card styling for mobile responsive */
+    details.card.sheet-collapse {
+      transition: all 0.2s ease;
+    }
+    
+    details.card.sheet-collapse summary {
+      cursor: pointer;
+      list-style: none;
+      outline: none;
+    }
+    
+    details.card.sheet-collapse summary::-webkit-details-marker {
+      display: none;
+    }
+    
+    .collapse-icon::before {
+      content: "＋";
+      font-size: 20px;
+      font-weight: 800;
+      color: #94a3b8;
+    }
+    
+    details[open] .collapse-icon::before {
+      content: "－";
+    }
+
     /* ===== Feedback Modal Styles ===== */
     .feedback-overlay {
       position: fixed;
@@ -529,105 +555,112 @@
       </div>
     </div>
 
-    <div class="card">
-      <h2 style="margin-top:0;">案件資訊</h2>
+    <details class="card sheet-collapse" id="caseInfoCollapse">
+      <summary style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+        <h2 style="margin:0; font-size: 20px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          📋 案件資訊 <span id="quickPatientSummary" style="font-size: 13px; font-weight: normal; color: var(--muted); margin-left: 4px;"></span>
+        </h2>
+        <span class="collapse-icon"></span>
+      </summary>
 
-      <div class="sub-section-title" style="margin-top:10px;">起案與聯絡資訊</div>
-      <div class="info-grid-compact" style="margin-bottom:18px;">
-        <div class="info-item compact">
-          <div class="info-label">個管師姓名</div>
-          <div class="info-value" id="caseManagerView">--</div>
+      <div style="margin-top: 20px; border-top: 1px dashed #cbd5e1; padding-top: 16px;">
+        <div class="sub-section-title" style="margin-top:0;">起案與聯絡資訊</div>
+        <div class="info-grid-compact" style="margin-bottom:18px;">
+          <div class="info-item compact">
+            <div class="info-label">個管師姓名</div>
+            <div class="info-value" id="caseManagerView">--</div>
+          </div>
+          <div class="info-item compact">
+            <div class="info-label">聯絡電話</div>
+            <div class="info-value" id="caseManagerPhoneView">--</div>
+          </div>
+          <div class="info-item compact">
+            <div class="info-label">單位分機</div>
+            <div class="info-value" id="hospitalExtView">--</div>
+          </div>
+          <div class="info-item compact">
+            <div class="info-label">轉介單位</div>
+            <div class="info-value" id="hospitalView">--</div>
+          </div>
+          <div class="info-item compact">
+            <div class="info-label">服務類型</div>
+            <div class="info-value" id="serviceTypeView">--</div>
+          </div>
+          <div class="info-item compact" id="caseIdWrap">
+            <div class="info-label">案件編號</div>
+            <div class="info-value" id="caseIdView" style="font-family: monospace; font-weight: 800;">--</div>
+          </div>
+          <div class="info-item compact" id="createdTimeWrap" style="grid-column: span 2;">
+            <div class="info-label">起案時間</div>
+            <div class="info-value" id="createdTimeView">--</div>
+          </div>
         </div>
-        <div class="info-item compact">
-          <div class="info-label">聯絡電話</div>
-          <div class="info-value" id="caseManagerPhoneView">--</div>
+
+        <div class="sub-section-title" style="margin-top:18px;">個案摘要</div>
+        <div class="info-grid-compact">
+          <div class="info-item compact">
+            <div class="info-label">姓名</div>
+            <div class="info-value" id="patientNameView">王阿滿</div>
+          </div>
+          <div class="info-item compact">
+            <div class="info-label">年齡 / 性別</div>
+            <div class="info-value" id="basicView">82歲 / 女</div>
+          </div>
+          <div class="info-item compact">
+            <div class="info-label">身高 / 體重</div>
+            <div class="info-value" id="bodyView">155 cm / 48 kg</div>
+          </div>
+          <div class="info-item compact">
+            <div class="info-label">意識</div>
+            <div class="info-value" id="consciousnessView">清楚</div>
+          </div>
         </div>
-        <div class="info-item compact">
-          <div class="info-label">單位分機</div>
-          <div class="info-value" id="hospitalExtView">--</div>
+
+        <div class="info-grid" style="margin-top:12px;">
+          <div class="info-item">
+            <div class="info-label">主要診斷 / 轉介原因</div>
+            <div class="info-value" id="diagnosisView">肺炎治療後病況穩定，因反覆跌倒與生活功能下降，出院後需持續居家照護與日常生活協助。</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">現居地址</div>
+            <div class="info-value" id="addressView">文山區興隆路三段 88 號 5 樓</div>
+          </div>
         </div>
-        <div class="info-item compact">
-          <div class="info-label">轉介單位</div>
-          <div class="info-value" id="hospitalView">--</div>
+
+        <div class="sub-section-title" style="margin-top:18px;">功能評估</div>
+        <div class="info-grid-compact">
+          <div class="info-item compact">
+            <div class="info-label">CMS</div>
+            <div class="info-value" id="cmsView">第 6 級</div>
+          </div>
+          <div class="info-item compact">
+            <div class="info-label">意識</div>
+            <div class="info-value" id="consciousnessEvalView">清楚</div>
+          </div>
+          <div class="info-item compact">
+            <div class="info-label">行動能力</div>
+            <div class="info-value" id="mobilityView">輪椅移位</div>
+          </div>
+          <div class="info-item compact">
+            <div class="info-label">特殊需求</div>
+            <div class="info-value" id="specialView">高跌倒風險、夜間需陪伴</div>
+          </div>
         </div>
-        <div class="info-item compact">
-          <div class="info-label">服務類型</div>
-          <div class="info-value" id="serviceTypeView">--</div>
-        </div>
-        <div class="info-item compact" id="caseIdWrap">
-          <div class="info-label">案件編號</div>
-          <div class="info-value" id="caseIdView" style="font-family: monospace; font-weight: 800;">--</div>
-        </div>
-        <div class="info-item compact" id="createdTimeWrap" style="grid-column: span 2;">
-          <div class="info-label">起案時間</div>
-          <div class="info-value" id="createdTimeView">--</div>
+
+        <div class="sub-section-title" style="margin-top:18px;">服務需求</div>
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">服務時段 / 服務碼別</div>
+            <div class="info-value" id="serviceNeedView">週一至週五白天
+  BA01 基本身體清潔、BA04 協助餵食、BA12 肢體關節活動</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">案況簡述</div>
+            <div class="info-value" id="caseSummaryView">個案與女兒同住，主要照顧者白天需上班，返家前希望先銜接居家服務，協助清潔、移位與進食照顧。</div>
+          </div>
         </div>
       </div>
-
-      <div class="sub-section-title" style="margin-top:18px;">個案摘要</div>
-      <div class="info-grid-compact">
-        <div class="info-item compact">
-          <div class="info-label">姓名</div>
-          <div class="info-value" id="patientNameView">王阿滿</div>
-        </div>
-        <div class="info-item compact">
-          <div class="info-label">年齡 / 性別</div>
-          <div class="info-value" id="basicView">82歲 / 女</div>
-        </div>
-        <div class="info-item compact">
-          <div class="info-label">身高 / 體重</div>
-          <div class="info-value" id="bodyView">155 cm / 48 kg</div>
-        </div>
-        <div class="info-item compact">
-          <div class="info-label">意識</div>
-          <div class="info-value" id="consciousnessView">清楚</div>
-        </div>
-      </div>
-
-      <div class="info-grid" style="margin-top:12px;">
-        <div class="info-item">
-          <div class="info-label">主要診斷 / 轉介原因</div>
-          <div class="info-value" id="diagnosisView">肺炎治療後病況穩定，因反覆跌倒與生活功能下降，出院後需持續居家照護與日常生活協助。</div>
-        </div>
-        <div class="info-item">
-          <div class="info-label">現居地址</div>
-          <div class="info-value" id="addressView">文山區興隆路三段 88 號 5 樓</div>
-        </div>
-      </div>
-
-      <div class="sub-section-title" style="margin-top:18px;">功能評估</div>
-      <div class="info-grid-compact">
-        <div class="info-item compact">
-          <div class="info-label">CMS</div>
-          <div class="info-value" id="cmsView">第 6 級</div>
-        </div>
-        <div class="info-item compact">
-          <div class="info-label">意識</div>
-          <div class="info-value" id="consciousnessEvalView">清楚</div>
-        </div>
-        <div class="info-item compact">
-          <div class="info-label">行動能力</div>
-          <div class="info-value" id="mobilityView">輪椅移位</div>
-        </div>
-        <div class="info-item compact">
-          <div class="info-label">特殊需求</div>
-          <div class="info-value" id="specialView">高跌倒風險、夜間需陪伴</div>
-        </div>
-      </div>
-
-      <div class="sub-section-title" style="margin-top:18px;">服務需求</div>
-      <div class="info-grid">
-        <div class="info-item">
-          <div class="info-label">服務時段 / 服務碼別</div>
-          <div class="info-value" id="serviceNeedView">週一至週五白天
-BA01 基本身體清潔、BA04 協助餵食、BA12 肢體關節活動</div>
-        </div>
-        <div class="info-item">
-          <div class="info-label">案況簡述</div>
-          <div class="info-value" id="caseSummaryView">個案與女兒同住，主要照顧者白天需上班，返家前希望先銜接居家服務，協助清潔、移位與進食照顧。</div>
-        </div>
-      </div>
-    </div>
+    </details>
 
     <div class="card">
       <h2 style="margin-top:0;">機構回覆</h2>
@@ -1049,6 +1082,13 @@ ${formatServiceCodes(data.service_codes)}`;
       $("specialView").textContent = data.special;
       $("serviceNeedView").textContent = serviceNeed;
       $("caseSummaryView").textContent = data.case_summary;
+
+      const maskedName = maskName(data.patient_name);
+      $("quickPatientSummary").textContent = `（案主：${maskedName}・${data.age}歲/${data.gender} ｜ CMS ${data.cms_level || '--'}）`;
+
+      if (window.innerWidth >= 768) {
+        $("caseInfoCollapse").setAttribute("open", "");
+      }
 
       // 起案與聯絡資訊
       let cmPhone = data.case_manager_phone || "";
