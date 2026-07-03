@@ -790,19 +790,48 @@
     const $ = id => document.getElementById(id);
     const sb = window.supabaseClient;
 
+    let holidayCache = {};
+    const fallbackHolidays2026 = new Set([
+      "2026-01-01", // 元旦
+      "2026-02-16", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20", // 春節
+      "2026-02-27", // 二二八紀念日補假
+      "2026-04-03", "2026-04-06", // 兒童節/清明節
+      "2026-05-01", // 勞動節
+      "2026-06-19", // 端午節
+      "2026-09-25", "2026-09-28", // 中秋節補假/連假
+      "2026-10-09"  // 國慶日補假
+    ]);
+
+    async function preloadTaiwanHolidays() {
+      const curYear = new Date().getFullYear();
+      const yearsToLoad = [curYear - 1, curYear, curYear + 1, curYear + 2];
+      
+      for (const y of yearsToLoad) {
+        try {
+          const res = await fetch(`https://cdn.jsdelivr.net/gh/ruyut/TaiwanCalendar/data/${y}.json`);
+          if (res.ok) {
+            const list = await res.json();
+            const holidaySet = new Set();
+            for (const item of list) {
+              if (item.isHoliday) {
+                const yearStr = item.date.slice(0, 4);
+                const monthStr = item.date.slice(4, 6);
+                const dateStr = item.date.slice(6, 8);
+                holidaySet.add(`${yearStr}-${monthStr}-${dateStr}`);
+              }
+            }
+            holidayCache[y] = holidaySet;
+          } else {
+            if (y === 2026) holidayCache[y] = fallbackHolidays2026;
+          }
+        } catch (e) {
+          if (y === 2026) holidayCache[y] = fallbackHolidays2026;
+        }
+      }
+    }
+
     function getTaiwanWorkingDays(startDateStr, endDateStr) {
       if (!startDateStr || !endDateStr) return -1;
-      const holidays = new Set([
-        "2026-01-01", // 元旦
-        "2026-02-16", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20", // 春節
-        "2026-02-27", // 二二八紀念日補假
-        "2026-04-03", "2026-04-06", // 兒童節/清明節
-        "2026-05-01", // 勞動節
-        "2026-06-19", // 端午節
-        "2026-09-25", "2026-09-28", // 中秋節補假/連假
-        "2026-10-09"  // 國慶日補假
-      ]);
-
       let start = new Date(startDateStr);
       let end = new Date(endDateStr);
       start.setHours(0, 0, 0, 0);
@@ -822,7 +851,8 @@
         const dateString = `${year}-${month}-${date}`;
 
         const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
-        const isHoliday = holidays.has(dateString);
+        const yearHolidays = holidayCache[year] || (year === 2026 ? fallbackHolidays2026 : new Set());
+        const isHoliday = yearHolidays.has(dateString);
 
         if (!isWeekend && !isHoliday) {
           count++;
@@ -839,6 +869,7 @@
 
     // --- Check login status ---
     window.onload = function() {
+      preloadTaiwanHolidays();
       if (checkLoginStatus()) {
         initApp();
       }
