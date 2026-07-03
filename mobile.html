@@ -760,6 +760,14 @@
           <input type="password" id="dialogClosePassword" placeholder="請輸入密碼">
         </div>
         <div class="input-field">
+          <label>照護計畫審核通過日期 <span style="color:var(--rose);">*</span></label>
+          <input type="date" id="dialogCarePlanApprovedDate" onchange="assessTimeLimit()">
+        </div>
+        <div class="input-field">
+          <label>機構首次進場服務日期 <span style="color:var(--rose);">*</span></label>
+          <input type="date" id="dialogFirstServiceDate" onchange="assessTimeLimit()">
+        </div>
+        <div class="input-field">
           <label>結案時間</label>
           <input type="datetime-local" id="dialogCloseTime" onchange="assessTimeLimit()" oninput="assessTimeLimit()">
           <div id="dialogCloseTimeAssessment" style="margin-top: 8px; font-size: 11px; font-weight: 800;"></div>
@@ -781,6 +789,48 @@
   <script>
     const $ = id => document.getElementById(id);
     const sb = window.supabaseClient;
+
+    function getTaiwanWorkingDays(startDateStr, endDateStr) {
+      if (!startDateStr || !endDateStr) return -1;
+      const holidays = new Set([
+        "2026-01-01", // 元旦
+        "2026-02-16", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20", // 春節
+        "2026-02-27", // 二二八紀念日補假
+        "2026-04-03", "2026-04-06", // 兒童節/清明節
+        "2026-05-01", // 勞動節
+        "2026-06-19", // 端午節
+        "2026-09-25", "2026-09-28", // 中秋節補假/連假
+        "2026-10-09"  // 國慶日補假
+      ]);
+
+      let start = new Date(startDateStr);
+      let end = new Date(endDateStr);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(0, 0, 0, 0);
+
+      if (start > end) return -1;
+
+      let count = 0;
+      let current = new Date(start);
+      current.setDate(current.getDate() + 1);
+
+      while (current <= end) {
+        const dayOfWeek = current.getDay();
+        const year = current.getFullYear();
+        const month = String(current.getMonth() + 1).padStart(2, '0');
+        const date = String(current.getDate()).padStart(2, '0');
+        const dateString = `${year}-${month}-${date}`;
+
+        const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+        const isHoliday = holidays.has(dateString);
+
+        if (!isWeekend && !isHoliday) {
+          count++;
+        }
+        current.setDate(current.getDate() + 1);
+      }
+      return count;
+    }
 
     let allFacilities = [];
     let myActiveCases = [];
@@ -1203,12 +1253,19 @@
                 <div><strong>媒合機構：</strong>${c.matched_facility ? `${c.matched_facility} (${getFacilityShortName(c.matched_facility)})` : '未知'}</div>
                 <div><strong>成功時間：</strong>${c.matched_at ? new Date(c.matched_at).toLocaleString() : '未知'}</div>
                 <div><strong>結案時間：</strong>${c.closed_at ? new Date(c.closed_at).toLocaleString() : '未知'}</div>
+                <div><strong>計畫審核：</strong>${c.care_plan_approved_at || '未填寫'}</div>
+                <div><strong>首次服務：</strong>${c.first_service_at || '未填寫'}</div>
                 <div style="display:flex; align-items:center; gap:6px; margin-top:4px;">
                   <strong>轉接時效：</strong>
-                  ${(c.matched_at && c.closed_at) 
-                    ? (isWithin3Days(c.matched_at, c.closed_at) 
-                      ? '<span style="color:#16a34a; font-weight:800; background:#f0fdf4; padding:2px 8px; border-radius:100px; border:1px solid #bbf7d0; font-size:11px;">✅ 3日內轉接</span>' 
-                      : '<span style="color:#dc2626; font-weight:800; background:#fef2f2; padding:2px 8px; border-radius:100px; border:1px solid #fecaca; font-size:11px;">❌ 超過3日</span>')
+                  ${(c.care_plan_approved_at && c.first_service_at) 
+                    ? (() => {
+                        const workingDays = getTaiwanWorkingDays(c.care_plan_approved_at, c.first_service_at);
+                        if (workingDays === -1) return '<span style="color:#64748b; font-weight:800; background:#f1f5f9; padding:2px 8px; border-radius:100px; border:1px solid #e2e8f0; font-size:11px;">-</span>';
+                        const slaDays = Math.max(0, workingDays - 3);
+                        return slaDays <= 3
+                          ? `<span style="color:#16a34a; font-weight:800; background:#f0fdf4; padding:2px 8px; border-radius:100px; border:1px solid #bbf7d0; font-size:11px;">✅ 符合（${slaDays} 天）</span>`
+                          : `<span style="color:#dc2626; font-weight:800; background:#fef2f2; padding:2px 8px; border-radius:100px; border:1px solid #fecaca; font-size:11px;">❌ 逾期（${slaDays} 天）</span>`;
+                      })()
                     : '<span style="color:#64748b; font-weight:800; background:#f1f5f9; padding:2px 8px; border-radius:100px; border:1px solid #e2e8f0; font-size:11px;">-</span>'
                   }
                 </div>
@@ -1321,6 +1378,8 @@
       
       $("dialogCloseEmpId").value = sessionStorage.getItem('admin_token');
       $("dialogClosePassword").value = "";
+      $("dialogCarePlanApprovedDate").value = "";
+      $("dialogFirstServiceDate").value = "";
       $("dialogCloseError").style.display = "none";
 
       const now = new Date();
@@ -1336,31 +1395,28 @@
     }
 
     function assessTimeLimit() {
-      const c = currentDetailCase;
-      if (!c || !c.matched_at) return;
-
-      const closeVal = $("dialogCloseTime").value;
+      const carePlanDateVal = $("dialogCarePlanApprovedDate").value;
+      const firstServiceDateVal = $("dialogFirstServiceDate").value;
       const assessmentEl = $("dialogCloseTimeAssessment");
-      if (!closeVal) {
+
+      if (!carePlanDateVal || !firstServiceDateVal) {
         assessmentEl.style.display = "none";
         return;
       }
 
-      const matchMs = new Date(c.matched_at).getTime();
-      const closeMs = new Date(closeVal).getTime();
-      const diffMs = closeMs - matchMs;
-      const diffHours = (diffMs / (60 * 60 * 1000)).toFixed(1);
-      const isWithin3Days = diffMs >= 0 && diffMs <= 3 * 24 * 60 * 60 * 1000;
+      const workingDays = getTaiwanWorkingDays(carePlanDateVal, firstServiceDateVal);
+      if (workingDays === -1) {
+        assessmentEl.style.display = "block";
+        assessmentEl.innerHTML = `<span style="color:#e11d48;">🔴 警告：首次服務日期不可早於審核通過日期！</span>`;
+        return;
+      }
 
+      const slaDays = Math.max(0, workingDays - 3);
       assessmentEl.style.display = "block";
-      if (isWithin3Days) {
-        assessmentEl.innerHTML = `<span style="color:#10b981;">🟢 符合 3 日內轉接 (相差 ${diffHours} 小時)</span>`;
+      if (slaDays <= 3) {
+        assessmentEl.innerHTML = `<span style="color:#10b981;">🟢 轉接時效評估：符合三個工作天內首次服務 (扣除3日審閱期，實計 ${slaDays} 工作日)</span>`;
       } else {
-        if (diffMs < 0) {
-          assessmentEl.innerHTML = `<span style="color:#e11d48;">🔴 警告：結案時間早於媒合時間！</span>`;
-        } else {
-          assessmentEl.innerHTML = `<span style="color:#e11d48;">🔴 超過 3 日轉接 (相差 ${diffHours} 小時)</span>`;
-        }
+        assessmentEl.innerHTML = `<span style="color:#e11d48;">🔴 轉接時效評估：超過三個工作天提供服務 (扣除3日審閱期，實計 ${slaDays} 工作日)</span>`;
       }
     }
 
@@ -1368,6 +1424,8 @@
       const eid = $("dialogCloseEmpId").value;
       const pwd = $("dialogClosePassword").value;
       const closeTime = $("dialogCloseTime").value;
+      const carePlanDate = $("dialogCarePlanApprovedDate").value;
+      const firstServiceDate = $("dialogFirstServiceDate").value;
       const errEl = $("dialogCloseError");
       errEl.style.display = "none";
 
@@ -1378,6 +1436,23 @@
       }
       if (!closeTime) {
         errEl.textContent = "請選擇結案時間";
+        errEl.style.display = "block";
+        return;
+      }
+      if (!carePlanDate) {
+        errEl.textContent = "請選擇照護計畫審核通過日期";
+        errEl.style.display = "block";
+        return;
+      }
+      if (!firstServiceDate) {
+        errEl.textContent = "請選擇機構首次進場服務日期";
+        errEl.style.display = "block";
+        return;
+      }
+
+      const workingDays = getTaiwanWorkingDays(carePlanDate, firstServiceDate);
+      if (workingDays === -1) {
+        errEl.textContent = "警告：首次服務日期不可早於審核通過日期！";
         errEl.style.display = "block";
         return;
       }
@@ -1399,7 +1474,9 @@
         // Close the case
         const { error: updateErr } = await sb.from('cases').update({
           status: '案件結案',
-          closed_at: closeTime
+          closed_at: closeTime,
+          care_plan_approved_at: carePlanDate,
+          first_service_at: firstServiceDate
         }).eq('case_id', currentDetailCase.case_id);
 
         if (updateErr) throw updateErr;
