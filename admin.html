@@ -1819,20 +1819,30 @@
         };
       });
 
-      // 排序邏輯：已回覆以時間由新到舊排序 (replyTimestamp 降冪)，未回覆 (pending) 一律排在最後面
+      // 排序邏輯：可接案 (accept) > 待協調 (coordinate) > 待回覆 (pending) > 無法接案 (reject)
+      const statusWeight = {
+        'accept': 1,
+        'coordinate': 2,
+        'pending': 3,
+        'reject': 4
+      };
+
       displayList.sort((a, b) => {
-        const aPending = a.status === 'pending';
-        const bPending = b.status === 'pending';
+        const wA = statusWeight[a.status] || 3;
+        const wB = statusWeight[b.status] || 3;
         
-        if (aPending && !bPending) return 1;  // a 是未回覆，排到後面
-        if (!aPending && bPending) return -1; // b 是未回覆，a 排在前面
-        
-        if (!aPending && !bPending) {
-          return b.replyTimestamp - a.replyTimestamp; // 由新到舊
+        if (wA !== wB) {
+          return wA - wB; // 權重小（優先級高）的排在前面
         }
         
-        // 如果都是未回覆，按機構名稱筆劃排序
-        return a.name.localeCompare(b.name, 'zh-TW');
+        // 相同狀態下的次級排序：
+        if (a.status === 'pending') {
+          // 如果都是未回覆，按機構名稱筆劃排序
+          return a.name.localeCompare(b.name, 'zh-TW');
+        } else {
+          // 如果是同種回覆狀態，按回覆時間由新到舊排序 (replyTimestamp 降冪)
+          return b.replyTimestamp - a.replyTimestamp;
+        }
       });
 
       // 計算各狀態家數統計

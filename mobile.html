@@ -1038,6 +1038,7 @@
         const noteReply = facReplies.find(r => r.case_manager_note);
         const cmNote = noteReply ? noteReply.case_manager_note : '';
 
+        const replyTimestamp = realReply ? new Date(realReply.created_at).getTime() : 0;
         return {
           name: fac ? fac.name : (realReply ? realReply.facility_name : '未知機構'),
           phone: fac ? fac.phone : '未提供電話',
@@ -1045,7 +1046,8 @@
           status: realReply ? realReply.reply_status : 'pending',
           note: realReply ? (realReply.note || '無備註') : '尚未回覆',
           reporter: realReply ? (realReply.reporter || '未提供') : '未提供',
-          case_manager_note: cmNote
+          case_manager_note: cmNote,
+          replyTimestamp: replyTimestamp
         };
       });
 
@@ -1064,8 +1066,31 @@
         filteredReplies = displayList.filter(r => r.status === activeReplyTab);
       }
 
-      // Sort displayList: replied first, pending last
-      filteredReplies.sort((a, b) => (a.status === 'pending') - (b.status === 'pending'));
+      // Sort displayList: accept > coordinate > pending > reject
+      const statusWeight = {
+        'accept': 1,
+        'coordinate': 2,
+        'pending': 3,
+        'reject': 4
+      };
+
+      filteredReplies.sort((a, b) => {
+        const wA = statusWeight[a.status] || 3;
+        const wB = statusWeight[b.status] || 3;
+        
+        if (wA !== wB) {
+          return wA - wB; // 權重小（優先級高）的排在前面
+        }
+        
+        // 相同狀態下的次級排序：
+        if (a.status === 'pending') {
+          // 如果都是未回覆，按機構名稱筆劃排序
+          return a.name.localeCompare(b.name, 'zh-TW');
+        } else {
+          // 如果是同種回覆狀態，按回覆時間由新到舊排序 (replyTimestamp 降冪)
+          return b.replyTimestamp - a.replyTimestamp;
+        }
+      });
 
       const replyListHtml = filteredReplies.map(r => {
         const isPending = r.status === 'pending';
