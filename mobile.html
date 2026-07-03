@@ -514,7 +514,7 @@
     }
     
     .tab-btn {
-      flex: 1;
+      flex-shrink: 0;
       text-align: center;
       padding: 8px 12px;
       font-size: 12px;
@@ -700,7 +700,6 @@
       <div class="app-body">
 
          <div class="section-title">我的進行中案件</div>
-         <div id="casesTabsContainer" class="tabs-container"></div>
  
          <!-- Case Cards List Container -->
          <div id="casesListContainer">
@@ -786,7 +785,7 @@
     let allFacilities = [];
     let myActiveCases = [];
     let currentDetailCase = null;
-    let activeCaseTab = 'all';
+    let activeReplyTab = 'all';
 
     // --- Check login status ---
     window.onload = function() {
@@ -929,62 +928,20 @@
 
     function renderCasesList() {
       const container = $("casesListContainer");
-      const tabsContainer = $("casesTabsContainer");
-
-      // Calculate counts
-      const counts = {
-        all: myActiveCases.length,
-        matching: myActiveCases.filter(c => c.status !== '媒合成功').length,
-        success: myActiveCases.filter(c => c.status === '媒合成功').length
-      };
-
-      // Render tab buttons
-      if (tabsContainer) {
-        tabsContainer.innerHTML = `
-          <button class="tab-btn ${activeCaseTab === 'all' ? 'active' : ''}" onclick="filterMobileCases('all')">
-            全部 (${counts.all})
-          </button>
-          <button class="tab-btn ${activeCaseTab === 'matching' ? 'active' : ''}" onclick="filterMobileCases('matching')">
-            媒合中 (${counts.matching})
-          </button>
-          <button class="tab-btn ${activeCaseTab === 'success' ? 'active' : ''}" onclick="filterMobileCases('success')">
-            已成功 (${counts.success})
-          </button>
-        `;
-      }
-
-      // Filter list
-      let filteredCases = myActiveCases;
-      if (activeCaseTab === 'matching') {
-        filteredCases = myActiveCases.filter(c => c.status !== '媒合成功');
-      } else if (activeCaseTab === 'success') {
-        filteredCases = myActiveCases.filter(c => c.status === '媒合成功');
-      }
-
-      if (filteredCases.length === 0) {
-        let emptyTitle = "您目前沒有進行中的案件";
-        let emptyDesc = "有新個案分派給您時，將會顯示於此處";
-        if (activeCaseTab === 'matching') {
-          emptyTitle = "目前沒有進行媒合中的案件";
-          emptyDesc = "所有案件皆已結案或媒合成功";
-        } else if (activeCaseTab === 'success') {
-          emptyTitle = "目前沒有媒合成功的案件";
-          emptyDesc = "請點選個案詳情登錄媒合結果";
-        }
-
+      if (myActiveCases.length === 0) {
         container.innerHTML = `
           <div class="empty-state">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
             </svg>
-            <h4>${emptyTitle}</h4>
-            <p style="font-size:12px; margin:0;">${emptyDesc}</p>
+            <h4>您目前沒有進行中的案件</h4>
+            <p style="font-size:12px; margin:0;">有新個案分派給您時，將會顯示於此處</p>
           </div>
         `;
         return;
       }
 
-      container.innerHTML = filteredCases.map((c) => {
+      container.innerHTML = myActiveCases.map((c) => {
         const total = c.total_targets || 0;
         const replied = (c.replies || []).filter(r => r.reply_status && r.reply_status !== 'pending').length;
         const progressPercent = total > 0 ? Math.min((replied / total) * 100, 100) : 0;
@@ -1027,11 +984,6 @@
       }).join('');
     }
 
-    window.filterMobileCases = function(tabName) {
-      activeCaseTab = tabName;
-      renderCasesList();
-    };
-
     // --- Helper lookup ---
     function getFacilityShortName(fullName) {
       if (!fullName) return '';
@@ -1044,6 +996,7 @@
       currentDetailCase = myActiveCases.find(c => c.case_id === caseId);
       if (!currentDetailCase) return;
 
+      activeReplyTab = 'all';
       $("sheetPatientTitle").textContent = `${currentDetailCase.patient_name} 的轉介案件詳情`;
       renderDetailsContent();
 
@@ -1096,10 +1049,25 @@
         };
       });
 
-      // Sort displayList: replied first, pending last
-      displayList.sort((a, b) => (a.status === 'pending') - (b.status === 'pending'));
+      // Calculate reply counts for status tabs
+      const replyCounts = {
+        all: displayList.length,
+        pending: displayList.filter(r => r.status === 'pending').length,
+        accept: displayList.filter(r => r.status === 'accept').length,
+        coordinate: displayList.filter(r => r.status === 'coordinate').length,
+        reject: displayList.filter(r => r.status === 'reject').length
+      };
 
-      const replyListHtml = displayList.map(r => `
+      // Filter replies based on selected status tab
+      let filteredReplies = displayList;
+      if (activeReplyTab !== 'all') {
+        filteredReplies = displayList.filter(r => r.status === activeReplyTab);
+      }
+
+      // Sort displayList: replied first, pending last
+      filteredReplies.sort((a, b) => (a.status === 'pending') - (b.status === 'pending'));
+
+      const replyListHtml = filteredReplies.map(r => `
         <div class="reply-list-item">
           <div class="reply-list-head">
             <span class="reply-fac-name">
@@ -1198,9 +1166,29 @@
 
         <!-- Targeted Institutions Reply List -->
         <div class="sheet-card">
-          <h5>目標機構回覆清單 (${replies.length} / ${targetIds.length})</h5>
+          <h5>目標機構回覆清單 (${filteredReplies.length} / ${targetIds.length})</h5>
+          
+          <!-- 可左右滑動的篩選頁籤列 -->
+          <div class="tabs-container" style="margin: 8px 0 12px 0;">
+            <button class="tab-btn ${activeReplyTab === 'all' ? 'active' : ''}" onclick="filterReplyList('all')">
+              全部 (${replyCounts.all})
+            </button>
+            <button class="tab-btn ${activeReplyTab === 'pending' ? 'active' : ''}" onclick="filterReplyList('pending')">
+              ⌛ 待回覆 (${replyCounts.pending})
+            </button>
+            <button class="tab-btn ${activeReplyTab === 'accept' ? 'active' : ''}" onclick="filterReplyList('accept')">
+              ✅ 可接案 (${replyCounts.accept})
+            </button>
+            <button class="tab-btn ${activeReplyTab === 'coordinate' ? 'active' : ''}" onclick="filterReplyList('coordinate')">
+              ⚠️ 待協調 (${replyCounts.coordinate})
+            </button>
+            <button class="tab-btn ${activeReplyTab === 'reject' ? 'active' : ''}" onclick="filterReplyList('reject')">
+              ❌ 無法接案 (${replyCounts.reject})
+            </button>
+          </div>
+
           <div style="max-height: 450px; overflow-y: auto;">
-            ${replyListHtml || '<div style="color:var(--muted); text-align:center; padding:12px;">無目標機構</div>'}
+            ${replyListHtml || '<div style="color:var(--muted); text-align:center; padding:12px;">無相符機構</div>'}
           </div>
         </div>
 
@@ -1210,6 +1198,11 @@
         </div>
       `;
     }
+
+    window.filterReplyList = function(tabName) {
+      activeReplyTab = tabName;
+      renderDetailsContent();
+    };
 
     // --- Action dialog: Match Success ---
     function openMatchDialog() {
