@@ -336,20 +336,54 @@
     }
 
     @media (max-width:768px){
+      .wrap {
+        padding: 12px 8px 30px;
+      }
+
+      .card {
+        padding: 14px 12px !important;
+        margin-bottom: 12px !important;
+        border-radius: 16px !important;
+      }
+
       .info-grid,
-      .info-grid-compact,
       .info-grid-3,
       .reply-actions{
         grid-template-columns:1fr;
       }
+
+      .info-grid-compact{
+        grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
+        gap:8px;
+      }
       
-      #createdTimeWrap, #caseIdWrap {
+      #createdTimeWrap {
+        grid-column: span 2 !important;
+      }
+      
+      #caseIdWrap {
         grid-column: span 1 !important;
+      }
+
+      .info-item {
+        padding: 6px 8px !important;
+      }
+      
+      .sub-section-title {
+        margin-top: 12px !important;
+        font-size: 13px !important;
+        margin-bottom: 8px !important;
+      }
+      
+      h2 {
+        font-size: 18px !important;
+        margin-bottom: 12px !important;
       }
 
       h1{
         font-size:22px;
       }
+
       .feedback-link-container {
         position: static !important;
         display: flex;
@@ -362,32 +396,6 @@
 
     .card.header {
       position: relative;
-    }
-
-    /* Collapsible card styling for mobile responsive */
-    details.card.sheet-collapse {
-      transition: all 0.2s ease;
-    }
-    
-    details.card.sheet-collapse summary {
-      cursor: pointer;
-      list-style: none;
-      outline: none;
-    }
-    
-    details.card.sheet-collapse summary::-webkit-details-marker {
-      display: none;
-    }
-    
-    .collapse-icon::before {
-      content: "＋";
-      font-size: 20px;
-      font-weight: 800;
-      color: #94a3b8;
-    }
-    
-    details[open] .collapse-icon::before {
-      content: "－";
     }
 
     /* ===== Feedback Modal Styles ===== */
@@ -555,16 +563,10 @@
       </div>
     </div>
 
-    <details class="card sheet-collapse" id="caseInfoCollapse">
-      <summary style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-        <h2 style="margin:0; font-size: 20px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-          📋 案件資訊 <span id="quickPatientSummary" style="font-size: 13px; font-weight: normal; color: var(--muted); margin-left: 4px;"></span>
-        </h2>
-        <span class="collapse-icon"></span>
-      </summary>
+    <div class="card">
+      <h2 style="margin-top:0;">案件資訊</h2>
 
-      <div style="margin-top: 20px; border-top: 1px dashed #cbd5e1; padding-top: 16px;">
-        <div class="sub-section-title" style="margin-top:0;">起案與聯絡資訊</div>
+      <div class="sub-section-title" style="margin-top:10px;">起案與聯絡資訊</div>
         <div class="info-grid-compact" style="margin-bottom:18px;">
           <div class="info-item compact">
             <div class="info-label">個管師姓名</div>
@@ -659,8 +661,7 @@
             <div class="info-value" id="caseSummaryView">個案與女兒同住，主要照顧者白天需上班，返家前希望先銜接居家服務，協助清潔、移位與進食照顧。</div>
           </div>
         </div>
-      </div>
-    </details>
+    </div>
 
     <div class="card">
       <h2 style="margin-top:0;">機構回覆</h2>
@@ -1083,12 +1084,6 @@ ${formatServiceCodes(data.service_codes)}`;
       $("serviceNeedView").textContent = serviceNeed;
       $("caseSummaryView").textContent = data.case_summary;
 
-      const maskedName = maskName(data.patient_name);
-      $("quickPatientSummary").textContent = `（案主：${maskedName}・${data.age}歲/${data.gender} ｜ CMS ${data.cms_level || '--'}）`;
-
-      if (window.innerWidth >= 768) {
-        $("caseInfoCollapse").setAttribute("open", "");
-      }
 
       // 起案與聯絡資訊
       let cmPhone = data.case_manager_phone || "";
