@@ -2005,7 +2005,10 @@
             <div><strong>照護計畫審核日期：</strong>${item.care_plan_approved_at || '未填寫'}</div>
             <div><strong>機構首次服務日期：</strong>${item.first_service_at || '未填寫'}</div>
             <div style="display:flex; align-items:center; gap:6px;">
-              <strong>轉接時效：</strong>
+              <div style="display:flex; flex-direction:column;">
+                <strong>三日內轉介時效：</strong>
+                <span style="font-size:10px; color:#64748b; font-weight:normal; margin-top:-2px;">(已扣除 審閱期/假日)</span>
+              </div>
               ${(item.care_plan_approved_at && item.first_service_at) 
                 ? (() => {
                     const workingDays = getTaiwanWorkingDays(item.care_plan_approved_at, item.first_service_at);
