@@ -634,8 +634,10 @@ BA01 基本身體清潔、BA04 協助餵食、BA12 肢體關節活動</div>
 
       <div class="field">
         <label for="facilitySearch">本案件指定派案機構</label>
-        <input type="text" id="facilitySearch" placeholder="請輸入機構名稱或簡稱搜尋" autocomplete="off" />
-        <div id="facilityDropdown" class="facility-dropdown"></div>
+        <div class="search-wrapper" style="position: relative; width: 100%;">
+          <input type="text" id="facilitySearch" placeholder="請輸入機構名稱或簡稱搜尋" autocomplete="off" />
+          <div id="facilityDropdown" class="facility-dropdown"></div>
+        </div>
         <div id="designationWarning" style="color: #dc2626; font-size: 13px; font-weight: 800; margin-top: 6px; display: none;">
           ⚠️ 非本次指定回復機構
         </div>
