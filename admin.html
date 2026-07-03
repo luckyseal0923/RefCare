@@ -2004,8 +2004,8 @@
             <div><strong>正式結案時間：</strong>${item.closed_at ? new Date(item.closed_at).toLocaleString() : '未知'}</div>
             <div><strong>照護計畫審核日期：</strong>${item.care_plan_approved_at || '未填寫'}</div>
             <div><strong>機構首次服務日期：</strong>${item.first_service_at || '未填寫'}</div>
-            <div style="display:flex; align-items:center; gap:6px;">
-              <div style="display:flex; flex-direction:column;">
+            <div style="display:flex; align-items:center; gap:6px; white-space:nowrap;">
+              <div style="display:flex; flex-direction:column; flex-shrink:0;">
                 <strong>三日內轉介時效：</strong>
                 <span style="font-size:10px; color:#64748b; font-weight:normal; margin-top:-2px;">(已扣除 審閱期/假日)</span>
               </div>
