@@ -445,6 +445,100 @@
       padding-bottom: 6px;
     }
 
+    /* Collapsible sections in bottom sheet */
+    .sheet-collapse {
+      background: #f8fafc;
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      border: 1px solid var(--line);
+      font-size: 13px;
+      transition: all 0.2s ease;
+    }
+
+    .sheet-collapse[open] {
+      background: white;
+    }
+
+    .sheet-collapse-summary {
+      font-weight: 850;
+      color: var(--primary);
+      cursor: pointer;
+      outline: none;
+      list-style: none; /* hide default marker */
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+    }
+
+    /* Custom marker */
+    .sheet-collapse-summary::after {
+      content: "＋";
+      font-size: 14px;
+      font-weight: bold;
+      transition: transform 0.2s ease;
+    }
+
+    .sheet-collapse[open] .sheet-collapse-summary::after {
+      content: "－";
+    }
+
+    /* Remove native arrow in Chrome/Safari/Firefox */
+    .sheet-collapse-summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .yellow-collapse {
+      background: #fffbeb;
+      border-color: #fef3c7;
+    }
+    .yellow-collapse[open] {
+      background: #fffbeb;
+    }
+    .yellow-collapse .sheet-collapse-summary {
+      color: #d97706;
+    }
+
+    /* Case List Filter Tabs */
+    .tabs-container {
+      display: flex;
+      gap: 8px;
+      margin: 12px 0 16px 0;
+      padding: 2px 0;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      width: 100%;
+    }
+    
+    .tab-btn {
+      flex: 1;
+      text-align: center;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 850;
+      border: 1px solid var(--line);
+      border-radius: 100px;
+      background: white;
+      color: var(--text-soft);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+      outline: none;
+    }
+    
+    .tab-btn.active {
+      background: #4f46e5;
+      color: white;
+      border-color: #4f46e5;
+      box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2);
+    }
+
     /* Facility Reply List */
     .reply-list-item {
       padding: 10px 0;
@@ -555,17 +649,6 @@
 <body>
   <div class="mobile-container">
     
-    <!-- Prominent Warning / Tip Banner -->
-    <div class="warning-banner">
-      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-      </svg>
-      <div style="flex: 1;">
-        手機版為個管師行動專用，僅呈現「您的進行中個案與催辦/媒合操作」。<br/>
-        如需歷史案件、機構/群組管理、帳號維護等完整功能，請使用電腦登入網頁版。
-      </div>
-    </div>
-
     <!-- Login Section -->
     <div id="loginSection" class="login-wrapper">
       <div class="login-card">
@@ -601,22 +684,24 @@
         </div>
       </header>
 
+      <!-- Prominent Warning / Tip Banner -->
+      <div class="warning-banner">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+        </svg>
+        <div style="flex: 1;">
+          ⚠️ 完整後台功能請以電腦版開啟
+        </div>
+      </div>
+
       <!-- App Content Area -->
       <div class="app-body">
-        
-        <!-- Welcome Banner -->
-        <div class="welcome-banner">
-          <div>
-            <h3 id="welcomeTitle">歡迎回來，--</h3>
-            <p>目前顯示您負責的進行中案件</p>
-          </div>
-          <div class="badge badge-primary" style="font-size: 11px; padding: 6px 10px;">手機專用</div>
-        </div>
 
-        <div class="section-title">我的進行中案件</div>
-
-        <!-- Case Cards List Container -->
-        <div id="casesListContainer">
+         <div class="section-title">我的進行中案件</div>
+         <div id="casesTabsContainer" class="tabs-container"></div>
+ 
+         <!-- Case Cards List Container -->
+         <div id="casesListContainer">
           <!-- Dynamically populated -->
         </div>
 
@@ -699,6 +784,7 @@
     let allFacilities = [];
     let myActiveCases = [];
     let currentDetailCase = null;
+    let activeCaseTab = 'all';
 
     // --- Check login status ---
     window.onload = function() {
@@ -717,7 +803,8 @@
         $("appSection").style.display = "flex";
         
         $("headerUserName").textContent = name;
-        $("welcomeTitle").textContent = `歡迎回來，${name}`;
+        const welcomeEl = $("welcomeTitle");
+        if (welcomeEl) welcomeEl.textContent = `歡迎回來，${name}`;
         return true;
       }
       
@@ -840,22 +927,64 @@
 
     function renderCasesList() {
       const container = $("casesListContainer");
-      if (myActiveCases.length === 0) {
+      const tabsContainer = $("casesTabsContainer");
+
+      // Calculate counts
+      const counts = {
+        all: myActiveCases.length,
+        matching: myActiveCases.filter(c => c.status !== '媒合成功').length,
+        success: myActiveCases.filter(c => c.status === '媒合成功').length
+      };
+
+      // Render tab buttons
+      if (tabsContainer) {
+        tabsContainer.innerHTML = `
+          <button class="tab-btn ${activeCaseTab === 'all' ? 'active' : ''}" onclick="filterMobileCases('all')">
+            全部 (${counts.all})
+          </button>
+          <button class="tab-btn ${activeCaseTab === 'matching' ? 'active' : ''}" onclick="filterMobileCases('matching')">
+            媒合中 (${counts.matching})
+          </button>
+          <button class="tab-btn ${activeCaseTab === 'success' ? 'active' : ''}" onclick="filterMobileCases('success')">
+            已成功 (${counts.success})
+          </button>
+        `;
+      }
+
+      // Filter list
+      let filteredCases = myActiveCases;
+      if (activeCaseTab === 'matching') {
+        filteredCases = myActiveCases.filter(c => c.status !== '媒合成功');
+      } else if (activeCaseTab === 'success') {
+        filteredCases = myActiveCases.filter(c => c.status === '媒合成功');
+      }
+
+      if (filteredCases.length === 0) {
+        let emptyTitle = "您目前沒有進行中的案件";
+        let emptyDesc = "有新個案分派給您時，將會顯示於此處";
+        if (activeCaseTab === 'matching') {
+          emptyTitle = "目前沒有進行媒合中的案件";
+          emptyDesc = "所有案件皆已結案或媒合成功";
+        } else if (activeCaseTab === 'success') {
+          emptyTitle = "目前沒有媒合成功的案件";
+          emptyDesc = "請點選個案詳情登錄媒合結果";
+        }
+
         container.innerHTML = `
           <div class="empty-state">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
             </svg>
-            <h4>您目前沒有進行中的案件</h4>
-            <p style="font-size:12px; margin:0;">有新個案分派給您時，將會顯示於此處</p>
+            <h4>${emptyTitle}</h4>
+            <p style="font-size:12px; margin:0;">${emptyDesc}</p>
           </div>
         `;
         return;
       }
 
-      container.innerHTML = myActiveCases.map((c, idx) => {
+      container.innerHTML = filteredCases.map((c) => {
         const total = c.total_targets || 0;
-        const replied = (c.replies || []).length;
+        const replied = (c.replies || []).filter(r => r.reply_status && r.reply_status !== 'pending').length;
         const progressPercent = total > 0 ? Math.min((replied / total) * 100, 100) : 0;
         const dateStr = new Date(c.created_at).toLocaleDateString();
 
@@ -868,7 +997,7 @@
         }
 
         return `
-          <div class="case-card" onclick="openDetailsSheet(${idx})">
+          <div class="case-card" onclick="openDetailsSheet('${c.case_id}')">
             <div class="card-head">
               <div>
                 <span class="patient-name">${c.patient_name}</span>
@@ -896,6 +1025,11 @@
       }).join('');
     }
 
+    window.filterMobileCases = function(tabName) {
+      activeCaseTab = tabName;
+      renderCasesList();
+    };
+
     // --- Helper lookup ---
     function getFacilityShortName(fullName) {
       if (!fullName) return '';
@@ -904,8 +1038,8 @@
     }
 
     // --- Detail Sheet UI ---
-    function openDetailsSheet(idx) {
-      currentDetailCase = myActiveCases[idx];
+    function openDetailsSheet(caseId) {
+      currentDetailCase = myActiveCases.find(c => c.case_id === caseId);
       if (!currentDetailCase) return;
 
       $("sheetPatientTitle").textContent = `${currentDetailCase.patient_name} 的轉介案件詳情`;
@@ -935,14 +1069,28 @@
 
       const displayList = Array.from(allTargetIds).map(id => {
         const fac = allFacilities.find(f => String(f.id) === id);
-        const reply = replies.find(r => String(r.facility_id) === id || (fac && r.facility_name === fac.name));
+        const facReplies = replies.filter(r => 
+          (r.facility_id && String(r.facility_id) === id) || 
+          (!r.facility_id && fac && r.facility_name === fac.name)
+        );
+
+        let realReply = facReplies.find(r => r.reply_status && r.reply_status !== 'pending');
+        if (!realReply && facReplies.length > 0) {
+          facReplies.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+          realReply = facReplies[0];
+        }
+
+        const noteReply = facReplies.find(r => r.case_manager_note);
+        const cmNote = noteReply ? noteReply.case_manager_note : '';
+
         return {
-          name: fac ? fac.name : (reply ? reply.facility_name : '未知機構'),
+          name: fac ? fac.name : (realReply ? realReply.facility_name : '未知機構'),
           phone: fac ? fac.phone : '未提供電話',
           lineGroupId: fac ? fac.line_group_id : null,
-          status: reply ? reply.reply_status : 'pending',
-          note: reply ? (reply.note || '無備註') : '尚未回覆',
-          reporter: reply ? (reply.reporter || '未提供') : '未提供'
+          status: realReply ? realReply.reply_status : 'pending',
+          note: realReply ? (realReply.note || '無備註') : '尚未回覆',
+          reporter: realReply ? (realReply.reporter || '未提供') : '未提供',
+          case_manager_note: cmNote
         };
       });
 
@@ -966,6 +1114,7 @@
           <div style="font-size:11px; color:var(--text-soft);">📞 電話：${r.phone}</div>
           ${r.status !== 'pending' ? `<div style="font-size:11px; color:#3b82f6; font-weight:700;">填報人：${r.reporter}</div>` : ''}
           <div style="font-size:12px; background:var(--surface-soft); padding:6px 10px; border-radius:6px; margin-top:4px;">${r.note}</div>
+          ${r.case_manager_note ? `<div style="font-size:12px; background:#fffbeb; padding:6px 10px; border-radius:6px; margin-top:4px; border:1px solid #fef3c7; color:#d97706;">📝 個管師備註：${r.case_manager_note}</div>` : ''}
         </div>
       `).join('');
 
@@ -990,53 +1139,65 @@
       };
 
       container.innerHTML = `
-        <!-- Case Details Summary Card -->
-        <div class="sheet-card">
-          <h5>個案基本評估</h5>
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
-            <div><strong>性別/年齡：</strong>${c.gender} / ${c.age}歲</div>
-            <div><strong>失能等級：</strong>CMS ${c.cms_level || '未填'}</div>
-            <div><strong>行動能力：</strong>${c.mobility || '未填'}</div>
-            <div><strong>意識狀態：</strong>${c.consciousness || '未填'}</div>
+        <!-- Case Details Summary Collapse -->
+        <details class="sheet-collapse">
+          <summary class="sheet-collapse-summary">📋 起案與需求資訊</summary>
+          <div style="margin-top:10px; display:flex; flex-direction:column; gap:10px;">
+            <!-- Case Details Summary Card -->
+            <div class="sheet-card" style="margin-bottom:0;">
+              <h5>個案基本評估</h5>
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+                <div><strong>性別/年齡：</strong>${c.gender} / ${c.age}歲</div>
+                <div><strong>失能等級：</strong>CMS ${c.cms_level || '未填'}</div>
+                <div><strong>行動能力：</strong>${c.mobility || '未填'}</div>
+                <div><strong>意識狀態：</strong>${c.consciousness || '未填'}</div>
+              </div>
+              <div style="margin-top:6px;"><strong>現居地址：</strong>${c.address || '未填'}</div>
+            </div>
+
+            <div class="sheet-card" style="margin-bottom:0;">
+              <h5>服務需求與長照服務碼</h5>
+              <div><strong>服務類型：</strong>${c.service_type || '未填'}</div>
+              <div><strong>期待時段：</strong>${c.service_time || '未填'}</div>
+              <div><strong>服務代碼：</strong>${Array.isArray(c.service_codes) && c.service_codes.length > 0 ? c.service_codes.join(', ') : '無'}</div>
+            </div>
+
+            <div class="sheet-card" style="margin-bottom:0;">
+              <h5>診斷與摘要說明</h5>
+              <div><strong>主要診斷：</strong>${c.diagnosis}</div>
+              <div style="margin-top:6px; background:#f8fafc; padding:8px; border-radius:6px; font-size:12px;"><strong>狀況描述：</strong>${c.case_summary}</div>
+              <div style="margin-top:4px;"><strong>特殊需求：</strong>${c.special_need || '無'}</div>
+            </div>
           </div>
-          <div style="margin-top:6px;"><strong>現居地址：</strong>${c.address || '未填'}</div>
-        </div>
+        </details>
 
-        <div class="sheet-card">
-          <h5>服務需求與長照服務碼</h5>
-          <div><strong>服務類型：</strong>${c.service_type || '未填'}</div>
-          <div><strong>期待時段：</strong>${c.service_time || '未填'}</div>
-          <div><strong>服務代碼：</strong>${Array.isArray(c.service_codes) && c.service_codes.length > 0 ? c.service_codes.join(', ') : '無'}</div>
-        </div>
-
-        <div class="sheet-card">
-          <h5>診斷與摘要說明</h5>
-          <div><strong>主要診斷：</strong>${c.diagnosis}</div>
-          <div style="margin-top:6px; background:#f8fafc; padding:8px; border-radius:6px; font-size:12px;"><strong>狀況描述：</strong>${c.case_summary}</div>
-          <div style="margin-top:4px;"><strong>特殊需求：</strong>${c.special_need || '無'}</div>
-        </div>
-
-        <!-- Dynamic Match Success Card -->
-        <div class="sheet-card" style="background:#fffbeb; border:1px solid #fef3c7;">
-          <h5 style="color:#d97706; border-bottom:1px solid #fef3c7; margin-bottom:8px;">🟠 媒合成功資訊</h5>
-          <div><strong>媒合機構：</strong>${c.matched_facility ? `${c.matched_facility} (${getFacilityShortName(c.matched_facility)})` : '未知'}</div>
-          <div><strong>成功時間：</strong>${c.matched_at ? new Date(c.matched_at).toLocaleString() : '未知'}</div>
-          <div><strong>結案時間：</strong>${c.closed_at ? new Date(c.closed_at).toLocaleString() : '未知'}</div>
-          <div style="display:flex; align-items:center; gap:6px; margin-top:4px;">
-            <strong>轉接時效：</strong>
-            ${(c.matched_at && c.closed_at) 
-              ? (isWithin3Days(c.matched_at, c.closed_at) 
-                ? '<span style="color:#16a34a; font-weight:800; background:#f0fdf4; padding:2px 8px; border-radius:100px; border:1px solid #bbf7d0; font-size:11px;">✅ 3日內轉接</span>' 
-                : '<span style="color:#dc2626; font-weight:800; background:#fef2f2; padding:2px 8px; border-radius:100px; border:1px solid #fecaca; font-size:11px;">❌ 超過3日</span>')
-              : '<span style="color:#64748b; font-weight:800; background:#f1f5f9; padding:2px 8px; border-radius:100px; border:1px solid #e2e8f0; font-size:11px;">-</span>'
-            }
-          </div>
-        </div>
+        <!-- Dynamic Match Success Card (Only displayed if matched) -->
+        ${isMatched ? `
+          <details class="sheet-collapse yellow-collapse">
+            <summary class="sheet-collapse-summary">🟠 媒合成功資訊</summary>
+            <div style="margin-top:10px;">
+              <div class="sheet-card" style="background:#fffbeb; border:1px solid #fef3c7; margin-bottom:0; color:#475569;">
+                <div><strong>媒合機構：</strong>${c.matched_facility ? `${c.matched_facility} (${getFacilityShortName(c.matched_facility)})` : '未知'}</div>
+                <div><strong>成功時間：</strong>${c.matched_at ? new Date(c.matched_at).toLocaleString() : '未知'}</div>
+                <div><strong>結案時間：</strong>${c.closed_at ? new Date(c.closed_at).toLocaleString() : '未知'}</div>
+                <div style="display:flex; align-items:center; gap:6px; margin-top:4px;">
+                  <strong>轉接時效：</strong>
+                  ${(c.matched_at && c.closed_at) 
+                    ? (isWithin3Days(c.matched_at, c.closed_at) 
+                      ? '<span style="color:#16a34a; font-weight:800; background:#f0fdf4; padding:2px 8px; border-radius:100px; border:1px solid #bbf7d0; font-size:11px;">✅ 3日內轉接</span>' 
+                      : '<span style="color:#dc2626; font-weight:800; background:#fef2f2; padding:2px 8px; border-radius:100px; border:1px solid #fecaca; font-size:11px;">❌ 超過3日</span>')
+                    : '<span style="color:#64748b; font-weight:800; background:#f1f5f9; padding:2px 8px; border-radius:100px; border:1px solid #e2e8f0; font-size:11px;">-</span>'
+                  }
+                </div>
+              </div>
+            </div>
+          </details>
+        ` : ''}
 
         <!-- Targeted Institutions Reply List -->
         <div class="sheet-card">
           <h5>目標機構回覆清單 (${replies.length} / ${targetIds.length})</h5>
-          <div style="max-height: 250px; overflow-y: auto;">
+          <div style="max-height: 450px; overflow-y: auto;">
             ${replyListHtml || '<div style="color:var(--muted); text-align:center; padding:12px;">無目標機構</div>'}
           </div>
         </div>

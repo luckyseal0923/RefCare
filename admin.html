@@ -1526,7 +1526,7 @@
           ? c.target_facility_ids.length
           : (c.total_targets || 0);
         totalTargets += cTotal;
-        totalReplies += (c.replies?.length || 0);
+        totalReplies += (c.replies || []).filter(r => r.reply_status && r.reply_status !== 'pending').length;
       });
       const rate = totalTargets > 0 ? Math.round((totalReplies / totalTargets) * 100) : 0;
       $("statReplyRate").textContent = rate + "%";
@@ -1709,7 +1709,7 @@
       const total = (Array.isArray(c.target_facility_ids) && c.target_facility_ids.length > 0)
         ? c.target_facility_ids.length
         : (c.total_targets || 0);
-      const replied = c.replies?.length || 0;
+      const replied = (c.replies || []).filter(r => r.reply_status && r.reply_status !== 'pending').length;
       const percent = total > 0 ? Math.min(100, Math.round((replied / total) * 100)) : 0;
       return { total, replied, percent };
     }
@@ -1754,28 +1754,41 @@
 
       displayList = Array.from(allTargetIds).map(id => {
         const fac = allFacilities.find(f => String(f.id) === id);
-        const reply = replies.find(r => String(r.facility_id) === id || (fac && r.facility_name === fac.name));
-        
+        const facReplies = replies.filter(r => 
+          (r.facility_id && String(r.facility_id) === id) || 
+          (!r.facility_id && fac && r.facility_name === fac.name)
+        );
+
+        let realReply = facReplies.find(r => r.reply_status && r.reply_status !== 'pending');
+        if (!realReply && facReplies.length > 0) {
+          // Sort desc by created_at or fallback to first
+          facReplies.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+          realReply = facReplies[0];
+        }
+
+        const noteReply = facReplies.find(r => r.case_manager_note);
+        const cmNote = noteReply ? noteReply.case_manager_note : '';
+
         let reporter = '未提供';
-        let cleanNote = reply ? (reply.note || '無備註') : '尚未回覆';
+        let cleanNote = realReply ? (realReply.note || '無備註') : '尚未回覆';
         let replyTimeStr = '';
         let replyTimestamp = 0; // 用於排序的新增欄位
 
-        if (reply) {
+        if (realReply) {
           // 支援獨立的 reporter 欄位或從 note 中正則解析填報者
-          if (reply.reporter) {
-            reporter = reply.reporter;
-          } else if (reply.note) {
-            const match = reply.note.match(/填報者：\s*(.+)$/);
+          if (realReply.reporter) {
+            reporter = realReply.reporter;
+          } else if (realReply.note) {
+            const match = realReply.note.match(/填報者：\s*(.+)$/);
             if (match) {
               reporter = match[1].trim();
-              cleanNote = reply.note.replace(/\n?填報者：\s*(.+)$/, '').trim() || '無備註';
+              cleanNote = realReply.note.replace(/\n?填報者：\s*(.+)$/, '').trim() || '無備註';
             }
           }
 
-          if (reply.created_at) {
+          if (realReply.created_at) {
             try {
-              const d = new Date(reply.created_at);
+              const d = new Date(realReply.created_at);
               replyTimestamp = d.getTime();
               replyTimeStr = d.toLocaleString('zh-TW', {
                 hour12: false,
@@ -1793,14 +1806,16 @@
 
         return {
           id,
-          name: fac ? fac.name : (reply ? reply.facility_name : '未知機構'),
-          status: reply ? reply.reply_status : 'pending',
+          name: fac ? fac.name : (realReply ? realReply.facility_name : '未知機構'),
+          status: realReply ? realReply.reply_status : 'pending',
           note: cleanNote,
           reporter,
           replyTimeStr,
           replyTimestamp,
           phone: fac ? fac.phone : '未知電話',
-          lineGroupId: fac ? fac.line_group_id : null
+          lineGroupId: fac ? fac.line_group_id : null,
+          case_manager_note: cmNote,
+          reply_id: realReply ? realReply.id : (noteReply ? noteReply.id : null)
         };
       });
 
@@ -1844,7 +1859,7 @@
               <span>📞 電話：${r.phone}</span>
               ${r.lineGroupId ? `
                 <span style="display:inline-flex; align-items:center; padding:2px 8px; font-size:11px; font-weight:850; color:#ffffff; background:#06c755; border-radius:100px; line-height:1.2; letter-spacing:0.5px; cursor:default;" title="此機構已設定 LINE 群組">
-                  LINE ID
+                   LINE ID
                 </span>
               ` : ''}
             </div>
@@ -1856,6 +1871,22 @@
             ` : ''}
           </div>
           <div style="margin-top:10px; background:#fff; padding:10px; border-radius:10px; font-size:13px; border:1px solid #eef2f7; white-space:pre-wrap;">${r.note}</div>
+          
+          <!-- 個管師備註區塊 (方案 A) -->
+          <div style="margin-top:10px; display:flex; align-items:center; gap:8px; border-top:1px dashed #edf2f7; padding-top:10px;">
+            <div style="font-size:12px; color:var(--text-strong); font-weight:800; white-space:nowrap; display:flex; align-items:center; gap:4px;">
+              <span>📝 個管師備註：</span>
+            </div>
+            <div style="position:relative; flex:1; display:flex; align-items:center;">
+              <input type="text" id="cmNote_${item.case_id}_${r.id}" value="${(r.case_manager_note || '').replace(/"/g, '&quot;')}" placeholder="輸入備註，離開游標或 Enter 自動儲存..." 
+                onblur="saveCmNote('${item.case_id}', '${r.id}', '${r.reply_id || ''}', this.value)"
+                onkeydown="if(event.key==='Enter') { this.blur(); }"
+                style="width:100%; height:32px; padding:0 30px 0 10px; font-size:12px; border:1px solid #edf2f7; border-radius:8px; background:#fff; transition:all 0.2s;"
+                onfocus="this.style.borderColor='var(--primary)';"
+                onblur="this.style.borderColor='#edf2f7';" />
+              <span id="cmNoteSaved_${item.case_id}_${r.id}" style="position:absolute; right:10px; color:#16a34a; font-size:12px; font-weight:900; opacity:0; transition:opacity 0.2s;">✓</span>
+            </div>
+          </div>
         </div>
       `).join("");
 
@@ -3299,6 +3330,63 @@
         }
       } catch (err) {
         alert("更新狀態失敗：" + err.message);
+      }
+    async function saveCmNote(caseId, facilityId, replyId, val) {
+      const trimmedVal = val.trim();
+      const savedIndicator = document.getElementById(`cmNoteSaved_${caseId}_${facilityId}`);
+      
+      try {
+        if (replyId && replyId !== 'null' && replyId !== '') {
+          // Update existing reply row
+          const { error } = await sb.from('replies').update({
+            case_manager_note: trimmedVal
+          }).eq('id', replyId);
+          if (error) throw error;
+        } else {
+          // Insert new pending reply row
+          const fac = allFacilities.find(f => String(f.id) === String(facilityId));
+          const { data, error } = await sb.from('replies').insert([{
+            case_id: caseId,
+            facility_id: facilityId,
+            facility_name: fac ? fac.name : '未知機構',
+            reply_status: 'pending',
+            case_manager_note: trimmedVal,
+            round: 1
+          }]).select();
+          if (error) throw error;
+          
+          // Re-fetch data to update UI with the new reply ID
+          await fetchData();
+          
+          // Update drawer content to reflect new ID
+          const currentItem = allCases.find(c => c.case_id === caseId);
+          if (currentItem) {
+            $("drawerContent").innerHTML = createDrawerContent(currentItem);
+          }
+          return;
+        }
+        
+        // Show checkmark animation
+        if (savedIndicator) {
+          savedIndicator.style.opacity = '1';
+          setTimeout(() => {
+            savedIndicator.style.opacity = '0';
+          }, 1500);
+        }
+        
+        // Update local memory data
+        const c = allCases.find(item => item.case_id === caseId);
+        if (c && c.replies) {
+          const r = c.replies.find(rep => rep.id === replyId);
+          if (r) {
+            r.case_manager_note = trimmedVal;
+          } else {
+            await fetchData();
+          }
+        }
+      } catch (err) {
+        console.error("Save Case Manager Note error:", err);
+        alert("儲存備註失敗：" + err.message);
       }
     }
 
