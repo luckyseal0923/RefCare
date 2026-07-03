@@ -1067,26 +1067,54 @@
       // Sort displayList: replied first, pending last
       filteredReplies.sort((a, b) => (a.status === 'pending') - (b.status === 'pending'));
 
-      const replyListHtml = filteredReplies.map(r => `
-        <div class="reply-list-item">
-          <div class="reply-list-head">
-            <span class="reply-fac-name">
-              ${getFacilityShortName(r.name)}
-              ${r.lineGroupId ? `<span class="line-badge">LINE ID</span>` : ''}
-            </span>
-            <span>
-              ${r.status === 'accept' ? '<span style="color:var(--green); font-weight:800; font-size:12px;">✅ 可接案</span>' :
-                r.status === 'reject' ? '<span style="color:var(--rose); font-weight:800; font-size:12px;">❌ 無法接案</span>' :
-                r.status === 'coordinate' ? '<span style="color:var(--amber); font-weight:800; font-size:12px;">⚠️ 待協調</span>' :
-                '<span style="color:var(--muted); font-size:12px;">⌛ 待回覆</span>'}
-            </span>
-          </div>
-          <div style="font-size:11px; color:var(--text-soft);">📞 電話：${r.phone}</div>
-          ${r.status !== 'pending' ? `<div style="font-size:11px; color:#3b82f6; font-weight:700;">填報人：${r.reporter}</div>` : ''}
-          <div style="font-size:12px; background:var(--surface-soft); padding:6px 10px; border-radius:6px; margin-top:4px;">${r.note}</div>
-          ${r.case_manager_note ? `<div style="font-size:12px; background:#fffbeb; padding:6px 10px; border-radius:6px; margin-top:4px; border:1px solid #fef3c7; color:#d97706;">📝 個管師備註：${r.case_manager_note}</div>` : ''}
-        </div>
-      `).join('');
+      const replyListHtml = filteredReplies.map(r => {
+        const isPending = r.status === 'pending';
+        const hasNote = r.note && r.note !== '無備註' && r.note !== '尚未回覆';
+        
+        let statusBadge = '';
+        if (r.status === 'accept') {
+          statusBadge = '<span style="color:var(--green); font-weight:800; font-size:12px;">✅ 可接案</span>';
+        } else if (r.status === 'reject') {
+          statusBadge = '<span style="color:var(--rose); font-weight:800; font-size:12px;">❌ 無法接案</span>';
+        } else if (r.status === 'coordinate') {
+          statusBadge = '<span style="color:var(--amber); font-weight:800; font-size:12px;">⚠️ 待協調</span>';
+        } else {
+          statusBadge = '<span style="color:var(--muted); font-size:12px;">⌛ 待回覆</span>';
+        }
+
+        if (isPending) {
+          return `
+            <div class="reply-list-item" style="padding: 8px 0; border-bottom: 1px solid var(--line-soft); gap: 2px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="reply-fac-name" style="font-size:13px; font-weight:700;">
+                  ${getFacilityShortName(r.name)}
+                  ${r.lineGroupId ? `<span class="line-badge">LINE ID</span>` : ''}
+                </span>
+                ${statusBadge}
+              </div>
+              <div style="font-size:11px; color:var(--muted);">📞 ${r.phone}</div>
+              ${r.case_manager_note ? `<div style="font-size:11px; background:#fffbeb; padding:4px 8px; border-radius:6px; margin-top:4px; border:1px solid #fef3c7; color:#d97706;">📝 備註：${r.case_manager_note}</div>` : ''}
+            </div>
+          `;
+        } else {
+          return `
+            <div class="reply-list-item" style="padding: 10px 0; border-bottom: 1px solid var(--line-soft); gap: 4px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="reply-fac-name" style="font-size:13px; font-weight:700; color:var(--text);">
+                  ${getFacilityShortName(r.name)}
+                  ${r.lineGroupId ? `<span class="line-badge">LINE ID</span>` : ''}
+                </span>
+                ${statusBadge}
+              </div>
+              <div style="font-size:11px; color:var(--text-soft);">
+                📞 ${r.phone} ｜ 👤 填報人：${r.reporter}
+              </div>
+              ${hasNote ? `<div style="font-size:12px; background:var(--surface-soft); padding:6px 10px; border-radius:6px; margin-top:2px; color:var(--text-soft);">${r.note}</div>` : ''}
+              ${r.case_manager_note ? `<div style="font-size:11px; background:#fffbeb; padding:4px 8px; border-radius:6px; margin-top:2px; border:1px solid #fef3c7; color:#d97706;">📝 個管師備註：${r.case_manager_note}</div>` : ''}
+            </div>
+          `;
+        }
+      }).join('');
 
       // Actions section html
       let actionButtonsHtml = '';
