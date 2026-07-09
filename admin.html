@@ -1545,9 +1545,14 @@
     // --- 資料抓取 ---
     async function loadFacilities() {
       const { data } = await sb.from('facilities').select('id, facility_name, short_name, phone, service_area, is_round_1, line_group_id');
-      if (data) allFacilities = data.map(f => ({
-        id: f.id, name: f.facility_name, short: f.short_name, phone: f.phone, area: f.service_area, is_round_1: f.is_round_1, line_group_id: f.line_group_id
-      }));
+      if (data) {
+        allFacilities = data.map(f => ({
+          id: f.id, name: f.facility_name, short: f.short_name, phone: f.phone, area: f.service_area, is_round_1: f.is_round_1, line_group_id: f.line_group_id
+        }));
+        if ($("facilitySuggestions")) {
+          $("facilitySuggestions").innerHTML = allFacilities.map(f => `<option value="${f.name}">`).join('');
+        }
+      }
     }
 
     async function fetchData() {
@@ -2162,7 +2167,7 @@
             
             <div class="edit-field"><label>計畫審核通過日期</label><input type="date" name="care_plan_approved_at" value="${item.care_plan_approved_at || ''}"></div>
             <div class="edit-field"><label>機構首次服務日期</label><input type="date" name="first_service_at" value="${item.first_service_at || ''}"></div>
-            <div class="edit-field"><label>媒合機構</label><input type="text" name="matched_facility" value="${item.matched_facility || ''}" placeholder="媒合成功之機構名稱"></div>
+            <div class="edit-field"><label>媒合機構</label><input type="text" name="matched_facility" list="facilitySuggestions" value="${item.matched_facility || ''}" placeholder="請輸入或選擇機構名稱"></div>
             <div class="edit-field"><label>媒合成功時間</label><input type="datetime-local" name="matched_at_input" value="${item.matched_at ? new Date(item.matched_at).toISOString().slice(0, 16) : ''}"></div>
             <div class="edit-field"><label>正式結案時間</label><input type="datetime-local" name="closed_at_input" value="${item.closed_at ? new Date(item.closed_at).toISOString().slice(0, 16) : ''}"></div>
             <div class="edit-field"><label>起案時間</label><input type="datetime-local" name="created_at_input" value="${item.created_at ? new Date(item.created_at).toISOString().slice(0, 16) : ''}"></div>
