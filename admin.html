@@ -1543,15 +1543,85 @@
     }
 
     // --- 資料抓取 ---
+    // --- 機構自動完成下拉選單 ---
+    function attachFacilityAutocomplete(inputId) {
+      const input = document.getElementById(inputId) || document.querySelector(`input[name="${inputId}"]`);
+      if (!input) return;
+
+      if (input.dataset.autocompleteAttached) return;
+      input.dataset.autocompleteAttached = 'true';
+
+      input.removeAttribute('list');
+      input.setAttribute('autocomplete', 'off');
+
+      const dropdown = document.createElement('div');
+      dropdown.style.position = 'absolute';
+      dropdown.style.width = '100%';
+      dropdown.style.maxHeight = '250px';
+      dropdown.style.overflowY = 'auto';
+      dropdown.style.background = '#fff';
+      dropdown.style.border = '1px solid #cbd5e1';
+      dropdown.style.borderRadius = '6px';
+      dropdown.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
+      dropdown.style.zIndex = '9999';
+      dropdown.style.display = 'none';
+      dropdown.style.marginTop = '4px';
+      dropdown.style.top = '100%';
+      dropdown.style.left = '0';
+      
+      input.parentElement.style.position = 'relative';
+      input.parentElement.appendChild(dropdown);
+
+      function renderList(filterText = '') {
+        const lowerFilter = filterText.toLowerCase();
+        const matches = allFacilities.filter(f => f.name.toLowerCase().includes(lowerFilter));
+        
+        if (matches.length === 0) {
+          dropdown.innerHTML = `<div style="padding: 10px; color: #94a3b8; font-size: 13px; text-align: center;">查無機構</div>`;
+          return;
+        }
+
+        dropdown.innerHTML = matches.map(f => `
+          <div class="fac-option" style="padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: var(--text-strong); transition: background 0.2s;"
+               onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='none'"
+               data-val="${f.name}">
+            ${f.name}
+          </div>
+        `).join('');
+
+        const options = dropdown.querySelectorAll('.fac-option');
+        options.forEach(opt => {
+          opt.addEventListener('mousedown', (e) => {
+            e.preventDefault(); 
+            input.value = opt.getAttribute('data-val');
+            dropdown.style.display = 'none';
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+          });
+        });
+      }
+
+      input.addEventListener('focus', () => {
+        renderList(input.value);
+        dropdown.style.display = 'block';
+      });
+
+      input.addEventListener('input', () => {
+        renderList(input.value);
+        dropdown.style.display = 'block';
+      });
+
+      input.addEventListener('blur', () => {
+        dropdown.style.display = 'none';
+      });
+    }
+
     async function loadFacilities() {
       const { data } = await sb.from('facilities').select('id, facility_name, short_name, phone, service_area, is_round_1, line_group_id');
       if (data) {
         allFacilities = data.map(f => ({
           id: f.id, name: f.facility_name, short: f.short_name, phone: f.phone, area: f.service_area, is_round_1: f.is_round_1, line_group_id: f.line_group_id
         }));
-        if ($("facilitySuggestions")) {
-          $("facilitySuggestions").innerHTML = allFacilities.map(f => `<option value="${f.name}">`).join('');
-        }
+        attachFacilityAutocomplete('matchFacilityInput');
       }
     }
 
@@ -2198,7 +2268,7 @@
             
             <div class="edit-field"><label>計畫審核通過日期</label><input type="date" name="care_plan_approved_at" value="${item.care_plan_approved_at || ''}"></div>
             <div class="edit-field"><label>機構首次服務日期</label><input type="date" name="first_service_at" value="${item.first_service_at || ''}"></div>
-            <div class="edit-field"><label>媒合機構</label><input type="text" name="matched_facility" list="facilitySuggestions" value="${item.matched_facility || ''}" placeholder="請輸入或選擇機構名稱"></div>
+            <div class="edit-field"><label>媒合機構</label><input type="text" id="matchedFacilityInput" name="matched_facility" value="${item.matched_facility || ''}" placeholder="請輸入或選擇機構名稱"></div>
             <div class="edit-field"><label>媒合成功時間</label><input type="datetime-local" name="matched_at_input" value="${item.matched_at ? new Date(item.matched_at).toISOString().slice(0, 16) : ''}"></div>
             <div class="edit-field"><label>正式結案時間</label><input type="datetime-local" name="closed_at_input" value="${item.closed_at ? new Date(item.closed_at).toISOString().slice(0, 16) : ''}"></div>
             <div class="edit-field"><label>起案時間</label><input type="datetime-local" name="created_at_input" value="${item.created_at ? new Date(item.created_at).toISOString().slice(0, 16) : ''}"></div>
@@ -2230,6 +2300,7 @@
       `;
       $("drawerOverlay").classList.add("show");
       $("detailDrawer").classList.add("show");
+      setTimeout(() => { attachFacilityAutocomplete('matchedFacilityInput'); }, 50);
     }
 
 
@@ -2413,9 +2484,7 @@
       $("matchFacilityInput").value = "";
       $("matchSuccessError").style.display = "none";
       
-      // Populate datalist suggestions
-      const suggestions = $("facilitySuggestions");
-      suggestions.innerHTML = allFacilities.map(f => `<option value="${f.name}">`).join('');
+      // Populate datalist suggestions (now handled by autocomplete)
 
       // Set default time to Taiwan current time
       const now = new Date();
