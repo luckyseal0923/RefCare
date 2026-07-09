@@ -2162,6 +2162,9 @@
             
             <div class="edit-field"><label>計畫審核通過日期</label><input type="date" name="care_plan_approved_at" value="${item.care_plan_approved_at || ''}"></div>
             <div class="edit-field"><label>機構首次服務日期</label><input type="date" name="first_service_at" value="${item.first_service_at || ''}"></div>
+            <div class="edit-field"><label>媒合機構</label><input type="text" name="matched_facility" value="${item.matched_facility || ''}" placeholder="媒合成功之機構名稱"></div>
+            <div class="edit-field"><label>媒合成功時間</label><input type="datetime-local" name="matched_at_input" value="${item.matched_at ? new Date(item.matched_at).toISOString().slice(0, 16) : ''}"></div>
+            <div class="edit-field"><label>正式結案時間</label><input type="datetime-local" name="closed_at_input" value="${item.closed_at ? new Date(item.closed_at).toISOString().slice(0, 16) : ''}"></div>
             <div class="edit-field"><label>起案時間</label><input type="datetime-local" name="created_at_input" value="${item.created_at ? new Date(item.created_at).toISOString().slice(0, 16) : ''}"></div>
             
             <div class="edit-field full" style="display:flex; flex-direction:column; gap:8px;">
@@ -2279,9 +2282,25 @@
       }
       delete updates.created_at_input;
 
+      // 媒合成功資訊反序列化
+      if (updates.matched_at_input) {
+        updates.matched_at = new Date(updates.matched_at_input).toISOString();
+      } else {
+        updates.matched_at = null;
+      }
+      delete updates.matched_at_input;
+
+      if (updates.closed_at_input) {
+        updates.closed_at = new Date(updates.closed_at_input).toISOString();
+      } else {
+        updates.closed_at = null;
+      }
+      delete updates.closed_at_input;
+
       // 日期空值轉換
       updates.care_plan_approved_at = updates.care_plan_approved_at || null;
       updates.first_service_at = updates.first_service_at || null;
+      updates.matched_facility = updates.matched_facility || null;
 
       delete updates.addr_county;
       delete updates.addr_district;
