@@ -2131,6 +2131,34 @@
             <div class="edit-field"><label>轉介醫院</label><input name="hospital" value="${item.hospital}"></div>
             <div class="edit-field"><label>年齡</label><input type="number" name="age" value="${item.age}"></div>
             <div class="edit-field"><label>性別</label><select name="gender"><option value="男" ${item.gender==='男'?'selected':''}>男</option><option value="女" ${item.gender==='女'?'selected':''}>女</option></select></div>
+            <div class="edit-field full" style="display:flex; flex-direction:column; gap:8px;">
+              <label>現居地址</label>
+              <div style="display: flex; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; width: 100%;">
+                <input type="text" name="addr_county" value="${addr.county || ''}" placeholder="縣市" style="flex: 1; min-width: 100px; padding: 8px 10px; font-size: 14px;" />
+                <input type="text" name="addr_district" value="${addr.district || ''}" placeholder="鄉鎮市區" style="flex: 1; min-width: 100px; padding: 8px 10px; font-size: 14px;" />
+                <input type="text" name="addr_road" value="${addr.road || ''}" placeholder="路/街/段" style="flex: 2; min-width: 150px; padding: 8px 10px; font-size: 14px;" />
+              </div>
+              <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 10px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px; width: 100%;">
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <input type="text" name="addr_lane" value="${addr.lane || ''}" style="width: 50px; text-align: center; padding: 8px 6px; font-size: 14px;" />
+                  <span style="font-weight: bold; font-size: 13px; color: #475569;">巷</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <input type="text" name="addr_alley" value="${addr.alley || ''}" style="width: 50px; text-align: center; padding: 8px 6px; font-size: 14px;" />
+                  <span style="font-weight: bold; font-size: 13px; color: #475569;">弄</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <input type="text" name="addr_no" value="${addr.no || ''}" style="width: 50px; text-align: center; padding: 8px 6px; font-size: 14px;" />
+                  <span style="font-weight: bold; font-size: 13px; color: #475569;">號之</span>
+                  <input type="text" name="addr_noExt" value="${addr.noExt || ''}" style="width: 45px; text-align: center; padding: 8px 6px; font-size: 14px;" />
+                </div>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <input type="text" name="addr_floor" value="${addr.floor || ''}" style="width: 50px; text-align: center; padding: 8px 6px; font-size: 14px;" />
+                  <span style="font-weight: bold; font-size: 13px; color: #475569;">樓之</span>
+                  <input type="text" name="addr_floorExt" value="${addr.floorExt || ''}" style="width: 45px; text-align: center; padding: 8px 6px; font-size: 14px;" />
+                </div>
+              </div>
+            </div>
             <div class="edit-field"><label>身高 (cm)</label><input type="number" name="height" value="${item.height || ''}" placeholder="cm"></div>
             <div class="edit-field"><label>體重 (kg)</label><input type="number" name="weight" value="${item.weight || ''}" placeholder="kg"></div>
             <div class="edit-field"><label>意識狀態</label>
@@ -2143,6 +2171,9 @@
             </div>
             <div class="edit-field"><label>CMS 等級</label><input name="cms_level" value="${item.cms_level || ''}" placeholder="例：第 6 級"></div>
             <div class="edit-field"><label>行動能力</label><input name="mobility" value="${item.mobility || ''}" placeholder="例如：輪椅、臥床"></div>
+            <div class="edit-field full"><label>主要診斷</label><textarea name="diagnosis" style="min-height:80px;">${item.diagnosis || ''}</textarea></div>
+            <div class="edit-field full"><label>案況摘要</label><textarea name="case_summary" style="min-height:100px;">${item.case_summary || ''}</textarea></div>
+            <div class="edit-field full"><label>特殊需求</label><textarea name="special_need" style="min-height:80px;">${item.special_need || ''}</textarea></div>
             <div class="edit-field"><label>服務類型</label><input name="service_type" value="${item.service_type || ''}" placeholder="例如：長照服務"></div>
             <div class="edit-field"><label>期待服務時段</label><input name="service_time" value="${item.service_time || ''}" placeholder="例如：平日白天"></div>
             
@@ -2172,34 +2203,7 @@
             <div class="edit-field"><label>正式結案時間</label><input type="datetime-local" name="closed_at_input" value="${item.closed_at ? new Date(item.closed_at).toISOString().slice(0, 16) : ''}"></div>
             <div class="edit-field"><label>起案時間</label><input type="datetime-local" name="created_at_input" value="${item.created_at ? new Date(item.created_at).toISOString().slice(0, 16) : ''}"></div>
             
-            <div class="edit-field full" style="display:flex; flex-direction:column; gap:8px;">
-              <label>現居地址</label>
-              <div style="display: flex; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; width: 100%;">
-                <input type="text" name="addr_county" value="${addr.county || ''}" placeholder="縣市" style="flex: 1; min-width: 100px; padding: 8px 10px; font-size: 14px;" />
-                <input type="text" name="addr_district" value="${addr.district || ''}" placeholder="鄉鎮市區" style="flex: 1; min-width: 100px; padding: 8px 10px; font-size: 14px;" />
-                <input type="text" name="addr_road" value="${addr.road || ''}" placeholder="路/街/段" style="flex: 2; min-width: 150px; padding: 8px 10px; font-size: 14px;" />
-              </div>
-              <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 10px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px; width: 100%;">
-                <div style="display: flex; align-items: center; gap: 4px;">
-                  <input type="text" name="addr_lane" value="${addr.lane || ''}" style="width: 50px; text-align: center; padding: 8px 6px; font-size: 14px;" />
-                  <span style="font-weight: bold; font-size: 13px; color: #475569;">巷</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 4px;">
-                  <input type="text" name="addr_alley" value="${addr.alley || ''}" style="width: 50px; text-align: center; padding: 8px 6px; font-size: 14px;" />
-                  <span style="font-weight: bold; font-size: 13px; color: #475569;">弄</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 4px;">
-                  <input type="text" name="addr_no" value="${addr.no || ''}" style="width: 50px; text-align: center; padding: 8px 6px; font-size: 14px;" />
-                  <span style="font-weight: bold; font-size: 13px; color: #475569;">號之</span>
-                  <input type="text" name="addr_noExt" value="${addr.noExt || ''}" style="width: 45px; text-align: center; padding: 8px 6px; font-size: 14px;" />
-                </div>
-                <div style="display: flex; align-items: center; gap: 4px;">
-                  <input type="text" name="addr_floor" value="${addr.floor || ''}" style="width: 50px; text-align: center; padding: 8px 6px; font-size: 14px;" />
-                  <span style="font-weight: bold; font-size: 13px; color: #475569;">樓之</span>
-                  <input type="text" name="addr_floorExt" value="${addr.floorExt || ''}" style="width: 45px; text-align: center; padding: 8px 6px; font-size: 14px;" />
-                </div>
-              </div>
-            </div>
+
 
             <div class="edit-field full" style="display:flex; flex-direction:column; gap:8px;">
               <label>指派機構名單 (已選擇 ${currentTargets.length} 家)</label>
@@ -2213,9 +2217,7 @@
               </details>
             </div>
 
-            <div class="edit-field full"><label>主要診斷</label><textarea name="diagnosis" style="min-height:80px;">${item.diagnosis || ''}</textarea></div>
-            <div class="edit-field full"><label>案況摘要</label><textarea name="case_summary" style="min-height:100px;">${item.case_summary || ''}</textarea></div>
-            <div class="edit-field full"><label>特殊需求</label><textarea name="special_need" style="min-height:80px;">${item.special_need || ''}</textarea></div>
+
           </form>
           <div style="margin-top:24px; display:flex; flex-direction:column; gap:10px;">
             <div style="display:flex; gap:10px;">
