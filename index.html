@@ -757,7 +757,6 @@
       font-size: 12px;
       font-weight: 900;
       color: var(--primary);
-      text-transform: uppercase;
       letter-spacing: 0.05em;
     }
     .service-name {
@@ -1821,16 +1820,33 @@
        3. 服務碼系統 (補回)
     ========================= */
     const baServices = [
-      { code: "BA01", name: "基本身體清潔" }, { code: "BA02", name: "基本日常照顧" },
-      { code: "BA03", name: "測量生命徵象" }, { code: "BA04", name: "餵食/灌食" },
-      { code: "BA05", name: "餐食照顧" }, { code: "BA07", name: "協助沐浴" },
-      { code: "BA08", name: "足部照護" }, { code: "BA09", name: "翻身拍背" },
-      { code: "BA10", name: "肢體關節活動" }, { code: "BA11", name: "協助上下樓" },
-      { code: "BA13", name: "陪伴外出" }, { code: "BA14", name: "陪伴就醫" },
-      { code: "BA15", name: "家務服務" }, { code: "BA16", name: "代購代送" },
-      { code: "BA18", name: "安全看視" }, { code: "BA20", name: "陪伴服務" },
-      { code: "BA22", name: "巡視服務" }, { code: "BA24", name: "協助排泄" },
-      { code: "BA17a", name: "氣道抽吸" }, { code: "BA17c", name: "管路清潔" },
+      { code: "BA01", name: "基本身體清潔" },
+      { code: "BA02", name: "基本日常照顧（半小時）" },
+      { code: "BA03", name: "測量生命徵象" },
+      { code: "BA04", name: "協助餵食或灌食" },
+      { code: "BA05", name: "餐食照顧" },
+      { code: "BA07", name: "協助沐浴及洗頭" },
+      { code: "BA08", name: "足部照護" },
+      { code: "BA09", name: "到宅沐浴車服務" },
+      { code: "BA09a", name: "到宅沐浴車服務（有管路）" },
+      { code: "BA10", name: "翻身拍背" },
+      { code: "BA11", name: "肢體關節活動" },
+      { code: "BA12", name: "協助上（下）樓梯" },
+      { code: "BA13", name: "陪同外出（半小時）" },
+      { code: "BA14", name: "陪同就醫" },
+      { code: "BA15-1", name: "家務協助（半小時）自用" },
+      { code: "BA15-2", name: "家務協助（半小時）共用" },
+      { code: "BA16", name: "代購或代領或代送服務" },
+      { code: "BA17a", name: "人工氣道管內分泌物抽吸" },
+      { code: "BA17b", name: "口鼻抽吸" },
+      { code: "BA17c", name: "管路（尿管、鼻胃管）清潔" },
+      { code: "BA17d", name: "甘油球灌便、血糖機驗血" },
+      { code: "BA17e", name: "依指示置入藥盒" },
+      { code: "BA18", name: "安全看視（半小時）" },
+      { code: "BA20", name: "陪伴服務（半小時）" },
+      { code: "BA22", name: "巡視服務" },
+      { code: "BA23", name: "協助洗頭" },
+      { code: "BA24", name: "協助排泄" },
       { code: "GA09", name: "居家喘息" }
     ];
     let selectedServiceCodes = new Set();
