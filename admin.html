@@ -967,63 +967,62 @@
 
   <!-- Match Status Modal Overlay (媒合狀態：成功/失敗) -->
   <div id="matchSuccessOverlay" class="admin-login-overlay" style="display: none; background: rgba(15,23,42,0.6); backdrop-filter: blur(8px);">
-    <div class="admin-login-card" style="width: 480px; max-width: 90vw; height: 450px; display: flex; flex-direction: column; justify-content: space-between;">
-      <div>
-        <div class="login-brand" style="margin-bottom: 16px;">
-          <div id="matchStatusLogo" class="login-logo" style="background: var(--amber); color: white;">M</div>
-          <div>
-            <div style="font-weight: 950; font-size: 18px;" id="matchStatusTitle">登記媒合狀態</div>
-            <div style="font-size: 13px; color: #64748b;" id="matchStatusSub">請選擇媒合結果並填寫相關資訊</div>
-          </div>
-        </div>
-
-        <!-- Tab / Segmented Buttons -->
-        <div style="display: flex; background: #f1f5f9; padding: 4px; border-radius: 12px; margin-bottom: 20px;">
-          <button type="button" id="tabMatchSuccess" onclick="switchMatchStatusType('success')" style="flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: 800; font-size: 14px; cursor: pointer; transition: all 0.2s; background: #fff; color: #d97706; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-            🟢 媒合成功
-          </button>
-          <button type="button" id="tabMatchFailed" onclick="switchMatchStatusType('failed')" style="flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: 800; font-size: 14px; cursor: pointer; transition: all 0.2s; background: transparent; color: #64748b;">
-            🔴 媒合失敗
-          </button>
-        </div>
-
-        <!-- Section 1: 媒合成功 -->
-        <div id="sectionMatchSuccess">
-          <div class="edit-field" style="margin-bottom: 16px;">
-            <label>媒合機構名稱 <span style="color:var(--rose);">*</span></label>
-            <input type="text" id="matchFacilityInput" list="facilitySuggestions" placeholder="請輸入或選擇機構名稱">
-            <datalist id="facilitySuggestions"></datalist>
-          </div>
-          <div class="edit-field" style="margin-bottom: 16px;">
-            <label>媒合成功時間 <span style="color:var(--rose);">*</span></label>
-            <input type="datetime-local" id="matchSuccessTimeInput">
-          </div>
-        </div>
-
-        <!-- Section 2: 媒合失敗 -->
-        <div id="sectionMatchFailed" style="display: none;">
-          <div class="edit-field" style="margin-bottom: 14px;">
-            <label>媒合失敗主要原因 <span style="color:var(--rose);">*</span></label>
-            <select id="matchFailedReasonSelect" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px;">
-              <option value="無合適長照機構/居服員可配合">無合適長照機構/居服員可配合</option>
-              <option value="家屬決定自行照顧 / 拒絕派案">家屬決定自行照顧 / 拒絕派案</option>
-              <option value="個案病情變化 / 再度住院">個案病情變化 / 再度住院</option>
-              <option value="超出服務區域 / 地理位置過遠">超出服務區域 / 地理位置過遠</option>
-              <option value="機構人力滿載無床位">機構人力滿載無床位</option>
-              <option value="其它">其它（請於下方補充說明）</option>
-            </select>
-          </div>
-          <div class="edit-field">
-            <label>失敗原因補充說明 / 備註</label>
-            <textarea id="matchFailedDetailInput" placeholder="請填寫詳細說明或備註（選填）" style="width:100%; height:65px; padding:8px 10px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; font-family:inherit; resize:none;"></textarea>
-          </div>
+    <div class="admin-login-card" style="width: 480px; max-width: 92vw; padding: 28px 32px; border-radius: 20px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);">
+      <div class="login-brand" style="margin-bottom: 20px; display: flex; align-items: center; gap: 14px;">
+        <div id="matchStatusLogo" class="login-logo" style="background: var(--amber); color: white; width: 44px; height: 44px; font-size: 20px; border-radius: 12px;">M</div>
+        <div>
+          <div style="font-weight: 950; font-size: 19px; color: #0f172a;" id="matchStatusTitle">登記媒合狀態</div>
+          <div style="font-size: 13px; color: #64748b; margin-top: 2px;" id="matchStatusSub">請選擇媒合結果並填寫相關資訊</div>
         </div>
       </div>
 
-      <div>
+      <!-- Tab / Segmented Buttons -->
+      <div style="display: flex; background: #f1f5f9; padding: 4px; border-radius: 12px; margin-bottom: 22px;">
+        <button type="button" id="tabMatchSuccess" onclick="switchMatchStatusType('success')" style="flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: 800; font-size: 14px; cursor: pointer; transition: all 0.2s; background: #fff; color: #d97706; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+          🟢 媒合成功
+        </button>
+        <button type="button" id="tabMatchFailed" onclick="switchMatchStatusType('failed')" style="flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: 800; font-size: 14px; cursor: pointer; transition: all 0.2s; background: transparent; color: #64748b;">
+          🔴 媒合失敗
+        </button>
+      </div>
+
+      <!-- Section 1: 媒合成功 -->
+      <div id="sectionMatchSuccess">
+        <div class="edit-field" style="margin-bottom: 18px;">
+          <label style="font-size: 13px; font-weight: 800; color: #334155; margin-bottom: 6px; display: block;">媒合機構名稱 <span style="color:var(--rose);">*</span></label>
+          <input type="text" id="matchFacilityInput" list="facilitySuggestions" placeholder="請輸入或選擇機構名稱" style="width:100%; height:46px; padding:0 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px;">
+          <datalist id="facilitySuggestions"></datalist>
+        </div>
+        <div class="edit-field" style="margin-bottom: 24px;">
+          <label style="font-size: 13px; font-weight: 800; color: #334155; margin-bottom: 6px; display: block;">媒合成功時間 <span style="color:var(--rose);">*</span></label>
+          <input type="datetime-local" id="matchSuccessTimeInput" style="width:100%; height:46px; padding:0 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px;">
+        </div>
+      </div>
+
+      <!-- Section 2: 媒合失敗 -->
+      <div id="sectionMatchFailed" style="display: none;">
+        <div class="edit-field" style="margin-bottom: 18px;">
+          <label style="font-size: 13px; font-weight: 800; color: #334155; margin-bottom: 6px; display: block;">媒合失敗主要原因 <span style="color:var(--rose);">*</span></label>
+          <select id="matchFailedReasonSelect" style="width:100%; height:46px; padding:0 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px; background:#fff;">
+            <option value="無合適長照機構/居服員可配合">無合適長照機構/居服員可配合</option>
+            <option value="家屬決定自行照顧 / 拒絕派案">家屬決定自行照顧 / 拒絕派案</option>
+            <option value="個案病情變化 / 再度住院">個案病情變化 / 再度住院</option>
+            <option value="超出服務區域 / 地理位置過遠">超出服務區域 / 地理位置過遠</option>
+            <option value="機構人力滿載無床位">機構人力滿載無床位</option>
+            <option value="其它">其它（請於下方補充說明）</option>
+          </select>
+        </div>
+        <div class="edit-field" style="margin-bottom: 24px;">
+          <label style="font-size: 13px; font-weight: 800; color: #334155; margin-bottom: 6px; display: block;">失敗原因補充說明 / 備註</label>
+          <textarea id="matchFailedDetailInput" placeholder="請填寫詳細說明或備註（選填）" style="width:100%; height:88px; padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:13px; font-family:inherit; resize:none; line-height:1.5;"></textarea>
+        </div>
+      </div>
+
+      <!-- Bottom Actions -->
+      <div style="margin-top: 4px;">
         <div style="display: flex; gap: 12px;">
-          <button class="btn btn-muted" style="flex: 1; height: 50px; font-size: 16px;" onclick="cancelMatchSuccess()">取消</button>
-          <button id="confirmMatchStatusBtn" class="btn btn-primary" style="flex: 1; height: 50px; font-size: 16px; background: var(--amber); border-color: var(--amber);" onclick="confirmMatchSuccess()">確認媒合成功</button>
+          <button class="btn btn-muted" style="flex: 1; height: 48px; font-size: 15px; font-weight: 800; border-radius: 12px;" onclick="cancelMatchSuccess()">取消</button>
+          <button id="confirmMatchStatusBtn" class="btn btn-primary" style="flex: 1.2; height: 48px; font-size: 15px; font-weight: 800; border-radius: 12px; background: var(--amber); border-color: var(--amber);" onclick="confirmMatchSuccess()">確認媒合成功</button>
         </div>
         <div id="matchSuccessError" style="margin-top: 12px; color: var(--rose); font-size: 13px; text-align: center; font-weight: 800; display: none;"></div>
       </div>
