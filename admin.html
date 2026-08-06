@@ -487,6 +487,8 @@
     .status-badge.matching { background: #fff7ed; color: #c2410c; border: 1px solid #fdba74; }
     .status-badge.done { background: #f5f3ff; color: #7c3aed; border: 1px solid #c4b5fd; }
     .status-badge.closed { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; }
+    .status-badge.closed-success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+    .status-badge.closed-failed { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
     .status-badge.danger { background: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; }
 
     .reply-block { min-width: 160px; }
@@ -1845,12 +1847,12 @@
              return fac ? (fac.short || fac.name) : fullName;
            };
            const displayGroup = c.status === '案件結案' 
-             ? `案件結案 (${c.matched_facility ? `派案成功 - ${getFacShortName(c.matched_facility)}` : '派案成功'})` 
+             ? `🟢 派案成功${c.matched_facility ? ` - ${getFacShortName(c.matched_facility)}` : ''}` 
              : (c.status === '媒合失敗'
-               ? `案件結案 (派案失敗)`
+               ? `🔴 媒合失敗`
                : (c.status === '媒合成功' 
-                 ? `媒合成功${c.matched_facility ? ` (${getFacShortName(c.matched_facility)})` : ''}` 
-                 : (c.target_group || '指定機構')));
+                 ? `🟠 媒合成功${c.matched_facility ? ` (${getFacShortName(c.matched_facility)})` : ''}` 
+                 : `● ${c.target_group || '指定機構'}`));
            const needTag = c.service_type || '未分類';
  
            const actionBtn = (c.status === '案件結案' || c.status === '媒合失敗')
@@ -1872,7 +1874,7 @@
                   ${c.case_summary || c.diagnosis || '無摘要'}
                 </div>
               </td>
-              <td><span class="status-badge ${badgeClass}">● ${displayGroup}</span></td>
+              <td><span class="status-badge ${badgeClass}">${displayGroup}</span></td>
               <td>
                 <div class="reply-block">
                   <div class="reply-text"><span>已回覆</span><strong>${progress.replied} / ${progress.total}</strong></div>
@@ -1909,7 +1911,8 @@
     }
 
     function getGroupBadgeClass(g, s) {
-      if (s === '案件結案' || s === '媒合失敗') return 'closed';
+      if (s === '案件結案') return 'closed-success';
+      if (s === '媒合失敗') return 'closed-failed';
       if (s === '媒合成功') return 'matching'; // orange/amber
       if (g === '合作機構(一輪)') return 'pending'; // blue
       if (g === '全區機構(二輪)') return 'done'; // purple
