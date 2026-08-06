@@ -1845,9 +1845,9 @@
              return fac ? (fac.short || fac.name) : fullName;
            };
            const displayGroup = c.status === '案件結案' 
-             ? `案件結案${c.matched_facility ? ` (${getFacShortName(c.matched_facility)})` : ''}` 
+             ? `案件結案 (${c.matched_facility ? `派案成功 - ${getFacShortName(c.matched_facility)}` : '派案成功'})` 
              : (c.status === '媒合失敗'
-               ? `媒合失敗${c.match_failed_reason ? ` (${c.match_failed_reason})` : ''}`
+               ? `案件結案 (派案失敗)`
                : (c.status === '媒合成功' 
                  ? `媒合成功${c.matched_facility ? ` (${getFacShortName(c.matched_facility)})` : ''}` 
                  : (c.target_group || '指定機構')));
@@ -1909,7 +1909,7 @@
     }
 
     function getGroupBadgeClass(g, s) {
-      if (s === '案件結案') return 'closed';
+      if (s === '案件結案' || s === '媒合失敗') return 'closed';
       if (s === '媒合成功') return 'matching'; // orange/amber
       if (g === '合作機構(一輪)') return 'pending'; // blue
       if (g === '全區機構(二輪)') return 'done'; // purple
