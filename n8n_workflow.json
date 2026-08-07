@@ -1,0 +1,470 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "msg-check",
+              "leftValue": "={{ $json.type }}",
+              "rightValue": "message",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -880,
+        -350
+      ],
+      "id": "225627a5-2ed0-4097-8fcc-8d067443ca77",
+      "name": "If Message"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "check-found",
+              "leftValue": "={{ $json.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "larger",
+                "name": "filter.operator.larger"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        0,
+        -450
+      ],
+      "id": "1a433298-e8b8-4576-87c0-70e270a2c05f",
+      "name": "If Found"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "to": "={{ $node[\"Line Messaging Trigger1\"].json.source.groupId }}",
+        "messages": {
+          "values": [
+            {
+              "text": "=🎉 綁定成功！\n此 LINE 群組已成功連結至【{{ $node[\"Search Supabase\"].json[0].short_name }}】。\n日後個案轉介通知將會自動發送到這裡。",
+              "type": "text"
+            }
+          ]
+        }
+      },
+      "type": "@aotoki/n8n-nodes-line-messaging.lineMessaging",
+      "typeVersion": 1,
+      "position": [
+        440,
+        -540
+      ],
+      "id": "ef508fa0-e434-43e0-8dd8-3b815f2fbabf",
+      "name": "Send Success Msg",
+      "credentials": {
+        "lineMessagingApi": {
+          "id": "9Rj601Rmtg6aMLgl",
+          "name": "Line Messaging account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "to": "={{ $node[\"Line Messaging Trigger1\"].json.source.groupId }}",
+        "messages": {
+          "values": [
+            {
+              "text": "=⚠️ 綁定失敗！\n系統資料庫中找不到名為「{{ $node[\"Line Messaging Trigger1\"].json.message.text }}」的機構。\n請確認輸入的「簡稱」是否正確（例如：愛關懷）。",
+              "type": "text"
+            }
+          ]
+        }
+      },
+      "type": "@aotoki/n8n-nodes-line-messaging.lineMessaging",
+      "typeVersion": 1,
+      "position": [
+        220,
+        -350
+      ],
+      "id": "2437ed77-ba96-43ca-a455-784c22c105bf",
+      "name": "Send Fail Msg",
+      "credentials": {
+        "lineMessagingApi": {
+          "id": "9Rj601Rmtg6aMLgl",
+          "name": "Line Messaging account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "events": [
+          "message",
+          "join"
+        ]
+      },
+      "type": "@aotoki/n8n-nodes-line-messaging.lineMessagingTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1100,
+        -350
+      ],
+      "id": "b332a16b-a6dd-45bf-ba51-3b538aaaa01a",
+      "name": "Line Messaging Trigger1",
+      "webhookId": "eef309f4-492c-498f-befd-5ed7c91444d3",
+      "credentials": {
+        "lineMessagingApi": {
+          "id": "9Rj601Rmtg6aMLgl",
+          "name": "Line Messaging account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "facilities",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "line_group_id",
+              "fieldValue": "={{ $node[\"Line Messaging Trigger1\"].json.source.groupId }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        220,
+        -540
+      ],
+      "id": "5b224f65-37a3-4cfd-ac69-0d2ced97192f",
+      "name": "Update Supabase",
+      "credentials": {
+        "supabaseApi": {
+          "id": "rcqBdX4OTqIHjGlT",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "facilities",
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "short_name",
+              "condition": "eq",
+              "keyValue": "={{ $node[\"Line Messaging Trigger1\"].json.message.text.trim() }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -220,
+        -450
+      ],
+      "id": "6e4aa716-e45b-46d5-9da6-e4751780cee7",
+      "name": "Search Supabase",
+      "credentials": {
+        "supabaseApi": {
+          "id": "rcqBdX4OTqIHjGlT",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "facilities",
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "line_group_id",
+              "condition": "eq",
+              "keyValue": "={{ $node[\"Line Messaging Trigger1\"].json.source.groupId }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -660,
+        -450
+      ],
+      "id": "supabase-check-bound",
+      "name": "Check If Group Bound",
+      "credentials": {
+        "supabaseApi": {
+          "id": "rcqBdX4OTqIHjGlT",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "is-bound-check",
+              "leftValue": "={{ $json.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "larger",
+                "name": "filter.operator.larger"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -440,
+        -450
+      ],
+      "id": "if-group-bound",
+      "name": "Is Group Bound"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "facilities",
+        "limit": 100,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "is_round_1",
+              "condition": "eq",
+              "keyValue": "true"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -660,
+        -200
+      ],
+      "id": "supabase-get-unbound",
+      "name": "Get Unbound Facilities",
+      "credentials": {
+        "supabaseApi": {
+          "id": "rcqBdX4OTqIHjGlT",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const facilities = $input.all(); \n\n// 篩選出 line_group_id 為空（尚未綁定）的一輪機構\nconst unboundFacs = facilities.filter(fac => {\n  const lgid = fac.json.line_group_id;\n  return !lgid || lgid.toString().trim() === \"\";\n});\n\n// 建立 3 行一排的按鈕網格\nconst buttons = [];\nlet currentRow = {\n  \"type\": \"box\",\n  \"layout\": \"horizontal\",\n  \"spacing\": \"sm\",\n  \"contents\": []\n};\n\nunboundFacs.forEach((fac, index) => {\n  const shortName = fac.json.short_name;\n  if (!shortName) return;\n  \n  currentRow.contents.push({\n    \"type\": \"button\",\n    \"action\": {\n      \"type\": \"message\",\n      \"label\": shortName,\n      \"text\": shortName\n    },\n    \"style\": \"secondary\",\n    \"height\": \"sm\",\n    \"color\": \"#1F4E79\"\n  });\n\n  if (currentRow.contents.length === 3 || index === unboundFacs.length - 1) {\n    buttons.push(currentRow);\n    currentRow = {\n      \"type\": \"box\",\n      \"layout\": \"horizontal\",\n      \"spacing\": \"sm\",\n      \"contents\": []\n    };\n  }\n});\n\nif (buttons.length === 0) {\n  buttons.push({\n    \"type\": \"text\",\n    \"text\": \"目前所有一輪合作機構皆已完成綁定。\",\n    \"align\": \"center\",\n    \"color\": \"#999999\"\n  });\n}\n\nconst flexJson = {\n  \"type\": \"bubble\",\n  \"size\": \"mega\",\n  \"body\": {\n    \"type\": \"box\",\n    \"layout\": \"vertical\",\n    \"spacing\": \"md\",\n    \"contents\": [\n      {\n        \"type\": \"text\",\n        \"text\": \"🏥 萬芳醫院轉介平台\",\n        \"weight\": \"bold\",\n        \"size\": \"xl\",\n        \"color\": \"#1F4E79\"\n      },\n      {\n        \"type\": \"text\",\n        \"text\": \"請直接點選下方對應的按鈕，即可自動完成此 LINE 群組的綁定：\",\n        \"wrap\": true,\n        \"size\": \"sm\",\n        \"color\": \"#666666\"\n      },\n      {\n        \"type\": \"separator\",\n        \"margin\": \"md\"\n      },\n      {\n        \"type\": \"box\",\n        \"layout\": \"vertical\",\n        \"spacing\": \"sm\",\n        \"contents\": buttons\n      }\n    ]\n  }\n};\n\nreturn [{ json: { flexJson } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        -440,
+        -200
+      ],
+      "id": "code-build-flex",
+      "name": "Build Flex Message"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "to": "={{ $node[\"Line Messaging Trigger1\"].json.source.groupId }}",
+        "messages": {
+          "values": [
+            {
+              "altText": "🏥 萬芳醫院轉介平台 - 請點選按鈕進行綁定",
+              "flexJson": "={{ JSON.stringify($json.flexJson) }}",
+              "type": "flex"
+            }
+          ]
+        }
+      },
+      "type": "@aotoki/n8n-nodes-line-messaging.lineMessaging",
+      "typeVersion": 1,
+      "position": [
+        -220,
+        -200
+      ],
+      "id": "welcome-flex-node",
+      "name": "Send Welcome Flex Message",
+      "credentials": {
+        "lineMessagingApi": {
+          "id": "9Rj601Rmtg6aMLgl",
+          "name": "Line Messaging account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "If Message": {
+      "main": [
+        [
+          {
+            "node": "Check If Group Bound",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Unbound Facilities",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Found": {
+      "main": [
+        [
+          {
+            "node": "Update Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Fail Msg",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Line Messaging Trigger1": {
+      "main": [
+        [
+          {
+            "node": "If Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Supabase": {
+      "main": [
+        [
+          {
+            "node": "Send Success Msg",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Supabase": {
+      "main": [
+        [
+          {
+            "node": "If Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check If Group Bound": {
+      "main": [
+        [
+          {
+            "node": "Is Group Bound",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Group Bound": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Search Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Unbound Facilities": {
+      "main": [
+        [
+          {
+            "node": "Build Flex Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Flex Message": {
+      "main": [
+        [
+          {
+            "node": "Send Welcome Flex Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
