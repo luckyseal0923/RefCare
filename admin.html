@@ -2167,7 +2167,7 @@
         ? `<button class="btn btn-primary" style="flex:1; background:linear-gradient(135deg, #3b82f6, #2563eb); border:none;" onclick="reopenCase('${item.case_id}')">案件再開</button>`
         : (item.status === '媒合成功'
           ? `<button class="btn btn-primary" style="flex:1; background:linear-gradient(135deg, #10b981, #059669); border:none;" onclick="closeCase('${item.case_id}')">正式結案</button>`
-          : `<button class="btn btn-primary" style="flex:1; background:linear-gradient(135deg, #f59e0b, #d97706); border:none;" onclick="openMatchStatusModal('${item.case_id}')">登記媒合狀態</button>`);
+          : '');
 
       return `
         <div class="detail-grid">
