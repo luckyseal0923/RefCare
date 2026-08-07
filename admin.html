@@ -1862,7 +1862,7 @@
              ? `<button class="icon-btn" style="color:#2563eb; background:#eff6ff; border-color:#dbeafe;" onclick="reopenCase('${c.case_id}')">再開</button>`
              : (c.status === '媒合成功'
                ? `<button class="icon-btn" style="color:#10b981; background:#ecfdf5; border-color:#a7f3d0;" onclick="closeCase('${c.case_id}')">正式結案</button>`
-               : `<button class="icon-btn" style="color:#d97706; background:#fffbeb; border-color:#fef3c7;" onclick="copyCaseInfoAndLink('${c.case_id}')">複製訊息</button>`);
+               : `<button class="icon-btn" style="color:#d97706; background:#fffbeb; border-color:#fef3c7;" onclick="openMatchStatusModal('${c.case_id}')">媒合狀態</button>`);
 
           return `
             <tr>
@@ -2167,7 +2167,7 @@
         ? `<button class="btn btn-primary" style="flex:1; background:linear-gradient(135deg, #3b82f6, #2563eb); border:none;" onclick="reopenCase('${item.case_id}')">案件再開</button>`
         : (item.status === '媒合成功'
           ? `<button class="btn btn-primary" style="flex:1; background:linear-gradient(135deg, #10b981, #059669); border:none;" onclick="closeCase('${item.case_id}')">正式結案</button>`
-          : `<button class="btn btn-primary" style="flex:1; background:linear-gradient(135deg, #f59e0b, #d97706); border:none;" onclick="copyCaseInfoAndLink('${item.case_id}')">手動複製個案訊息</button>`);
+          : `<button class="btn btn-primary" style="flex:1; background:linear-gradient(135deg, #f59e0b, #d97706); border:none;" onclick="openMatchStatusModal('${item.case_id}')">登記媒合狀態</button>`);
 
       return `
         <div class="detail-grid">
@@ -2218,7 +2218,8 @@
             <div id="repliesContainer">${replyCardsHtml}</div>
           </div>
         </div>
-        <div style="margin-top:20px; display:flex; gap:10px;">
+        <div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn btn-primary" style="flex:1; background:linear-gradient(135deg, #0ea5e9, #0284c7); border:none;" onclick="copyCaseInfoAndLink('${item.case_id}')">手動複製個案訊息</button>
           <button class="btn btn-primary" style="flex:1;" onclick="copyFacilityLink('${item.case_id}')">發送催案提醒</button>
           ${drawerActionBtn}
         </div>
