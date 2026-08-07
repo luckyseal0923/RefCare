@@ -1862,7 +1862,7 @@
              ? `<button class="icon-btn" style="color:#2563eb; background:#eff6ff; border-color:#dbeafe;" onclick="reopenCase('${c.case_id}')">再開</button>`
              : (c.status === '媒合成功'
                ? `<button class="icon-btn" style="color:#10b981; background:#ecfdf5; border-color:#a7f3d0;" onclick="closeCase('${c.case_id}')">正式結案</button>`
-               : `<button class="icon-btn" style="color:#d97706; background:#fffbeb; border-color:#fef3c7;" onclick="openMatchStatusModal('${c.case_id}')">媒合狀態</button>`);
+               : `<button class="icon-btn" style="color:#d97706; background:#fffbeb; border-color:#fef3c7;" onclick="copyCaseInfoAndLink('${c.case_id}')">複製訊息</button>`);
 
           return `
             <tr>
@@ -2167,7 +2167,7 @@
         ? `<button class="btn btn-primary" style="flex:1; background:linear-gradient(135deg, #3b82f6, #2563eb); border:none;" onclick="reopenCase('${item.case_id}')">案件再開</button>`
         : (item.status === '媒合成功'
           ? `<button class="btn btn-primary" style="flex:1; background:linear-gradient(135deg, #10b981, #059669); border:none;" onclick="closeCase('${item.case_id}')">正式結案</button>`
-          : `<button class="btn btn-primary" style="flex:1; background:linear-gradient(135deg, #f59e0b, #d97706); border:none;" onclick="openMatchStatusModal('${item.case_id}')">登記媒合狀態</button>`);
+          : `<button class="btn btn-primary" style="flex:1; background:linear-gradient(135deg, #f59e0b, #d97706); border:none;" onclick="copyCaseInfoAndLink('${item.case_id}')">手動複製個案訊息</button>`);
 
       return `
         <div class="detail-grid">
@@ -2817,6 +2817,56 @@
         closeDrawer();
       } catch (err) { 
         alert("結案失敗：" + err.message); 
+      }
+    }
+
+    async function copyCaseInfoAndLink(id) {
+      const c = allCases.find(item => item.case_id === id);
+      if (!c) {
+        alert("找不到案件資訊");
+        return;
+      }
+
+      const replyUrl = window.location.origin + window.location.pathname.replace('admin.html', 'facility.html') + '?case_id=' + id;
+      const serviceCodesStr = Array.isArray(c.service_codes) && c.service_codes.length > 0 ? c.service_codes.join(', ') : (c.service_codes || '無');
+
+      const messageText = `📋【 RefCare 個案轉介資訊 】
+----------------------------------------
+📌 案件編號：${c.case_id}
+🏥 轉介單位：${c.hospital || '未填'}${c.case_manager ? ` (${c.case_manager})` : ''}
+👤 案主姓名：${c.patient_name || '未填'} (${c.gender || '--'} / ${c.age || '--'}歲)
+🆔 身分證號：${maskNationalId(c.patient_id || '')}
+♿ 失能等級：CMS ${c.cms_level || '未評估'}
+🧠 意識狀態：${c.consciousness || '未填'}
+🚶 行動能力：${c.mobility || '未填'}
+🏠 現居地址：${c.address || '未填'}
+💡 服務類型：${c.service_type || '未填'}
+⏰ 期待時段：${c.service_time || '未填'}
+🛠️ 服務代碼：${serviceCodesStr}
+🩺 主要診斷：${c.diagnosis || '無'}
+📝 案況描述：${c.case_summary || '無'}
+⭐ 特殊需求：${c.special_need || '無'}
+----------------------------------------
+⚡ 點擊下方連結進行媒合回覆：
+${replyUrl}`;
+
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(messageText);
+        } else {
+          const textarea = document.createElement('textarea');
+          textarea.value = messageText;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+        }
+        alert("個案訊息與回覆網址已成功複製到剪貼簿！");
+      } catch (err) {
+        console.error("複製失敗:", err);
+        alert("複製失敗：" + err.message);
       }
     }
 
