@@ -2024,8 +2024,13 @@
       let displayList = [];
 
       if (isDifficultMode) {
-        // 困難派案模式：嚴格維護個管師排定的發送隊列順序 (第 1 家, 第 2 家...)
-        const queue = item.target_facility_queue;
+        // 困難派案模式：嚴格維護個管師排定的發送隊列順序 (第 1 家, 第 2 家...)，並過濾掉已被編輯移除的機構
+        const targetIdsSet = (Array.isArray(item.target_facility_ids) && item.target_facility_ids.length > 0)
+          ? new Set(item.target_facility_ids.map(String))
+          : null;
+        
+        const rawQueue = item.target_facility_queue;
+        const queue = targetIdsSet ? rawQueue.filter(q => targetIdsSet.has(String(q.id))) : rawQueue;
         const curIdx = parseInt(item.current_queue_index) || 0;
 
         displayList = queue.map((qItem, qIdx) => {
@@ -2585,9 +2590,33 @@
         updates.service_codes = [];
       }
 
-      // 指派機構勾選資料反序列化
+      // 指派機構勾選資料反序列化與困難派案隊列同步
       const checkedBoxes = form.querySelectorAll('input[name="target_facility_ids"]:checked');
-      updates.target_facility_ids = Array.from(checkedBoxes).map(cb => String(cb.value));
+      const newTargetIds = Array.from(checkedBoxes).map(cb => String(cb.value));
+      updates.target_facility_ids = newTargetIds;
+      updates.total_targets = newTargetIds.length;
+
+      try {
+        const currentEditingCase = currentRenderedList[currentEditingIndex];
+        if (currentEditingCase && Array.isArray(currentEditingCase.target_facility_queue)) {
+          let updatedQueue = currentEditingCase.target_facility_queue.filter(qItem => newTargetIds.includes(String(qItem.id)));
+          
+          newTargetIds.forEach(id => {
+            if (!updatedQueue.some(qItem => String(qItem.id) === String(id))) {
+              const fac = allFacilities.find(f => String(f.id) === String(id));
+              if (fac) {
+                updatedQueue.push({
+                  id: fac.id,
+                  name: fac.name,
+                  line_group_id: fac.line_group_id || ""
+                });
+              }
+            }
+          });
+          
+          updates.target_facility_queue = updatedQueue;
+        }
+      } catch (e) { console.warn("[Sync Queue Error]", e); }
 
       // 起案時間反序列化
       if (updates.created_at_input) {
