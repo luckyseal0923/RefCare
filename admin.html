@@ -1864,6 +1864,23 @@
                ? `<button class="icon-btn" style="color:#10b981; background:#ecfdf5; border-color:#a7f3d0;" onclick="closeCase('${c.case_id}')">正式結案</button>`
                : `<button class="icon-btn" style="color:#d97706; background:#fffbeb; border-color:#fef3c7;" onclick="openMatchStatusModal('${c.case_id}')">媒合狀態</button>`);
 
+            let activeFacText = '';
+            if (c.target_group === '困難派案(三輪)' && Array.isArray(c.target_facility_queue) && c.target_facility_queue.length > 0) {
+              const queue = c.target_facility_queue;
+              const curIdx = c.current_queue_index || 0;
+              const curFac = queue[curIdx];
+              const curFacName = curFac ? getFacShortName(curFac.name) : '';
+              if (c.status === '媒合成功') {
+                activeFacText = `<div style="font-size:12px; color:#059669; font-weight:800; margin-top:4px;">🟢 已媒合：${getFacShortName(c.matched_facility || curFacName)}</div>`;
+              } else if (c.status === '媒合失敗') {
+                activeFacText = `<div style="font-size:12px; color:#dc2626; font-weight:800; margin-top:4px;">🔴 詢問完畢 (無機構配合)</div>`;
+              } else if (c.queue_status === 'PAUSED_PARTIAL') {
+                activeFacText = `<div style="font-size:12px; color:#d97706; font-weight:800; margin-top:4px;">⚠️ 當前發送：${curFacName || '無'} <span style="font-size:11px; background:#fef3c7; color:#b45309; padding:1px 4px; border-radius:4px;">待確認</span></div>`;
+              } else {
+                activeFacText = `<div style="font-size:12px; color:#be123c; font-weight:800; margin-top:4px;">📍 當前發送：${curFacName || '無'}</div>`;
+              }
+            }
+
           return `
             <tr>
               <td><input type="checkbox" class="case-checkbox" value="${c.case_id}" ${selectedCaseIds.has(c.case_id) ? 'checked' : ''} onchange="toggleCaseSelect('${c.case_id}', this.checked)" /></td>
@@ -1882,6 +1899,7 @@
                 <div class="reply-block">
                   <div class="reply-text"><span>已回覆</span><strong>${progress.replied} / ${progress.total}</strong></div>
                   <div class="progress"><div class="progress-bar" style="width:${progress.percent}%;"></div></div>
+                  ${activeFacText}
                 </div>
               </td>
               <td>
@@ -1945,105 +1963,190 @@
 
     function createDrawerContent(item) {
       const replies = item.replies || [];
-      const targetIds = item.target_facility_ids || [];
+      const isDifficultMode = (item.target_group === '困難派案(三輪)' && Array.isArray(item.target_facility_queue) && item.target_facility_queue.length > 0);
       
-      // 合併顯示：目標名單 + 已回覆名單
       let displayList = [];
-      const allTargetIds = new Set(targetIds.map(String));
-      replies.forEach(r => { if(r.facility_id) allTargetIds.add(String(r.facility_id)); });
 
-      displayList = Array.from(allTargetIds).map(id => {
-        const fac = allFacilities.find(f => String(f.id) === id);
-        const facReplies = replies.filter(r => 
-          (r.facility_id && String(r.facility_id) === id) || 
-          (!r.facility_id && fac && r.facility_name === fac.name)
-        );
+      if (isDifficultMode) {
+        // 困難派案模式：嚴格維護個管師排定的發送隊列順序 (第 1 家, 第 2 家...)
+        const queue = item.target_facility_queue;
+        const curIdx = parseInt(item.current_queue_index) || 0;
 
-        let realReply = facReplies.find(r => r.reply_status && r.reply_status !== 'pending');
-        if (!realReply && facReplies.length > 0) {
-          // Sort desc by created_at or fallback to first
-          facReplies.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-          realReply = facReplies[0];
-        }
+        displayList = queue.map((qItem, qIdx) => {
+          const fac = allFacilities.find(f => String(f.id) === String(qItem.id) || f.name === qItem.name);
+          const facReplies = replies.filter(r => 
+            (r.facility_id && String(r.facility_id) === String(qItem.id)) || 
+            (!r.facility_id && (r.facility_name === qItem.name || (fac && r.facility_name === fac.name)))
+          );
 
-        const noteReply = facReplies.find(r => r.case_manager_note);
-        const cmNote = noteReply ? noteReply.case_manager_note : '';
+          let realReply = facReplies.find(r => r.reply_status && r.reply_status !== 'pending');
+          if (!realReply && facReplies.length > 0) {
+            facReplies.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            realReply = facReplies[0];
+          }
 
-        let reporter = '未提供';
-        let cleanNote = realReply ? (realReply.note || '無備註') : '尚未回覆';
-        let replyTimeStr = '';
-        let replyTimestamp = 0; // 用於排序的新增欄位
+          const noteReply = facReplies.find(r => r.case_manager_note);
+          const cmNote = noteReply ? noteReply.case_manager_note : '';
 
-        if (realReply) {
-          // 支援獨立的 reporter 欄位或從 note 中正則解析填報者
-          if (realReply.reporter) {
-            reporter = realReply.reporter;
-          } else if (realReply.note) {
-            const match = realReply.note.match(/填報者：\s*(.+)$/);
-            if (match) {
-              reporter = match[1].trim();
-              cleanNote = realReply.note.replace(/\n?填報者：\s*(.+)$/, '').trim() || '無備註';
+          let reporter = '未提供';
+          let cleanNote = realReply ? (realReply.note || '無備註') : '尚未回覆';
+          let replyTimeStr = '';
+
+          if (realReply) {
+            if (realReply.reporter) {
+              reporter = realReply.reporter;
+            } else if (realReply.note) {
+              const match = realReply.note.match(/填報者：\s*(.+)$/);
+              if (match) {
+                reporter = match[1].trim();
+                cleanNote = realReply.note.replace(/\n?填報者：\s*(.+)$/, '').trim() || '無備註';
+              }
+            }
+
+            if (realReply.created_at) {
+              try {
+                const d = new Date(realReply.created_at);
+                replyTimeStr = d.toLocaleString('zh-TW', {
+                  hour12: false,
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                });
+              } catch (e) { replyTimeStr = ''; }
             }
           }
 
-          if (realReply.created_at) {
-            try {
-              const d = new Date(realReply.created_at);
-              replyTimestamp = d.getTime();
-              replyTimeStr = d.toLocaleString('zh-TW', {
-                hour12: false,
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-              });
-            } catch (e) {
-              replyTimeStr = '';
+          // 困難派案階段標籤狀態判斷
+          let sequenceTag = `第 ${qIdx + 1} 家`;
+          let sequenceStatusText = '⚪ 等待發送 (順序預定)';
+          let sequenceStatusClass = 'muted';
+
+          if (qIdx < curIdx) {
+            if (realReply && realReply.reply_status === 'accept') {
+              sequenceStatusText = '🟢 可收案 (媒合成功)';
+              sequenceStatusClass = 'green';
+            } else if (realReply && realReply.reply_status === 'coordinate') {
+              sequenceStatusText = '⚠️ 已回應部分時段人力';
+              sequenceStatusClass = 'amber';
+            } else {
+              sequenceStatusText = '❌ 無法接案 (已轉下一家)';
+              sequenceStatusClass = 'rose';
+            }
+          } else if (qIdx === curIdx) {
+            if (item.queue_status === 'PAUSED_PARTIAL') {
+              sequenceStatusText = '⚠️ 部分時段有人力 (待個管師確認)';
+              sequenceStatusClass = 'amber';
+            } else if (realReply && realReply.reply_status === 'accept') {
+              sequenceStatusText = '🟢 可收案 (媒合成功)';
+              sequenceStatusClass = 'green';
+            } else if (realReply && realReply.reply_status === 'reject') {
+              sequenceStatusText = '❌ 無法接案 (準備推進)';
+              sequenceStatusClass = 'rose';
+            } else {
+              sequenceStatusText = '⚡ 正在詢問中 (已發送 LINE，等待回覆)';
+              sequenceStatusClass = 'primary';
             }
           }
-        }
 
-        return {
-          id,
-          name: fac ? fac.name : (realReply ? realReply.facility_name : '未知機構'),
-          status: realReply ? realReply.reply_status : 'pending',
-          note: cleanNote,
-          reporter,
-          replyTimeStr,
-          replyTimestamp,
-          phone: fac ? fac.phone : '未知電話',
-          lineGroupId: fac ? fac.line_group_id : null,
-          case_manager_note: cmNote,
-          reply_id: realReply ? realReply.id : (noteReply ? noteReply.id : null)
-        };
-      });
+          return {
+            id: qItem.id,
+            name: qItem.name || (fac ? fac.name : '未知機構'),
+            status: realReply ? realReply.reply_status : 'pending',
+            note: cleanNote,
+            reporter,
+            replyTimeStr,
+            phone: fac ? fac.phone : '未知電話',
+            lineGroupId: fac ? fac.line_group_id : qItem.line_group_id,
+            case_manager_note: cmNote,
+            reply_id: realReply ? realReply.id : (noteReply ? noteReply.id : null),
+            sequenceIndex: qIdx + 1,
+            sequenceTag,
+            sequenceStatusText,
+            sequenceStatusClass,
+            isCurrent: (qIdx === curIdx)
+          };
+        });
 
-      // 排序邏輯：可接案 (accept) > 待協調 (coordinate) > 待回覆 (pending) > 無法接案 (reject)
-      const statusWeight = {
-        'accept': 1,
-        'coordinate': 2,
-        'pending': 3,
-        'reject': 4
-      };
+      } else {
+        // 普通派案模式：按狀態排序 (可接案 > 待協調 > 待回覆 > 無法接案)
+        const targetIds = item.target_facility_ids || [];
+        const allTargetIds = new Set(targetIds.map(String));
+        replies.forEach(r => { if(r.facility_id) allTargetIds.add(String(r.facility_id)); });
 
-      displayList.sort((a, b) => {
-        const wA = statusWeight[a.status] || 3;
-        const wB = statusWeight[b.status] || 3;
-        
-        if (wA !== wB) {
-          return wA - wB; // 權重小（優先級高）的排在前面
-        }
-        
-        // 相同狀態下的次級排序：
-        if (a.status === 'pending') {
-          // 如果都是未回覆，按機構名稱筆劃排序
-          return a.name.localeCompare(b.name, 'zh-TW');
-        } else {
-          // 如果是同種回覆狀態，按回覆時間由新到舊排序 (replyTimestamp 降冪)
+        displayList = Array.from(allTargetIds).map(id => {
+          const fac = allFacilities.find(f => String(f.id) === id);
+          const facReplies = replies.filter(r => 
+            (r.facility_id && String(r.facility_id) === id) || 
+            (!r.facility_id && fac && r.facility_name === fac.name)
+          );
+
+          let realReply = facReplies.find(r => r.reply_status && r.reply_status !== 'pending');
+          if (!realReply && facReplies.length > 0) {
+            facReplies.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            realReply = facReplies[0];
+          }
+
+          const noteReply = facReplies.find(r => r.case_manager_note);
+          const cmNote = noteReply ? noteReply.case_manager_note : '';
+
+          let reporter = '未提供';
+          let cleanNote = realReply ? (realReply.note || '無備註') : '尚未回覆';
+          let replyTimeStr = '';
+          let replyTimestamp = 0;
+
+          if (realReply) {
+            if (realReply.reporter) {
+              reporter = realReply.reporter;
+            } else if (realReply.note) {
+              const match = realReply.note.match(/填報者：\s*(.+)$/);
+              if (match) {
+                reporter = match[1].trim();
+                cleanNote = realReply.note.replace(/\n?填報者：\s*(.+)$/, '').trim() || '無備註';
+              }
+            }
+
+            if (realReply.created_at) {
+              try {
+                const d = new Date(realReply.created_at);
+                replyTimestamp = d.getTime();
+                replyTimeStr = d.toLocaleString('zh-TW', {
+                  hour12: false,
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                });
+              } catch (e) { replyTimeStr = ''; }
+            }
+          }
+
+          return {
+            id,
+            name: fac ? fac.name : (realReply ? realReply.facility_name : '未知機構'),
+            status: realReply ? realReply.reply_status : 'pending',
+            note: cleanNote,
+            reporter,
+            replyTimeStr,
+            replyTimestamp,
+            phone: fac ? fac.phone : '未知電話',
+            lineGroupId: fac ? fac.line_group_id : null,
+            case_manager_note: cmNote,
+            reply_id: realReply ? realReply.id : (noteReply ? noteReply.id : null)
+          };
+        });
+
+        const statusWeight = { 'accept': 1, 'coordinate': 2, 'pending': 3, 'reject': 4 };
+        displayList.sort((a, b) => {
+          const wA = statusWeight[a.status] || 3;
+          const wB = statusWeight[b.status] || 3;
+          if (wA !== wB) return wA - wB;
+          if (a.status === 'pending') return a.name.localeCompare(b.name, 'zh-TW');
           return b.replyTimestamp - a.replyTimestamp;
-        }
-      });
+        });
+      }
 
       // 計算各狀態家數統計
       const counts = {
@@ -2055,13 +2158,18 @@
       };
 
       const replyCardsHtml = displayList.map(r => `
-        <div class="reply-item-card" data-status="${r.status}" style="margin-bottom:12px; padding:16px; background:#f8fafc; border-radius:16px; border:1px solid #edf2f7;">
+        <div class="reply-item-card" data-status="${r.status}" style="margin-bottom:12px; padding:16px; background:${r.isCurrent ? '#fff1f2' : '#f8fafc'}; border-radius:16px; border:1px solid ${r.isCurrent ? '#fecdd3' : '#edf2f7'}; ${r.isCurrent ? 'border-left:4px solid #be123c;' : ''}">
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <strong style="font-size:15px; color:var(--text-strong);">${r.name}</strong>
-            <span style="font-weight:900; font-size:12px;">
-              ${r.status==='accept' ? '<span style="color:var(--green);">✅ 可收案</span>' : 
+            <div style="display:flex; align-items:center; gap:8px;">
+              ${r.sequenceIndex ? `<span style="background:${r.isCurrent ? '#be123c' : '#64748b'}; color:white; font-size:11px; font-weight:800; padding:2px 8px; border-radius:12px;">第 ${r.sequenceIndex} 家</span>` : ''}
+              <strong style="font-size:15px; color:var(--text-strong);">${r.name}</strong>
+            </div>
+            <span style="font-weight:900; font-size:12px; ${r.sequenceStatusClass ? `color:var(--${r.sequenceStatusClass});` : ''}">
+              ${r.sequenceStatusText ? r.sequenceStatusText : (
+                r.status==='accept' ? '<span style="color:var(--green);">✅ 可收案</span>' : 
                 r.status==='reject' ? '<span style="color:var(--rose);">❌ 無法收案</span>' : 
-                r.status==='coordinate' ? '<span style="color:var(--amber);">⚠️ 待協調</span>' : '<span style="color:var(--muted);">⌛ 待回覆</span>'}
+                r.status==='coordinate' ? '<span style="color:var(--amber);">⚠️ 待協調</span>' : '<span style="color:var(--muted);">⌛ 待回覆</span>'
+              )}
             </span>
           </div>
           <div style="font-size:13px; color:var(--muted); margin-top:6px; display:flex; flex-direction:column; gap:4px;">
