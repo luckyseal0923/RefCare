@@ -2537,13 +2537,14 @@
                   <div id="editQueueContainer" style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px; max-height:260px; overflow-y:auto; padding-right:4px;">
                   </div>
 
-                  <div style="display:flex; gap:8px; align-items:center; background:#ffffff; border:1px solid #fda4af; border-radius:10px; padding:8px 12px; flex-wrap:wrap;">
+                  <div style="display:flex; gap:8px; align-items:center; background:#ffffff; border:1px solid #fda4af; border-radius:12px; padding:10px 14px; flex-wrap:wrap; width:100%; box-sizing:border-box;">
                     <span style="font-size:13px; font-weight:800; color:#881337; white-space:nowrap;">➕ 追加機構至隊列末端：</span>
-                    <select id="addFacToQueueSelect" style="flex:1; min-width:180px; height:36px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; background:#fff;">
-                      <option value="">-- 請選擇要追加的機構 --</option>
-                      ${allFacilities.map(f => `<option value="${f.id}">${f.name}${f.area ? ` (${f.area})` : ''}</option>`).join('')}
-                    </select>
-                    <button type="button" class="btn" onclick="addFacToEditQueue()" style="height:36px; padding:0 14px; background:#be123c; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:800; cursor:pointer; white-space:nowrap;">
+                    <div style="position:relative; flex:1; min-width:220px;">
+                      <input type="text" id="addFacToQueueInput" placeholder="🔍 輸入關鍵字搜尋 (例如：紅心、安家...)" 
+                        style="width:100%; height:38px; padding:0 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; outline:none; background:#ffffff; box-sizing:border-box;"
+                        onkeydown="if(event.key==='Enter'){ event.preventDefault(); addFacToEditQueue(); }" />
+                    </div>
+                    <button type="button" class="btn" onclick="addFacToEditQueue()" style="height:38px; padding:0 16px; background:#be123c; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:800; cursor:pointer; white-space:nowrap; box-shadow:0 2px 6px rgba(190,18,60,0.25);">
                       追加
                     </button>
                   </div>
@@ -2575,7 +2576,10 @@
       $("detailDrawer").classList.add("show");
       setTimeout(() => {
         attachFacilityAutocomplete('matchedFacilityInput');
-        if (isDifficultMode) renderEditQueueList();
+        if (isDifficultMode) {
+          renderEditQueueList();
+          attachFacilityAutocomplete('addFacToQueueInput');
+        }
       }, 50);
     }
 
@@ -2625,22 +2629,36 @@
     };
 
     window.addFacToEditQueue = function() {
-      const select = document.getElementById('addFacToQueueSelect');
-      if (!select || !select.value) return alert("請選擇要追加的機構");
-      const id = select.value;
-      if (window.editDifficultQueue.some(q => String(q.id) === String(id))) {
-        return alert("該機構已存在於隊列中");
+      const input = document.getElementById('addFacToQueueInput');
+      if (!input || !input.value.trim()) return alert("請輸入或選擇要追加的機構名稱");
+      const val = input.value.trim();
+      const valLower = val.toLowerCase();
+      
+      let fac = allFacilities.find(f => f.name === val || f.name.toLowerCase() === valLower);
+      if (!fac) {
+        const matches = allFacilities.filter(f => f.name.toLowerCase().includes(valLower));
+        if (matches.length === 1) {
+          fac = matches[0];
+        } else if (matches.length > 1) {
+          fac = matches[0];
+        }
       }
-      const fac = allFacilities.find(f => String(f.id) === String(id));
-      if (fac) {
-        window.editDifficultQueue.push({
-          id: fac.id,
-          name: fac.name,
-          line_group_id: fac.line_group_id || ""
-        });
-        select.value = "";
-        renderEditQueueList();
+
+      if (!fac) {
+        return alert(`找不到關鍵字為「${val}」的機構，請點選下拉選單中的機構名稱。`);
       }
+
+      if (window.editDifficultQueue.some(q => String(q.id) === String(fac.id) || q.name === fac.name)) {
+        return alert(`「${fac.name}」已存在於隊列中`);
+      }
+
+      window.editDifficultQueue.push({
+        id: fac.id,
+        name: fac.name,
+        line_group_id: fac.line_group_id || ""
+      });
+      input.value = "";
+      renderEditQueueList();
     };
 
     async function saveEdit(sendNotification) {
