@@ -1673,13 +1673,24 @@
           return;
         }
 
-        dropdown.innerHTML = matches.map(f => `
-          <div class="fac-option" style="padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: var(--text-strong); transition: background 0.2s;"
-               onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='none'"
-               data-val="${f.name}">
-            ${f.name}
-          </div>
-        `).join('');
+        dropdown.innerHTML = matches.map(f => {
+          const hasLine = (f.line_group_id && f.line_group_id.trim() !== '');
+          const lineBadge = hasLine 
+            ? `<span style="background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; font-size:10px; font-weight:800; padding:2px 6px; border-radius:6px; flex-shrink:0;">🟢 LINE 已綁定</span>`
+            : `<span style="background:#f1f5f9; color:#94a3b8; border:1px solid #e2e8f0; font-size:10px; font-weight:700; padding:2px 6px; border-radius:6px; flex-shrink:0;">⚪ 無 LINE 群組</span>`;
+
+          return `
+            <div class="fac-option" style="padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 13px; color: var(--text-strong); display: flex; align-items: center; justify-content: space-between; gap: 8px; transition: background 0.2s;"
+                 onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='none'"
+                 data-val="${f.name}">
+              <span style="font-weight: 700; color: #1e293b; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                ${f.name}
+                ${f.area ? `<span style="color: #64748b; font-size: 11px; font-weight: normal;">📍 ${f.area}</span>` : ''}
+              </span>
+              ${lineBadge}
+            </div>
+          `;
+        }).join('');
 
         const options = dropdown.querySelectorAll('.fac-option');
         options.forEach(opt => {
@@ -2598,11 +2609,20 @@
       container.innerHTML = window.editDifficultQueue.map((item, idx) => {
         const isFirst = idx === 0;
         const isLast = idx === window.editDifficultQueue.length - 1;
+
+        const fac = allFacilities.find(f => String(f.id) === String(item.id) || f.name === item.name);
+        const hasLine = (fac && fac.line_group_id && fac.line_group_id.trim() !== '') || (item.line_group_id && item.line_group_id.trim() !== '');
+
+        const lineBadge = hasLine 
+          ? `<span style="background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; font-size:10px; font-weight:800; padding:2px 6px; border-radius:6px; flex-shrink:0;">🟢 LINE 已綁定</span>`
+          : `<span style="background:#f1f5f9; color:#94a3b8; border:1px solid #e2e8f0; font-size:10px; font-weight:700; padding:2px 6px; border-radius:6px; flex-shrink:0;">⚪ 無 LINE 群組</span>`;
+
         return `
           <div style="display:flex; align-items:center; justify-content:space-between; background:#ffffff; border:1px solid #fecdd3; border-radius:12px; padding:10px 14px; gap:10px;">
-            <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
+            <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
               <span style="background:#be123c; color:#fff; font-size:11px; font-weight:900; padding:2px 8px; border-radius:10px; flex-shrink:0;">第 ${idx + 1} 家</span>
               <span style="font-size:14px; font-weight:800; color:#1e293b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.name}</span>
+              ${lineBadge}
             </div>
             <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
               <button type="button" onclick="moveEditQueueItem(${idx}, -1)" ${isFirst ? 'disabled style="opacity:0.3; cursor:not-allowed;"' : ''} style="padding:4px 8px; font-size:12px; font-weight:800; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:6px; cursor:pointer;" title="上移">▲</button>
