@@ -2418,12 +2418,22 @@
       
       const isDifficultMode = (item.target_group === '困難派案(三輪)');
       if (isDifficultMode) {
-        window.editDifficultQueue = (Array.isArray(item.target_facility_queue) && item.target_facility_queue.length > 0)
+        const targetIdsSet = (Array.isArray(item.target_facility_ids) && item.target_facility_ids.length > 0)
+          ? new Set(item.target_facility_ids.map(String))
+          : null;
+
+        let rawQueue = (Array.isArray(item.target_facility_queue) && item.target_facility_queue.length > 0)
           ? JSON.parse(JSON.stringify(item.target_facility_queue))
           : (item.target_facility_ids || []).map(id => {
               const fac = allFacilities.find(f => String(f.id) === String(id));
               return fac ? { id: fac.id, name: fac.name, line_group_id: fac.line_group_id || '' } : null;
             }).filter(Boolean);
+
+        if (targetIdsSet && targetIdsSet.size > 0) {
+          rawQueue = rawQueue.filter(q => targetIdsSet.has(String(q.id)));
+        }
+
+        window.editDifficultQueue = rawQueue;
       } else {
         window.editDifficultQueue = null;
       }
