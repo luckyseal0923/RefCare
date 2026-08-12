@@ -1764,7 +1764,7 @@
           if (!r.facility_name) return;
           if (!stats[r.facility_name]) stats[r.facility_name] = { count: 0, accept: 0, totalTime: 0 };
           stats[r.facility_name].count++;
-          if (r.reply_status === 'accept') stats[r.facility_name].accept++;
+        if (r.reply_status === 'accept') stats[r.facility_name].accept++;
           
           const replyTime = new Date(r.created_at);
           const caseTime = new Date(c.created_at);
@@ -2533,6 +2533,48 @@
         closeDrawer();
       } catch (err) { alert("案件再開失敗：" + err.message); }
     }
+
+    window.advanceDifficultCaseNext = async function(id) {
+      try {
+        const { data: cData, error } = await sb.from('cases').select('*').eq('case_id', id).single();
+        if (error || !cData) return alert("找不到案件資料");
+        
+        const queue = cData.target_facility_queue || [];
+        const currentIdx = parseInt(cData.current_queue_index) || 0;
+        const nextIdx = currentIdx + 1;
+        
+        if (nextIdx >= queue.length) {
+          return alert("隊列中已無下一家機構。");
+        }
+        
+        const nextFac = queue[nextIdx];
+        const newNote = prompt(`機構 (第 ${currentIdx + 1} 家) 回覆部分時段有人力。\n請輸入與機構確認後的備註/服務時段內文，並點擊「確定」發送給第 ${nextIdx + 1} 家 (${nextFac.name}):`, cData.special_need || "");
+        if (newNote === null) return;
+        
+        const { error: updateErr } = await sb.from('cases').update({
+          special_need: newNote,
+          current_queue_index: nextIdx,
+          queue_status: "WAITING_REPLY",
+          target_group_line_id: nextFac.line_group_id || ""
+        }).eq('case_id', id);
+        if (updateErr) throw updateErr;
+        
+        fetch("https://n8nwfh.zeabur.app/webhook/case_difficult", {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...cData,
+            special_need: newNote,
+            current_queue_index: nextIdx,
+            target_group_line_id: nextFac.line_group_id || ""
+          })
+        }).catch(e => console.warn('[Manual Advance Webhook Error]', e));
+        
+        alert(`✅ 已成功發送給第 ${nextIdx + 1} 家 (${nextFac.name})！`);
+        fetchData();
+        if (typeof closeDrawer === 'function') closeDrawer();
+      } catch (err) { alert("發送失敗：" + err.message); }
+    };
 
     async function deleteCase(id) {
       if (!(await checkAdminPrivilege(true))) return;

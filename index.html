@@ -1911,15 +1911,20 @@
           selectedFacIds = new Set(round1);
         }
         renderSelectedFacList();
-      } else if (mode === '全區機構(二輪)' || mode === '困難派案(三輪)') {
-        const targetDbName = mode === '全區機構(二輪)' ? '全區機構' : '困難派案(三輪)';
-        const group = facGroups.find(g => g.name === targetDbName);
+      } else if (mode === '全區機構(二輪)') {
+        const group = facGroups.find(g => g.name === '全區機構');
         if (group && group.facility_ids) {
           selectedFacIds = new Set(group.facility_ids.map(id => String(id)));
         } else {
           const fullSurvey = allFacilities.filter(f => f.is_full_survey).map(f => String(f.id));
           selectedFacIds = new Set(fullSurvey);
         }
+        selectedFacOrder = Array.from(selectedFacIds);
+        renderSelectedFacList();
+      } else if (mode === '困難派案(三輪)') {
+        // 困難派案：取消廣播73家，改由個管師依順序挑選
+        selectedFacIds = new Set();
+        selectedFacOrder = [];
         renderSelectedFacList();
       }
       updateSidebar();
@@ -1969,6 +1974,12 @@
 
     function confirmFacModal() {
       selectedFacIds = new Set(pendingFacIds);
+      // 維護順序：確保新加入的機構排在後面，已刪除的移除
+      const newOrder = selectedFacOrder.filter(id => selectedFacIds.has(String(id)));
+      selectedFacIds.forEach(id => {
+        if (!newOrder.includes(String(id))) newOrder.push(String(id));
+      });
+      selectedFacOrder = newOrder;
       renderSelectedFacList();
       closeFacModal();
       updateSidebar();
@@ -1978,20 +1989,73 @@
       const wrap = $("selectedFacList");
       if (selectedFacIds.size === 0) {
         wrap.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#94a3b8; font-size:14px;">尚未選擇任何機構</div>';
+        $("selectedCount").textContent = "0";
         return;
       }
-      const selected = allFacilities.filter(f => selectedFacIds.has(String(f.id)));
-      wrap.innerHTML = selected.map(f => `
-        <div class="chip" style="justify-content:space-between; background:#f0fdfa; border-color:#99f6e4; padding:8px 16px;">
-          <span>${f.facility_name}</span>
-          <span style="cursor:pointer; font-weight:900; padding-left:8px;" onclick="removeSelectedFac('${f.id}')">×</span>
-        </div>
-      `).join('');
+
+      const mode = document.querySelector('input[name="targetGroup"]:checked')?.value;
+      const isDifficultMode = (mode === '困難派案(三輪)');
+
+      // 若為困難派案，依照 selectedFacOrder 的順序呈現
+      let orderedFacs = [];
+      if (isDifficultMode) {
+        orderedFacs = selectedFacOrder
+          .map(id => allFacilities.find(f => String(f.id) === String(id)))
+          .filter(Boolean);
+      } else {
+        orderedFacs = allFacilities.filter(f => selectedFacIds.has(String(f.id)));
+      }
+
+      if (isDifficultMode) {
+        wrap.style.display = "flex";
+        wrap.style.flexDirection = "column";
+        wrap.style.gap = "8px";
+        wrap.innerHTML = orderedFacs.map((f, idx) => `
+          <div class="chip" style="justify-content:space-between; background:#fff1f2; border-color:#fecdd3; padding:10px 16px; border-left:4px solid #be123c;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="background:#be123c; color:white; font-size:12px; font-weight:800; padding:2px 8px; border-radius:12px;">第 ${idx + 1} 家</span>
+              <span style="font-weight:700; color:#881337;">${f.facility_name}</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              ${idx > 0 ? `<button type="button" onclick="moveFacOrder('${f.id}', -1)" style="border:none; background:#ffe4e6; color:#be123c; border-radius:4px; padding:2px 6px; cursor:pointer; font-weight:800;" title="上移">▲</button>` : ''}
+              ${idx < orderedFacs.length - 1 ? `<button type="button" onclick="moveFacOrder('${f.id}', 1)" style="border:none; background:#ffe4e6; color:#be123c; border-radius:4px; padding:2px 6px; cursor:pointer; font-weight:800;" title="下移">▼</button>` : ''}
+              <span style="cursor:pointer; font-weight:900; color:#e11d48; padding-left:6px;" onclick="removeSelectedFac('${f.id}')">×</span>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        wrap.style.display = "grid";
+        wrap.style.gridTemplateColumns = "repeat(auto-fill, minmax(200px, 1fr))";
+        wrap.style.gap = "10px";
+        wrap.innerHTML = orderedFacs.map(f => `
+          <div class="chip" style="justify-content:space-between; background:#f0fdfa; border-color:#99f6e4; padding:8px 16px;">
+            <span>${f.facility_name}</span>
+            <span style="cursor:pointer; font-weight:900; padding-left:8px;" onclick="removeSelectedFac('${f.id}')">×</span>
+          </div>
+        `).join('');
+      }
+
       $("selectedCount").textContent = selectedFacIds.size;
     }
 
+    function moveFacOrder(id, direction) {
+      const strId = String(id);
+      const idx = selectedFacOrder.indexOf(strId);
+      if (idx === -1) return;
+      const targetIdx = idx + direction;
+      if (targetIdx < 0 || targetIdx >= selectedFacOrder.length) return;
+      
+      const temp = selectedFacOrder[idx];
+      selectedFacOrder[idx] = selectedFacOrder[targetIdx];
+      selectedFacOrder[targetIdx] = temp;
+      
+      renderSelectedFacList();
+    }
+
     function removeSelectedFac(id) {
-      selectedFacIds.delete(String(id));
+      const strId = String(id);
+      selectedFacIds.delete(strId);
+      selectedFacOrder = selectedFacOrder.filter(item => String(item) !== strId);
       renderSelectedFacList();
       updateSidebar();
     }
@@ -2073,6 +2137,21 @@
         }
       }
 
+      let targetFacilityQueue = [];
+      if (targetGroupVal === "困難派案(三輪)") {
+        targetFacilityQueue = selectedFacOrder.map(id => {
+          const f = allFacilities.find(fac => String(fac.id) === String(id));
+          return {
+            id: String(id),
+            name: f ? f.facility_name : "",
+            line_group_id: f ? (f.line_group_id || "") : ""
+          };
+        });
+        if (targetFacilityQueue.length > 0) {
+          targetGroupLineId = targetFacilityQueue[0].line_group_id || targetGroupLineId;
+        }
+      }
+
       const formData = {
         case_id: $("caseId").value,
         hospital: $("hospital").value.trim(),
@@ -2123,6 +2202,9 @@
         target_group: targetGroupVal,
         target_group_line_id: targetGroupLineId,
         target_facility_ids: Array.from(selectedFacIds),
+        target_facility_queue: targetFacilityQueue,
+        current_queue_index: 0,
+        queue_status: "WAITING_REPLY",
         total_targets: selectedFacIds.size,
         status: (function() {
           if (targetGroupVal === "全區機構(二輪)") return "二輪媒合中";

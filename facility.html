@@ -795,7 +795,8 @@
     // =============================================
     const N8N_WEBHOOKS = {
       // 機構回覆時，通知個管師 / LINE 群組
-      facilityReply: "https://your-n8n-url/webhook/facility-reply",
+      facilityReply: "https://n8nwfh.zeabur.app/webhook/facility_reply",
+      difficult: "https://n8nwfh.zeabur.app/webhook/case_difficult"
     };
 
     /** 通用 Webhook 發送（靜默失敗，不阻斷主流程） */
@@ -1489,6 +1490,54 @@ ${cleanUrl}`;
             }]);
           
           if (sbError) throw sbError;
+
+          // 🆕 困難派案半自動順序發送邏輯
+          const cData = window.currentCaseData;
+          if (cData && cData.target_group === "困難派案(三輪)" && Array.isArray(cData.target_facility_queue) && cData.target_facility_queue.length > 0) {
+            const queue = cData.target_facility_queue;
+            const currentIdx = parseInt(cData.current_queue_index) || 0;
+
+            if (replyStatus === "accept") {
+              // 有人力 -> 標記媒合成功，停止後續發送
+              await window.supabaseClient.from('cases').update({
+                status: "媒合成功",
+                queue_status: "MATCHED"
+              }).eq('case_id', payload.case_id);
+            } else if (replyStatus === "reject") {
+              // 無人力 -> 自動推進至下一家
+              const nextIdx = currentIdx + 1;
+              if (nextIdx < queue.length) {
+                const nextFac = queue[nextIdx];
+                await window.supabaseClient.from('cases').update({
+                  current_queue_index: nextIdx,
+                  queue_status: "WAITING_REPLY",
+                  target_group_line_id: nextFac.line_group_id || ""
+                }).eq('case_id', payload.case_id);
+
+                // 發送 N8N Webhook 給下一家
+                fetch(N8N_WEBHOOKS.difficult, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    ...cData,
+                    current_queue_index: nextIdx,
+                    target_group_line_id: nextFac.line_group_id || ""
+                  })
+                }).catch(e => console.warn('[Auto-advance Webhook Error]', e));
+              } else {
+                // 已無下家 -> 媒合失敗
+                await window.supabaseClient.from('cases').update({
+                  status: "媒合失敗",
+                  queue_status: "ENDED"
+                }).eq('case_id', payload.case_id);
+              }
+            } else if (replyStatus === "coordinate") {
+              // 部分時段有人力 -> 暫停，等待個管師確認
+              await window.supabaseClient.from('cases').update({
+                queue_status: "PAUSED_PARTIAL"
+              }).eq('case_id', payload.case_id);
+            }
+          }
         }
 
         // 🔔 N8N：機構回覆通知
