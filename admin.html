@@ -1941,41 +1941,54 @@
               const curIdx = parseInt(c.current_queue_index) || 0;
               const totalQueue = queue.length;
               const stepNum = Math.min(curIdx + 1, totalQueue);
-              const queuePercent = Math.round((stepNum / totalQueue) * 100);
               const curFac = queue[curIdx];
-              const curFacName = curFac ? getFacShortName(curFac.name) : '';
+              
+              let facShort = '';
+              if (curFac) {
+                const matchedFac = allFacilities.find(f => String(f.id) === String(curFac.id) || f.name === curFac.name);
+                facShort = matchedFac ? (matchedFac.short || getFacShortName(curFac.name)) : getFacShortName(curFac.name);
+              }
 
-              let activeFacText = '';
-              let stepLabelText = `第 ${stepNum} / ${totalQueue} 家`;
-              let barColor = 'linear-gradient(135deg, #be123c, #e11d48)';
-              let trackBg = '#ffe4e6';
+              let badgeBg = '#be123c';
+              let badgeText = `第 ${stepNum} / ${totalQueue} 家`;
+              let statusLabel = `⚡ 詢問中`;
+              let statusColor = `#be123c`;
+              let targetHtml = `<span style="color:#be123c; font-weight:900;">📍</span><span style="font-size:13px; font-weight:800; color:#1e293b;">【${facShort || '無'}】</span>`;
 
               if (c.status === '媒合成功') {
-                stepLabelText = `媒合成功`;
-                barColor = 'linear-gradient(135deg, #10b981, #059669)';
-                trackBg = '#d1fae5';
-                activeFacText = `<div style="font-size:12px; color:#059669; font-weight:800; margin-top:4px;">🟢 已媒合：${getFacShortName(c.matched_facility || curFacName)}</div>`;
+                badgeBg = '#059669';
+                badgeText = `第 ${stepNum} / ${totalQueue} 家`;
+                statusLabel = `🟢 媒合成功`;
+                statusColor = `#047857`;
+                const finalMatchedName = c.matched_facility ? getFacShortName(c.matched_facility) : facShort;
+                targetHtml = `<span style="color:#059669; font-weight:900;">✅</span><span style="font-size:13px; font-weight:800; color:#065f46;">【${finalMatchedName}】(已確認)</span>`;
               } else if (c.status === '媒合失敗') {
-                stepLabelText = `詢問完畢`;
-                barColor = 'linear-gradient(135deg, #ef4444, #dc2626)';
-                trackBg = '#fee2e2';
-                activeFacText = `<div style="font-size:12px; color:#dc2626; font-weight:800; margin-top:4px;">🔴 詢問完畢 (無機構配合)</div>`;
+                badgeBg = '#64748b';
+                badgeText = `詢問完畢`;
+                statusLabel = `🔴 無機構配合`;
+                statusColor = `#dc2626`;
+                targetHtml = `<span style="font-size:12px; font-weight:800; color:#991b1b;">❌ 困難派案全數無人力</span>`;
               } else if (c.queue_status === 'PAUSED_PARTIAL') {
-                activeFacText = `<div style="font-size:12px; color:#d97706; font-weight:800; margin-top:4px;">⚠️ 當前發送：${curFacName || '無'} <span style="font-size:11px; background:#fef3c7; color:#b45309; padding:1px 4px; border-radius:4px;">待確認</span></div>`;
-              } else {
-                activeFacText = `<div style="font-size:12px; color:#be123c; font-weight:800; margin-top:4px;">📍 當前發送：${curFacName || '無'}</div>`;
+                badgeBg = '#d97706';
+                badgeText = `第 ${stepNum} / ${totalQueue} 家`;
+                statusLabel = `⚠️ 待個管師確認`;
+                statusColor = `#b45309`;
+                targetHtml = `<span style="color:#d97706; font-weight:900;">📍</span><span style="font-size:13px; font-weight:800; color:#1e293b;">【${facShort}】(部分人力)</span>`;
               }
 
               progressBlockHtml = `
-                <div class="reply-block">
-                  <div class="reply-text" style="color:#be123c;">
-                    <span style="font-weight:800; color:#881337;">發送訊息排序</span>
-                    <strong style="color:#be123c; font-size:13px; font-weight:900;">${stepLabelText}</strong>
+                <div style="display:flex; flex-direction:column; gap:4px; align-items:flex-start;">
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <span style="background:${badgeBg}; color:#ffffff; font-size:11px; font-weight:900; padding:2px 8px; border-radius:6px; white-space:nowrap; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+                      ${badgeText}
+                    </span>
+                    <span style="font-size:12px; color:${statusColor}; font-weight:800; white-space:nowrap;">
+                      ${statusLabel}
+                    </span>
                   </div>
-                  <div class="progress" style="background:${trackBg};">
-                    <div class="progress-bar" style="width:${queuePercent}%; background:${barColor};"></div>
+                  <div style="font-size:13px; font-weight:800; color:#1e293b; display:flex; align-items:center; gap:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">
+                    ${targetHtml}
                   </div>
-                  ${activeFacText}
                 </div>
               `;
             } else {
