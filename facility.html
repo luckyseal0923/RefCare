@@ -1093,6 +1093,66 @@ ${formatServiceCodes(data.service_codes)}`;
       $("serviceNeedView").textContent = serviceNeed;
       $("caseSummaryView").textContent = data.case_summary;
 
+      // 若為困難派案，切換為困難派案專用視覺主題與告示卡片
+      if (data.target_group === '困難派案(三輪)') {
+        const headerCard = document.querySelector('.card.header');
+        if (headerCard) {
+          headerCard.style.background = 'linear-gradient(135deg, #be123c 0%, #881337 100%)';
+          headerCard.style.border = '1px solid #fda4af';
+          headerCard.style.boxShadow = '0 10px 30px rgba(190, 18, 60, 0.25)';
+        }
+
+        const badgeEl = document.querySelector('.badge');
+        if (badgeEl) {
+          badgeEl.textContent = '🎯 困難派案專用通道 (三輪順序派案)';
+          badgeEl.style.background = 'rgba(255, 255, 255, 0.25)';
+          badgeEl.style.color = '#ffffff';
+          badgeEl.style.border = '1px solid rgba(255, 255, 255, 0.4)';
+        }
+
+        const descEl = document.querySelector('.desc');
+        if (descEl) {
+          descEl.textContent = '本案件為【困難派案】，採一對一順序輪詢派案。若貴機構服務人力合適請回應「可收案」或「需協調」；若無人力請回應「無法收案」，系統將自動傳遞給下一家機構。';
+        }
+
+        // 注入困難派案優先告示卡片
+        let noticeCard = document.getElementById('difficultNoticeCard');
+        if (!noticeCard) {
+          noticeCard = document.createElement('div');
+          noticeCard.id = 'difficultNoticeCard';
+          noticeCard.style.cssText = 'background:#fff1f2; border:2px solid #fecdd3; border-radius:22px; padding:20px 22px; margin-bottom:18px; box-shadow:0 8px 24px rgba(190,18,60,0.12); display:flex; align-items:flex-start; gap:16px; animation: fadeInUp 0.4s ease;';
+          noticeCard.innerHTML = `
+            <div style="font-size:36px; line-height:1; flex-shrink:0;">🎯</div>
+            <div style="flex:1;">
+              <div style="font-weight:900; color:#881337; font-size:18px; margin-bottom:6px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                <span>本案件為【困難派案】媒合標的</span>
+                <span style="background:#be123c; color:#fff; font-size:12px; font-weight:800; padding:3px 10px; border-radius:12px; letter-spacing:0.5px;">優先處理急件</span>
+              </div>
+              <div style="font-size:14px; color:#9f1239; line-height:1.6; font-weight:700;">
+                📌 為提升調度效率，個管師已安排順序派案隊列：<br>
+                • 若貴機構<strong>人力合適</strong>：請點選【可收案】。<br>
+                • 若貴機構<strong>僅部分時段有人力</strong>：請點選【需協調】。<br>
+                • 若貴機構<strong>完全無人力配合</strong>：請點選【無法收案】，系統將自動通知下一家機構協助。
+              </div>
+            </div>
+          `;
+          if (headerCard && headerCard.parentNode) {
+            headerCard.parentNode.insertBefore(noticeCard, headerCard.nextSibling);
+          }
+        }
+
+        // 高亮回覆表單卡片
+        const allCards = document.querySelectorAll('.card');
+        if (allCards.length > 0) {
+          const replyCard = allCards[allCards.length - 1];
+          if (replyCard && !replyCard.classList.contains('header')) {
+            replyCard.style.border = '2px solid #fda4af';
+            replyCard.style.background = '#fffdfd';
+            replyCard.style.boxShadow = '0 10px 30px rgba(190, 18, 60, 0.15)';
+          }
+        }
+      }
+
 
       // 起案與聯絡資訊
       let cmPhone = data.case_manager_phone || "";
