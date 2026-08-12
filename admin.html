@@ -1025,6 +1025,51 @@
           <button id="confirmMatchStatusBtn" class="btn btn-primary" style="flex: 1.2; height: 48px; font-size: 15px; font-weight: 800; border-radius: 12px; background: var(--amber); border-color: var(--amber);" onclick="confirmMatchSuccess()">確認媒合成功</button>
         </div>
         <div id="matchSuccessError" style="margin-top: 12px; color: var(--rose); font-size: 13px; text-align: center; font-weight: 800; display: none;"></div>
+  </div>
+
+  <!-- Difficult Case Adjust & Advance Modal Overlay -->
+  <div id="difficultAdjustOverlay" class="admin-login-overlay" style="display: none; background: rgba(15,23,42,0.6); backdrop-filter: blur(8px); z-index: 2800;">
+    <div style="background: #ffffff; width: 100%; max-width: 600px; border-radius: 24px; padding: 28px; box-shadow: var(--shadow); position: relative; animation: modalPop 0.25s ease-out; margin: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 14px;">
+        <h3 style="font-size: 20px; font-weight: 900; color: #be123c; margin: 0; display: flex; align-items: center; gap: 8px;">
+          <span>📝 修訂需求與推進發送</span>
+        </h3>
+        <button onclick="closeDifficultAdjustModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #94a3b8;">&times;</button>
+      </div>
+
+      <div id="difficultAdjustTargetHint" style="background: #fff1f2; border: 1px solid #fecdd3; border-radius: 12px; padding: 14px 16px; font-size: 14px; font-weight: 800; color: #9f1239; margin-bottom: 18px;">
+        📍 準備發送給第 X 家：機構名稱
+      </div>
+
+      <!-- Field 1: 服務時段 -->
+      <div class="field" style="margin-bottom: 16px;">
+        <label style="font-weight: 800; font-size: 14px; color: var(--text-strong); display: block; margin-bottom: 6px;">
+          1. 修訂剩餘服務時段 (service_time) <span style="color: #dc2626;">*</span>
+        </label>
+        <input type="text" id="adjServiceTime" style="width: 100%; padding: 10px 14px; font-size: 14px; border: 1px solid #cbd5e1; border-radius: 10px;" placeholder="例如：週一至週四白天" />
+      </div>
+
+      <!-- Field 2: 服務碼別 -->
+      <div class="field" style="margin-bottom: 16px;">
+        <label style="font-weight: 800; font-size: 14px; color: var(--text-strong); display: block; margin-bottom: 6px;">
+          2. 修訂剩餘服務碼別 (service_codes)
+        </label>
+        <div id="adjServiceCodesWrap" style="display: flex; flex-wrap: wrap; gap: 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; max-height: 130px; overflow-y: auto;">
+        </div>
+      </div>
+
+      <!-- Field 3: 補充說明/特殊需求 -->
+      <div class="field" style="margin-bottom: 24px;">
+        <label style="font-weight: 800; font-size: 14px; color: var(--text-strong); display: block; margin-bottom: 6px;">
+          3. 給下一家的補充說明 / 特殊需求 (special_need)
+        </label>
+        <textarea id="adjSpecialNeed" style="width: 100%; height: 90px; padding: 10px 14px; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 10px;" placeholder="例如：週五已由翔伶機構承接，本卡片僅詢問週一至週四剩餘需求..."></textarea>
+      </div>
+
+      <!-- Bottom Actions -->
+      <div style="display: flex; gap: 12px;">
+        <button class="btn btn-muted" style="flex: 1; height: 46px; font-size: 15px; font-weight: 800; border-radius: 12px;" onclick="closeDifficultAdjustModal()">取消</button>
+        <button id="btnSubmitDifficultAdjust" class="btn btn-primary" style="flex: 1.5; height: 46px; font-size: 15px; font-weight: 800; border-radius: 12px; background: #be123c; border-color: #881337;" onclick="submitDifficultAdjustModal()">💾 保存修訂並發送給下一家</button>
       </div>
     </div>
   </div>
@@ -2642,46 +2687,137 @@
       } catch (err) { alert("案件再開失敗：" + err.message); }
     }
 
-    window.advanceDifficultCaseNext = async function(id) {
+    let currentAdjustCaseId = null;
+    let currentAdjustNextIdx = null;
+
+    const ALL_SERVICE_CODES = [
+      "BA01 基本身體清潔", "BA02 基本日常照顧", "BA03 測量生命徵象", "BA04 協助餵食或灌食",
+      "BA05 餐食照顧", "BA07 協助洗頭", "BA08 協助排泄", "BA11 肢體關節活動",
+      "BA13 陪同外出", "BA14 陪同就醫", "BA15 家務協助", "BA17 協助服藥",
+      "GA09 居服督導訪視", "CA01 照顧者支持服務"
+    ];
+
+    window.openDifficultAdjustModal = async function(caseId) {
       try {
-        const { data: cData, error } = await sb.from('cases').select('*').eq('case_id', id).single();
+        const { data: cData, error } = await sb.from('cases').select('*').eq('case_id', caseId).single();
         if (error || !cData) return alert("找不到案件資料");
-        
+
         const queue = cData.target_facility_queue || [];
-        const currentIdx = parseInt(cData.current_queue_index) || 0;
-        const nextIdx = currentIdx + 1;
-        
+        const curIdx = parseInt(cData.current_queue_index) || 0;
+        const nextIdx = curIdx + 1;
+
         if (nextIdx >= queue.length) {
-          return alert("隊列中已無下一家機構。");
+          return alert("隊列中已無下一家機構，已到達隊列末端。");
         }
-        
+
         const nextFac = queue[nextIdx];
-        const newNote = prompt(`機構 (第 ${currentIdx + 1} 家) 回覆部分時段有人力。\n請輸入與機構確認後的備註/服務時段內文，並點擊「確定」發送給第 ${nextIdx + 1} 家 (${nextFac.name}):`, cData.special_need || "");
-        if (newNote === null) return;
+        const curFac = queue[curIdx];
+
+        currentAdjustCaseId = caseId;
+        currentAdjustNextIdx = nextIdx;
+
+        $("difficultAdjustTargetHint").innerHTML = `
+          📍 準備發送給第 <strong>${nextIdx + 1}</strong> 家：<span style="color:#881337; font-size:16px;">${nextFac.name}</span>
+          ${curFac ? `<div style="font-size:12px; color:#64748b; font-weight:normal; margin-top:4px;">(前一家 ${curFac.name} 已記錄部分人力)</div>` : ''}
+        `;
+
+        $("adjServiceTime").value = cData.service_time || '';
         
+        let prefillspec = cData.special_need || '';
+        if (curFac && !prefillspec.includes(curFac.name)) {
+          prefillspec += (prefillspec ? "\n" : "") + `【時段調整】第 ${curIdx + 1} 家 (${curFac.name}) 已安排部分時段，本卡片僅詢問剩餘時段服務。`;
+        }
+        $("adjSpecialNeed").value = prefillspec;
+
+        const existingCodes = Array.isArray(cData.service_codes) ? cData.service_codes : [];
+        const codesWrap = $("adjServiceCodesWrap");
+        codesWrap.innerHTML = ALL_SERVICE_CODES.map(code => {
+          const checked = existingCodes.some(c => c.includes(code.split(' ')[0]));
+          return `
+            <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; background:#ffffff; padding:4px 8px; border-radius:6px; border:1px solid #cbd5e1;">
+              <input type="checkbox" class="adj-code-chk" value="${code}" ${checked ? 'checked' : ''} style="margin:0; width:14px; height:14px;" /> ${code}
+            </label>
+          `;
+        }).join('');
+
+        $("difficultAdjustOverlay").style.display = "flex";
+      } catch (err) { alert("開啟調整彈窗失敗：" + err.message); }
+    };
+
+    window.closeDifficultAdjustModal = function() {
+      $("difficultAdjustOverlay").style.display = "none";
+      currentAdjustCaseId = null;
+      currentAdjustNextIdx = null;
+    };
+
+    window.submitDifficultAdjustModal = async function() {
+      if (!currentAdjustCaseId || currentAdjustNextIdx === null) return;
+
+      const newServiceTime = $("adjServiceTime").value.trim();
+      const newSpecialNeed = $("adjSpecialNeed").value.trim();
+      
+      const chkEls = document.querySelectorAll('.adj-code-chk:checked');
+      const newServiceCodes = Array.from(chkEls).map(el => el.value);
+
+      if (!newServiceTime) {
+        return alert("請填寫修訂後的服務時段");
+      }
+
+      try {
+        const { data: cData, error: fetchErr } = await sb.from('cases').select('*').eq('case_id', currentAdjustCaseId).single();
+        if (fetchErr || !cData) throw new Error("案件資料讀取失敗");
+
+        const queue = cData.target_facility_queue || [];
+        const nextIdx = currentAdjustNextIdx;
+
+        if (nextIdx >= queue.length) throw new Error("隊列索引超出範圍");
+        const nextFac = queue[nextIdx];
+
+        $("btnSubmitDifficultAdjust").disabled = true;
+        $("btnSubmitDifficultAdjust").textContent = "儲存與發送中...";
+
+        // 1. 更新 Supabase 案件資料
         const { error: updateErr } = await sb.from('cases').update({
-          special_need: newNote,
+          service_time: newServiceTime,
+          service_codes: newServiceCodes,
+          special_need: newSpecialNeed,
           current_queue_index: nextIdx,
           queue_status: "WAITING_REPLY",
           target_group_line_id: nextFac.line_group_id || ""
-        }).eq('case_id', id);
+        }).eq('case_id', currentAdjustCaseId);
+
         if (updateErr) throw updateErr;
-        
-        fetch("https://n8nwfh.zeabur.app/webhook/case_difficult", {
+
+        // 2. 發送 N8N Webhook 給下一家
+        const payload = {
+          ...cData,
+          service_time: newServiceTime,
+          service_codes: newServiceCodes,
+          special_need: newSpecialNeed,
+          current_queue_index: nextIdx,
+          target_group_line_id: nextFac.line_group_id || ""
+        };
+
+        fetch(N8N_WEBHOOKS.difficult || "https://n8nwfh.zeabur.app/webhook/case_difficult", {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ...cData,
-            special_need: newNote,
-            current_queue_index: nextIdx,
-            target_group_line_id: nextFac.line_group_id || ""
-          })
-        }).catch(e => console.warn('[Manual Advance Webhook Error]', e));
-        
-        alert(`✅ 已成功發送給第 ${nextIdx + 1} 家 (${nextFac.name})！`);
+          body: JSON.stringify(payload)
+        }).catch(e => console.warn('[Adjust & Advance Webhook Error]', e));
+
+        alert(`✅ 已成功修訂案件需求，並將最新卡片發送給第 ${nextIdx + 1} 家 (${nextFac.name})！`);
+        closeDifficultAdjustModal();
         fetchData();
         if (typeof closeDrawer === 'function') closeDrawer();
-      } catch (err) { alert("發送失敗：" + err.message); }
+      } catch (err) {
+        alert("儲存或發送失敗：" + err.message);
+      } finally {
+        $("btnSubmitDifficultAdjust").disabled = false;
+        $("btnSubmitDifficultAdjust").textContent = "💾 保存修訂並發送給下一家";
+      }
+    };
+
+    window.advanceDifficultCaseNext = function(id) {
+      openDifficultAdjustModal(id);
     };
 
     async function deleteCase(id) {
