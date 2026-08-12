@@ -2185,7 +2185,9 @@
             sequenceTag,
             sequenceStatusText,
             sequenceStatusClass,
-            isCurrent: (qIdx === curIdx)
+            isPast: (qIdx < curIdx),
+            isCurrent: (qIdx === curIdx),
+            isFuture: (qIdx > curIdx)
           };
         });
 
@@ -2277,61 +2279,107 @@
         reject: displayList.filter(r => r.status === 'reject').length
       };
 
-      const replyCardsHtml = displayList.map(r => `
-        <div class="reply-item-card" data-status="${r.status}" style="margin-bottom:12px; padding:16px; background:${r.isCurrent ? '#fff1f2' : '#f8fafc'}; border-radius:16px; border:1px solid ${r.isCurrent ? '#fecdd3' : '#edf2f7'};">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
-            <div style="display:flex; align-items:flex-start; gap:8px; flex:1; min-width:0;">
-              ${r.sequenceIndex ? `<span style="background:${r.isCurrent ? '#be123c' : '#64748b'}; color:white; font-size:11px; font-weight:800; padding:2px 8px; border-radius:12px; flex-shrink:0; white-space:nowrap; margin-top:2px;">第 ${r.sequenceIndex} 家</span>` : ''}
-              <strong style="font-size:15px; color:var(--text-strong); word-break:break-word; flex:1;">${r.name}</strong>
+      const replyCardsHtml = displayList.map(r => {
+        let cardBg = '#f8fafc';
+        let cardBorder = '1px solid #edf2f7';
+        let leftBorder = '';
+        let badgeBg = '#64748b';
+        let isCurrentBadge = '';
+
+        if (isDifficultMode) {
+          if (r.isCurrent) {
+            cardBg = '#fff1f2';
+            cardBorder = '1px solid #fecdd3';
+            leftBorder = 'border-left: 5px solid #be123c;';
+            badgeBg = '#be123c';
+            isCurrentBadge = `<span style="background:#be123c; color:#fff; font-size:10px; font-weight:900; padding:1px 6px; border-radius:4px; margin-left:4px; letter-spacing:0.5px;">🎯 當前目標</span>`;
+          } else if (r.isPast) {
+            cardBg = '#f8fafc';
+            cardBorder = '1px solid #e2e8f0';
+            leftBorder = 'border-left: 4px solid #cbd5e1;';
+            badgeBg = '#64748b';
+          } else if (r.isFuture) {
+            cardBg = '#ffffff';
+            cardBorder = '1px dashed #cbd5e1';
+            leftBorder = 'border-left: 4px dashed #cbd5e1;';
+            badgeBg = '#94a3b8';
+          }
+        } else {
+          if (r.status === 'accept') {
+            leftBorder = 'border-left: 4px solid #10b981;';
+          } else if (r.status === 'coordinate') {
+            leftBorder = 'border-left: 4px solid #f59e0b;';
+          } else if (r.status === 'reject') {
+            leftBorder = 'border-left: 4px solid #f43f5e;';
+          }
+        }
+
+        const fac = allFacilities.find(f => String(f.id) === String(r.id) || f.name === r.name);
+        const shortName = fac && fac.short ? `【${fac.short}】` : '';
+
+        return `
+          <div class="reply-item-card" data-status="${r.status}" style="margin-bottom:12px; padding:16px; background:${cardBg}; border-radius:16px; border:${cardBorder}; ${leftBorder} transition:all 0.2s ease;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+              <div style="display:flex; align-items:flex-start; gap:8px; flex:1; min-width:0;">
+                ${r.sequenceIndex ? `
+                  <div style="display:flex; align-items:center; gap:4px; flex-shrink:0; margin-top:2px;">
+                    <span style="background:${badgeBg}; color:white; font-size:11px; font-weight:900; padding:2px 8px; border-radius:12px; white-space:nowrap;">第 ${r.sequenceIndex} 家</span>
+                    ${isCurrentBadge}
+                  </div>
+                ` : ''}
+                <strong style="font-size:15px; color:var(--text-strong); word-break:break-word; flex:1;">
+                  ${shortName ? `<span style="color:#be123c; font-weight:900; margin-right:4px;">${shortName}</span>` : ''}${r.name}
+                </strong>
+              </div>
+              <span style="font-weight:900; font-size:12px; flex-shrink:0; white-space:nowrap; margin-left:8px; ${r.sequenceStatusClass ? `color:var(--${r.sequenceStatusClass});` : ''}">
+                ${r.sequenceStatusText ? r.sequenceStatusText : (
+                  r.status==='accept' ? '<span style="color:var(--green);">✅ 可收案</span>' : 
+                  r.status==='reject' ? '<span style="color:var(--rose);">❌ 無法收案</span>' : 
+                  r.status==='coordinate' ? '<span style="color:var(--amber);">⚠️ 待協調</span>' : '<span style="color:var(--muted);">⌛ 待回覆</span>'
+                )}
+              </span>
             </div>
-            <span style="font-weight:900; font-size:12px; flex-shrink:0; white-space:nowrap; margin-left:8px; ${r.sequenceStatusClass ? `color:var(--${r.sequenceStatusClass});` : ''}">
-              ${r.sequenceStatusText ? r.sequenceStatusText : (
-                r.status==='accept' ? '<span style="color:var(--green);">✅ 可收案</span>' : 
-                r.status==='reject' ? '<span style="color:var(--rose);">❌ 無法收案</span>' : 
-                r.status==='coordinate' ? '<span style="color:var(--amber);">⚠️ 待協調</span>' : '<span style="color:var(--muted);">⌛ 待回覆</span>'
-              )}
-            </span>
-          </div>
-          <div style="font-size:13px; color:var(--muted); margin-top:6px; display:flex; flex-direction:column; gap:4px;">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <span>📞 電話：${r.phone}</span>
-              ${r.lineGroupId ? `
-                <span style="display:inline-flex; align-items:center; padding:2px 8px; font-size:11px; font-weight:850; color:#ffffff; background:#06c755; border-radius:100px; line-height:1.2; letter-spacing:0.5px; cursor:default;" title="此機構已設定 LINE 群組">
-                   LINE ID
-                </span>
+            <div style="font-size:13px; color:var(--muted); margin-top:6px; display:flex; flex-direction:column; gap:4px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span>📞 電話：${r.phone}</span>
+                ${r.lineGroupId ? `
+                  <span style="display:inline-flex; align-items:center; padding:2px 8px; font-size:11px; font-weight:850; color:#ffffff; background:#06c755; border-radius:100px; line-height:1.2; letter-spacing:0.5px; cursor:default;" title="此機構已設定 LINE 群組">
+                     LINE ID
+                  </span>
+                ` : ''}
+              </div>
+              ${r.status !== 'pending' ? `
+                <div style="display:flex; align-items:center; gap:12px; margin-top:2px; font-weight:800; color:#3b82f6;">
+                  <span>🕒 回覆時間：${r.replyTimeStr || '--'}</span>
+                  <span>👤 填報者：${r.reporter}</span>
+                </div>
               ` : ''}
             </div>
-            ${r.status !== 'pending' ? `
-              <div style="display:flex; align-items:center; gap:12px; margin-top:2px; font-weight:800; color:#3b82f6;">
-                <span>🕒 回覆時間：${r.replyTimeStr || '--'}</span>
-                <span>👤 填報者：${r.reporter}</span>
+            <div style="margin-top:10px; background:#fff; padding:10px; border-radius:10px; font-size:13px; border:1px solid #eef2f7; white-space:pre-wrap;">${r.note}</div>
+            
+            <!-- 個管師備註與手動發送區塊 -->
+            <div style="margin-top:10px; display:flex; align-items:center; gap:8px; border-top:1px dashed #edf2f7; padding-top:10px;">
+              <div style="font-size:12px; color:var(--text-strong); font-weight:800; white-space:nowrap; display:flex; align-items:center; gap:4px;">
+                <span>📝 個管師備註：</span>
               </div>
-            ` : ''}
-          </div>
-          <div style="margin-top:10px; background:#fff; padding:10px; border-radius:10px; font-size:13px; border:1px solid #eef2f7; white-space:pre-wrap;">${r.note}</div>
-          
-          <!-- 個管師備註與手動發送區塊 -->
-          <div style="margin-top:10px; display:flex; align-items:center; gap:8px; border-top:1px dashed #edf2f7; padding-top:10px;">
-            <div style="font-size:12px; color:var(--text-strong); font-weight:800; white-space:nowrap; display:flex; align-items:center; gap:4px;">
-              <span>📝 個管師備註：</span>
+              <div style="position:relative; flex:1; display:flex; align-items:center;">
+                <input type="text" id="cmNote_${item.case_id}_${r.id}" value="${(r.case_manager_note || '').replace(/"/g, '&quot;')}" placeholder="輸入備註，離開游標或 Enter 自動儲存..." 
+                  onblur="saveCmNote('${item.case_id}', '${r.id}', '${r.reply_id || ''}', this.value)"
+                  onkeydown="if(event.key==='Enter') { this.blur(); }"
+                  style="width:100%; height:32px; padding:0 30px 0 10px; font-size:12px; border:1px solid #edf2f7; border-radius:8px; background:#fff; transition:all 0.2s;"
+                  onfocus="this.style.borderColor='var(--primary)';"
+                  onblur="this.style.borderColor='#edf2f7';" />
+                <span id="cmNoteSaved_${item.case_id}_${r.id}" style="position:absolute; right:10px; color:#16a34a; font-size:12px; font-weight:900; opacity:0; transition:opacity 0.2s;">✓</span>
+              </div>
+              ${(item.target_group === '困難派案(三輪)' && (r.status === 'coordinate' || (r.isCurrent && item.queue_status === 'PAUSED_PARTIAL'))) ? `
+                <button type="button" class="btn" style="height:32px; padding:0 12px; font-size:12px; font-weight:800; border-radius:8px; background:#be123c; border:none; color:#ffffff; cursor:pointer; white-space:nowrap; flex-shrink:0; box-shadow:0 2px 6px rgba(190,18,60,0.3);" onclick="openDifficultAdjustModal('${item.case_id}')">
+                  ✏️ 手動發送
+                </button>
+              ` : ''}
             </div>
-            <div style="position:relative; flex:1; display:flex; align-items:center;">
-              <input type="text" id="cmNote_${item.case_id}_${r.id}" value="${(r.case_manager_note || '').replace(/"/g, '&quot;')}" placeholder="輸入備註，離開游標或 Enter 自動儲存..." 
-                onblur="saveCmNote('${item.case_id}', '${r.id}', '${r.reply_id || ''}', this.value)"
-                onkeydown="if(event.key==='Enter') { this.blur(); }"
-                style="width:100%; height:32px; padding:0 30px 0 10px; font-size:12px; border:1px solid #edf2f7; border-radius:8px; background:#fff; transition:all 0.2s;"
-                onfocus="this.style.borderColor='var(--primary)';"
-                onblur="this.style.borderColor='#edf2f7';" />
-              <span id="cmNoteSaved_${item.case_id}_${r.id}" style="position:absolute; right:10px; color:#16a34a; font-size:12px; font-weight:900; opacity:0; transition:opacity 0.2s;">✓</span>
-            </div>
-            ${(item.target_group === '困難派案(三輪)' && (r.status === 'coordinate' || (r.isCurrent && item.queue_status === 'PAUSED_PARTIAL'))) ? `
-              <button type="button" class="btn" style="height:32px; padding:0 12px; font-size:12px; font-weight:800; border-radius:8px; background:#be123c; border:none; color:#ffffff; cursor:pointer; white-space:nowrap; flex-shrink:0; box-shadow:0 2px 6px rgba(190,18,60,0.3);" onclick="openDifficultAdjustModal('${item.case_id}')">
-                ✏️ 手動發送
-              </button>
-            ` : ''}
           </div>
-        </div>
-      `).join("");
+        `;
+      }).join("");
 
       const getFacShortName = (fullName) => {
         if (!fullName) return '';
