@@ -1539,10 +1539,10 @@
             }
             holidayCache[y] = holidaySet;
           } else {
-            if (y === 2026) holidayCache[y] = fallbackHolidays2026;
+            holidayCache[y] = fallbackHolidays2026;
           }
         } catch (e) {
-          if (y === 2026) holidayCache[y] = fallbackHolidays2026;
+          holidayCache[y] = fallbackHolidays2026;
         }
       }
     }
@@ -1857,7 +1857,10 @@
       const fSort = $("sortFilter").value;
 
       let filtered = allCases.filter(c => {
-        const matchQ = c.patient_name.toLowerCase().includes(q) || c.case_id.toLowerCase().includes(q) || c.diagnosis.toLowerCase().includes(q);
+        const pName = (c.patient_name || '').toLowerCase();
+        const cId = (c.case_id || '').toLowerCase();
+        const diag = (c.diagnosis || '').toLowerCase();
+        const matchQ = pName.includes(q) || cId.includes(q) || diag.includes(q);
         const matchManager = hFilter === 'all' || c.case_manager === hFilter;
         
         let matchStatus = true;
