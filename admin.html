@@ -2416,19 +2416,17 @@
       const addr = getAddressFields(item);
       $("drawerPatientName").textContent = `編輯案件：${item.patient_name}`;
       
-      const currentTargets = Array.isArray(item.target_facility_ids) ? item.target_facility_ids.map(id => String(id)) : [];
-      const facilityCheckboxes = allFacilities.map(f => {
-        const isChecked = currentTargets.includes(String(f.id));
-        return `
-          <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 12px; cursor: pointer; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 10px; background: #ffffff; transition: all 0.15s; margin: 0; box-shadow: 0 1px 2px rgba(0,0,0,0.02); min-height: 52px; box-sizing: border-box;">
-            <input type="checkbox" name="target_facility_ids" value="${f.id}" ${isChecked ? 'checked' : ''} style="width: auto; margin: 2px 0 0 0; flex-shrink: 0;">
-            <span style="color: #334155; line-height: 1.4; font-weight: 600;">
-              ${f.name}
-              ${f.area ? `<br><span style="color: #64748b; font-size: 10px; font-weight: normal; display: inline-block; margin-top: 2px;">📍 ${f.area}</span>` : ''}
-            </span>
-          </label>
-        `;
-      }).join("");
+      const isDifficultMode = (item.target_group === '困難派案(三輪)');
+      if (isDifficultMode) {
+        window.editDifficultQueue = (Array.isArray(item.target_facility_queue) && item.target_facility_queue.length > 0)
+          ? JSON.parse(JSON.stringify(item.target_facility_queue))
+          : (item.target_facility_ids || []).map(id => {
+              const fac = allFacilities.find(f => String(f.id) === String(id));
+              return fac ? { id: fac.id, name: fac.name, line_group_id: fac.line_group_id || '' } : null;
+            }).filter(Boolean);
+      } else {
+        window.editDifficultQueue = null;
+      }
 
       $("drawerContent").innerHTML = `
         <div class="detail-card full">
@@ -2514,17 +2512,42 @@
             <div class="edit-field"><label>起案時間</label><input type="datetime-local" name="created_at_input" value="${item.created_at ? new Date(item.created_at).toISOString().slice(0, 16) : ''}"></div>
             
 
-
             <div class="edit-field full" style="display:flex; flex-direction:column; gap:8px;">
-              <label>指派機構名單 (已選擇 ${currentTargets.length} 家)</label>
-              <details style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; background: #f8fafc; width: 100%;">
-                <summary style="font-size: 13px; font-weight: bold; color: #475569; cursor: pointer; outline: none; margin-bottom: 8px;">
-                  📁 展開/收合機構清單
-                </summary>
-                <div style="max-height: 250px; overflow-y: auto; padding: 8px; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; background: #f1f5f9; border-radius: 6px; border: 1px solid #cbd5e1;">
-                  ${facilityCheckboxes}
+              <label>指派機構名單 ${isDifficultMode ? `(困難派案順序隊列)` : `(已選擇 ${currentTargets.length} 家)`}</label>
+              ${isDifficultMode ? `
+                <div style="background:#fff1f2; border:1px solid #fecdd3; border-radius:16px; padding:16px; width:100%;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <span style="font-weight:900; color:#881337; font-size:14px;">🎯 困難派案發送順序與機構隊列</span>
+                    <span id="editQueueCountBadge" style="font-size:12px; font-weight:800; color:#be123c; background:#ffe4e6; padding:2px 8px; border-radius:12px;">已排定 ${window.editDifficultQueue.length} 家</span>
+                  </div>
+                  <div style="font-size:12px; color:#9f1239; margin-bottom:12px;">
+                    📍 您可在此自由調整順序（▲/▼）、刪除、或追加新機構。儲存後系統將自動從第 1 家開始掃描，自動鎖定第一個未回覆的機構。
+                  </div>
+
+                  <div id="editQueueContainer" style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px; max-height:260px; overflow-y:auto; padding-right:4px;">
+                  </div>
+
+                  <div style="display:flex; gap:8px; align-items:center; background:#ffffff; border:1px solid #fda4af; border-radius:10px; padding:8px 12px; flex-wrap:wrap;">
+                    <span style="font-size:13px; font-weight:800; color:#881337; white-space:nowrap;">➕ 追加機構至隊列末端：</span>
+                    <select id="addFacToQueueSelect" style="flex:1; min-width:180px; height:36px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; background:#fff;">
+                      <option value="">-- 請選擇要追加的機構 --</option>
+                      ${allFacilities.map(f => `<option value="${f.id}">${f.name}${f.area ? ` (${f.area})` : ''}</option>`).join('')}
+                    </select>
+                    <button type="button" class="btn" onclick="addFacToEditQueue()" style="height:36px; padding:0 14px; background:#be123c; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:800; cursor:pointer; white-space:nowrap;">
+                      追加
+                    </button>
+                  </div>
                 </div>
-              </details>
+              ` : `
+                <details style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; background: #f8fafc; width: 100%;">
+                  <summary style="font-size: 13px; font-weight: bold; color: #475569; cursor: pointer; outline: none; margin-bottom: 8px;">
+                    📁 展開/收合機構清單
+                  </summary>
+                  <div style="max-height: 250px; overflow-y: auto; padding: 8px; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; background: #f1f5f9; border-radius: 6px; border: 1px solid #cbd5e1;">
+                    ${facilityCheckboxes}
+                  </div>
+                </details>
+              `}
             </div>
 
 
@@ -2540,9 +2563,75 @@
       `;
       $("drawerOverlay").classList.add("show");
       $("detailDrawer").classList.add("show");
-      setTimeout(() => { attachFacilityAutocomplete('matchedFacilityInput'); }, 50);
+      setTimeout(() => {
+        attachFacilityAutocomplete('matchedFacilityInput');
+        if (isDifficultMode) renderEditQueueList();
+      }, 50);
     }
 
+
+    window.renderEditQueueList = function() {
+      const container = document.getElementById('editQueueContainer');
+      if (!container) return;
+      const countBadge = document.getElementById('editQueueCountBadge');
+      if (countBadge) countBadge.textContent = `已排定 ${(window.editDifficultQueue || []).length} 家`;
+
+      if (!window.editDifficultQueue || window.editDifficultQueue.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:16px; color:#94a3b8; font-size:13px;">目前隊列中尚無機構</div>`;
+        return;
+      }
+
+      container.innerHTML = window.editDifficultQueue.map((item, idx) => {
+        const isFirst = idx === 0;
+        const isLast = idx === window.editDifficultQueue.length - 1;
+        return `
+          <div style="display:flex; align-items:center; justify-content:space-between; background:#ffffff; border:1px solid #fecdd3; border-radius:12px; padding:10px 14px; gap:10px;">
+            <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
+              <span style="background:#be123c; color:#fff; font-size:11px; font-weight:900; padding:2px 8px; border-radius:10px; flex-shrink:0;">第 ${idx + 1} 家</span>
+              <span style="font-size:14px; font-weight:800; color:#1e293b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.name}</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+              <button type="button" onclick="moveEditQueueItem(${idx}, -1)" ${isFirst ? 'disabled style="opacity:0.3; cursor:not-allowed;"' : ''} style="padding:4px 8px; font-size:12px; font-weight:800; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:6px; cursor:pointer;" title="上移">▲</button>
+              <button type="button" onclick="moveEditQueueItem(${idx}, 1)" ${isLast ? 'disabled style="opacity:0.3; cursor:not-allowed;"' : ''} style="padding:4px 8px; font-size:12px; font-weight:800; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:6px; cursor:pointer;" title="下移">▼</button>
+              <button type="button" onclick="removeEditQueueItem(${idx})" style="padding:4px 8px; font-size:12px; font-weight:800; background:#fff1f2; color:#be123c; border:1px solid #fecdd3; border-radius:6px; cursor:pointer;" title="移除">🗑️ 移除</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    };
+
+    window.moveEditQueueItem = function(index, direction) {
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= window.editDifficultQueue.length) return;
+      const temp = window.editDifficultQueue[index];
+      window.editDifficultQueue[index] = window.editDifficultQueue[targetIndex];
+      window.editDifficultQueue[targetIndex] = temp;
+      renderEditQueueList();
+    };
+
+    window.removeEditQueueItem = function(index) {
+      window.editDifficultQueue.splice(index, 1);
+      renderEditQueueList();
+    };
+
+    window.addFacToEditQueue = function() {
+      const select = document.getElementById('addFacToQueueSelect');
+      if (!select || !select.value) return alert("請選擇要追加的機構");
+      const id = select.value;
+      if (window.editDifficultQueue.some(q => String(q.id) === String(id))) {
+        return alert("該機構已存在於隊列中");
+      }
+      const fac = allFacilities.find(f => String(f.id) === String(id));
+      if (fac) {
+        window.editDifficultQueue.push({
+          id: fac.id,
+          name: fac.name,
+          line_group_id: fac.line_group_id || ""
+        });
+        select.value = "";
+        renderEditQueueList();
+      }
+    };
 
     async function saveEdit(sendNotification) {
       if (sendNotification) {
@@ -2590,33 +2679,76 @@
         updates.service_codes = [];
       }
 
-      // 指派機構勾選資料反序列化與困難派案隊列同步
-      const checkedBoxes = form.querySelectorAll('input[name="target_facility_ids"]:checked');
-      const newTargetIds = Array.from(checkedBoxes).map(cb => String(cb.value));
-      updates.target_facility_ids = newTargetIds;
-      updates.total_targets = newTargetIds.length;
+      // 指派機構與隊列處理
+      const currentEditingCase = currentRenderedList[currentEditingIndex];
+      const isDifficultMode = (updates.target_group === '困難派案(三輪)' || (currentEditingCase && currentEditingCase.target_group === '困難派案(三輪)'));
 
-      try {
-        const currentEditingCase = currentRenderedList[currentEditingIndex];
-        if (currentEditingCase && Array.isArray(currentEditingCase.target_facility_queue)) {
-          let updatedQueue = currentEditingCase.target_facility_queue.filter(qItem => newTargetIds.includes(String(qItem.id)));
+      let finalQueue = [];
+      if (isDifficultMode && Array.isArray(window.editDifficultQueue)) {
+        finalQueue = window.editDifficultQueue;
+        updates.target_facility_queue = finalQueue;
+        updates.target_facility_ids = finalQueue.map(q => String(q.id));
+        updates.total_targets = finalQueue.length;
+      } else {
+        const checkedBoxes = form.querySelectorAll('input[name="target_facility_ids"]:checked');
+        updates.target_facility_ids = Array.from(checkedBoxes).map(cb => String(cb.value));
+        updates.total_targets = updates.target_facility_ids.length;
+      }
+
+      // 核心掃描：從第 1 家開始自動掃描回覆狀態，找出第一個尚未回覆的標的
+      if (isDifficultMode && finalQueue.length > 0) {
+        const caseReplies = (currentEditingCase && currentEditingCase.replies) ? currentEditingCase.replies : [];
+        
+        let foundIdx = -1;
+        let activeFac = null;
+        let scanStatus = 'WAITING_REPLY';
+
+        for (let i = 0; i < finalQueue.length; i++) {
+          const qItem = finalQueue[i];
+          const fac = allFacilities.find(f => String(f.id) === String(qItem.id) || f.name === qItem.name);
           
-          newTargetIds.forEach(id => {
-            if (!updatedQueue.some(qItem => String(qItem.id) === String(id))) {
-              const fac = allFacilities.find(f => String(f.id) === String(id));
-              if (fac) {
-                updatedQueue.push({
-                  id: fac.id,
-                  name: fac.name,
-                  line_group_id: fac.line_group_id || ""
-                });
-              }
+          const facReplies = caseReplies.filter(r => 
+            (r.facility_id && String(r.facility_id) === String(qItem.id)) || 
+            (!r.facility_id && (r.facility_name === qItem.name || (fac && r.facility_name === fac.name)))
+          );
+
+          const realReply = facReplies.find(r => r.reply_status && r.reply_status !== 'pending');
+
+          if (realReply) {
+            if (realReply.reply_status === 'accept') {
+              foundIdx = i;
+              activeFac = qItem;
+              scanStatus = 'MATCHED';
+              break;
+            } else if (realReply.reply_status === 'coordinate') {
+              foundIdx = i;
+              activeFac = qItem;
+              scanStatus = 'PAUSED_PARTIAL';
+              break;
             }
-          });
-          
-          updates.target_facility_queue = updatedQueue;
+            // 若為 reject (無人力)，繼續檢查隊列中下一家！
+          } else {
+            // 找到了第一個尚未回覆的機構標的！
+            foundIdx = i;
+            activeFac = qItem;
+            scanStatus = 'WAITING_REPLY';
+            break;
+          }
         }
-      } catch (e) { console.warn("[Sync Queue Error]", e); }
+
+        if (foundIdx !== -1) {
+          updates.current_queue_index = foundIdx;
+          updates.queue_status = scanStatus;
+          updates.target_group_line_id = activeFac ? (activeFac.line_group_id || '') : '';
+        } else {
+          // 所有機構皆已回覆 reject (無人力) -> 困難派案結束
+          updates.current_queue_index = finalQueue.length - 1;
+          updates.queue_status = 'ENDED';
+          if (updates.status !== '媒合成功' && updates.status !== '案件結案') {
+            updates.status = '媒合失敗';
+          }
+        }
+      }
 
       // 起案時間反序列化
       if (updates.created_at_input) {
