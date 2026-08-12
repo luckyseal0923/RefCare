@@ -2159,12 +2159,12 @@
 
       const replyCardsHtml = displayList.map(r => `
         <div class="reply-item-card" data-status="${r.status}" style="margin-bottom:12px; padding:16px; background:${r.isCurrent ? '#fff1f2' : '#f8fafc'}; border-radius:16px; border:1px solid ${r.isCurrent ? '#fecdd3' : '#edf2f7'}; ${r.isCurrent ? 'border-left:4px solid #be123c;' : ''}">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="display:flex; align-items:center; gap:8px;">
-              ${r.sequenceIndex ? `<span style="background:${r.isCurrent ? '#be123c' : '#64748b'}; color:white; font-size:11px; font-weight:800; padding:2px 8px; border-radius:12px;">第 ${r.sequenceIndex} 家</span>` : ''}
-              <strong style="font-size:15px; color:var(--text-strong);">${r.name}</strong>
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+            <div style="display:flex; align-items:flex-start; gap:8px; flex:1; min-width:0;">
+              ${r.sequenceIndex ? `<span style="background:${r.isCurrent ? '#be123c' : '#64748b'}; color:white; font-size:11px; font-weight:800; padding:2px 8px; border-radius:12px; flex-shrink:0; white-space:nowrap; margin-top:2px;">第 ${r.sequenceIndex} 家</span>` : ''}
+              <strong style="font-size:15px; color:var(--text-strong); word-break:break-word; flex:1;">${r.name}</strong>
             </div>
-            <span style="font-weight:900; font-size:12px; ${r.sequenceStatusClass ? `color:var(--${r.sequenceStatusClass});` : ''}">
+            <span style="font-weight:900; font-size:12px; flex-shrink:0; white-space:nowrap; margin-left:8px; ${r.sequenceStatusClass ? `color:var(--${r.sequenceStatusClass});` : ''}">
               ${r.sequenceStatusText ? r.sequenceStatusText : (
                 r.status==='accept' ? '<span style="color:var(--green);">✅ 可收案</span>' : 
                 r.status==='reject' ? '<span style="color:var(--rose);">❌ 無法收案</span>' : 
