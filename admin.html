@@ -2577,10 +2577,14 @@
 
           </form>
           <div style="margin-top:24px; display:flex; flex-direction:column; gap:10px;">
-            <div style="display:flex; gap:10px;">
-              <button class="btn btn-primary" style="flex:1; background:linear-gradient(135deg, #6366f1, #4f46e5); border:none; box-shadow:0 4px 12px rgba(99,102,241,0.2);" onclick="saveEdit(true)">儲存並發送通知</button>
-              <button class="btn btn-muted" style="flex:1; background:#f1f5f9; border:1px solid #cbd5e1; color:#334155;" onclick="saveEdit(false)">僅儲存修改</button>
-            </div>
+            ${isDifficultMode ? `
+              <button class="btn btn-primary" style="width:100%; background:linear-gradient(135deg, #be123c, #9f1239); border:none; box-shadow:0 4px 14px rgba(190,18,60,0.3); font-size:15px; font-weight:900; padding:12px 16px; border-radius:10px; cursor:pointer;" onclick="saveEdit(true)">💾 儲存並發送通知給目標機構</button>
+            ` : `
+              <div style="display:flex; gap:10px;">
+                <button class="btn btn-primary" style="flex:1; background:linear-gradient(135deg, #6366f1, #4f46e5); border:none; box-shadow:0 4px 12px rgba(99,102,241,0.2);" onclick="saveEdit(true)">儲存並發送通知</button>
+                <button class="btn btn-muted" style="flex:1; background:#f1f5f9; border:1px solid #cbd5e1; color:#334155;" onclick="saveEdit(false)">僅儲存修改</button>
+              </div>
+            `}
             <button class="btn btn-light" style="width:100%;" onclick="openDrawer(${idx})">取消</button>
           </div>
         </div>
