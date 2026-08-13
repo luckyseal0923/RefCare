@@ -2067,12 +2067,14 @@
       $("drawerContent").innerHTML = createDrawerContent(c);
       $("drawerOverlay").classList.add("show");
       $("detailDrawer").classList.add("show");
+      $("detailDrawer").setAttribute("aria-hidden", "false");
       document.body.style.overflow = "hidden";
     }
 
     function closeDrawer() {
       $("drawerOverlay").classList.remove("show");
       $("detailDrawer").classList.remove("show");
+      $("detailDrawer").setAttribute("aria-hidden", "true");
       document.body.style.overflow = "";
     }
 
@@ -2696,6 +2698,7 @@
       `;
       $("drawerOverlay").classList.add("show");
       $("detailDrawer").classList.add("show");
+      $("detailDrawer").setAttribute("aria-hidden", "false");
       setTimeout(() => {
         attachFacilityAutocomplete('matchedFacilityInput');
         if (isDifficultMode) {
@@ -3865,6 +3868,7 @@ ${replyUrl}`;
       `;
       $("drawerOverlay").classList.add("show");
       $("detailDrawer").classList.add("show");
+      $("detailDrawer").setAttribute("aria-hidden", "false");
       updateGroupCount();
     }
 
@@ -4372,6 +4376,7 @@ ${replyUrl}`;
       `;
       $("drawerOverlay").classList.add("show");
       $("detailDrawer").classList.add("show");
+      $("detailDrawer").setAttribute("aria-hidden", "false");
     }
 
     async function saveFacility() {
