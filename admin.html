@@ -2547,6 +2547,100 @@
       btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       items.forEach(it => it.style.display = (s === 'all' || it.dataset.status === s) ? 'block' : 'none');
+    // --- 編輯案件時的媒合機構搜尋與標籤管理 ---
+    let editSelectedMatchedFacilities = [];
+
+    function renderEditSelectedMatchedFacilities() {
+      const container = $("editSelectedMatchedFacilitiesContainer");
+      const hiddenInput = $("editMatchedFacilityHiddenInput");
+      if (hiddenInput) {
+        hiddenInput.value = editSelectedMatchedFacilities.join('、');
+      }
+      if (!container) return;
+      if (editSelectedMatchedFacilities.length === 0) {
+        container.innerHTML = `<span style="font-size:13px; color:#94a3b8; padding:2px 4px;">尚無選取機構。請使用上方搜尋列輸入關鍵字新增。</span>`;
+        return;
+      }
+      container.innerHTML = editSelectedMatchedFacilities.map((name, idx) => `
+        <span style="display:inline-flex; align-items:center; gap:6px; background:#fef3c7; color:#b45309; border:1px solid #fde68a; font-weight:800; font-size:13px; padding:4px 10px; border-radius:20px;">
+          🏢 ${name}
+          <span onclick="removeEditMatchedFacility(${idx})" style="cursor:pointer; font-weight:900; color:#d97706; margin-left:4px; font-size:14px;" title="移除">✕</span>
+        </span>
+      `).join('');
+    }
+
+    function removeEditMatchedFacility(idx) {
+      editSelectedMatchedFacilities.splice(idx, 1);
+      renderEditSelectedMatchedFacilities();
+      const input = $("editMatchedFacilitySearchInput");
+      if (input) onEditMatchedFacilitySearchInput(input.value);
+    }
+
+    function addEditSelectedMatchedFacility(name) {
+      if (name && !editSelectedMatchedFacilities.includes(name)) {
+        editSelectedMatchedFacilities.push(name);
+        renderEditSelectedMatchedFacilities();
+      }
+      const input = $("editMatchedFacilitySearchInput");
+      if (input) input.value = '';
+      const resultsEl = $("editMatchedFacilitySearchResults");
+      if (resultsEl) resultsEl.style.display = "none";
+    }
+
+    function addEditCustomMatchedFacility() {
+      const input = $("editMatchedFacilitySearchInput");
+      const val = input ? input.value.trim() : '';
+      if (val) {
+        addEditSelectedMatchedFacility(val);
+      }
+    }
+
+    function onEditMatchedFacilitySearchFocus() {
+      const input = $("editMatchedFacilitySearchInput");
+      onEditMatchedFacilitySearchInput(input ? input.value : '');
+    }
+
+    function onEditMatchedFacilitySearchInput(query) {
+      const resultsEl = $("editMatchedFacilitySearchResults");
+      if (!resultsEl) return;
+      const q = (query || '').trim().toLowerCase();
+
+      let optionsHtml = '';
+
+      const allMatches = (allFacilities || []).filter(f => {
+        const name = f.name || '';
+        const short = f.short || '';
+        const matchQ = !q || name.toLowerCase().includes(q) || short.toLowerCase().includes(q);
+        return matchQ && !editSelectedMatchedFacilities.includes(name);
+      });
+
+      if (allMatches.length > 0) {
+        allMatches.slice(0, 20).forEach(f => {
+          optionsHtml += `
+            <div onclick="addEditSelectedMatchedFacility('${f.name.replace(/'/g, "\\'")}')" 
+              style="padding:8px 12px; font-size:13px; color:#334155; cursor:pointer; transition:background 0.15s;"
+              onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+              🏢 ${f.name} ${f.short ? `<span style="color:#64748b; font-size:12px;">(${f.short})</span>` : ''}
+            </div>
+          `;
+        });
+      }
+
+      if (q && !editSelectedMatchedFacilities.includes(q)) {
+        optionsHtml += `
+          <div onclick="addEditCustomMatchedFacility()" 
+            style="padding:8px 12px; font-size:13px; font-weight:800; color:#d97706; background:#fffbeb; cursor:pointer; border-top:1px dashed #fde68a;">
+            ➕ 新增自訂機構：「${q}」
+          </div>
+        `;
+      }
+
+      if (!optionsHtml) {
+        optionsHtml = `<div style="padding:10px; font-size:13px; color:#94a3b8; text-align:center;">無符合機構，請按 Enter 直接新增</div>`;
+      }
+
+      resultsEl.innerHTML = optionsHtml;
+      resultsEl.style.display = "block";
     }
 
     // --- 編輯功能 ---
@@ -2556,6 +2650,12 @@
       currentEditingIndex = idx;
       const addr = getAddressFields(item);
       $("drawerPatientName").textContent = `編輯案件：${item.patient_name}`;
+      
+      // 初始化編輯抽屜的媒合成功機構標籤
+      editSelectedMatchedFacilities = [];
+      if (item.matched_facility) {
+        editSelectedMatchedFacilities = item.matched_facility.split(/[,、]/).map(s => s.trim()).filter(Boolean);
+      }
       
       const isDifficultMode = (item.target_group === '困難派案(三輪)');
       if (isDifficultMode) {
@@ -2668,7 +2768,28 @@
             <div class="edit-field"><label>媒合失敗原因</label><input type="text" name="match_failed_reason" value="${item.match_failed_reason || ''}" placeholder="請填寫失敗原因"></div>
             <div class="edit-field"><label>計畫審核通過日期</label><input type="date" name="care_plan_approved_at" value="${item.care_plan_approved_at || ''}"></div>
             <div class="edit-field"><label>機構首次服務日期</label><input type="date" name="first_service_at" value="${item.first_service_at || ''}"></div>
-            <div class="edit-field"><label>媒合機構 (多家用頓號 、 隔開)</label><input type="text" id="matchedFacilityInput" name="matched_facility" value="${item.matched_facility || ''}" placeholder="例如：紅心長照、安家居家"></div>
+            <div class="edit-field full" style="display:flex; flex-direction:column; gap:8px;">
+              <label style="font-weight:800; font-size:13px; color:#334155;">媒合機構 (可搜尋複選)</label>
+              <input type="hidden" id="editMatchedFacilityHiddenInput" name="matched_facility" value="${item.matched_facility || ''}">
+              
+              <!-- 上方：關鍵字搜尋輸入框與下拉選單 -->
+              <div style="position:relative; width:100%;">
+                <input type="text" id="editMatchedFacilitySearchInput" placeholder="🔍 請輸入關鍵字搜尋機構 (例如：紅心、安家...)" 
+                  style="width:100%; height:42px; padding:0 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; outline:none; background:#ffffff; box-sizing:border-box;"
+                  oninput="onEditMatchedFacilitySearchInput(this.value)"
+                  onfocus="onEditMatchedFacilitySearchFocus()"
+                  onkeydown="if(event.key==='Enter'){ event.preventDefault(); addEditCustomMatchedFacility(); }" />
+                
+                <!-- 搜尋結果下拉選單 -->
+                <div id="editMatchedFacilitySearchResults" 
+                  style="display:none; position:absolute; top:46px; left:0; right:0; max-height:220px; overflow-y:auto; background:#ffffff; border:1px solid #cbd5e1; border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.15); z-index:9999; padding:4px 0;">
+                </div>
+              </div>
+
+              <!-- 下方：已選擇媒合機構標籤池 -->
+              <div id="editSelectedMatchedFacilitiesContainer" style="display:flex; flex-wrap:wrap; gap:6px; min-height:42px; padding:8px 10px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; align-items:center;">
+              </div>
+            </div>
             <div class="edit-field full"><label>媒合成功狀態備註</label><textarea name="matched_note" style="min-height:60px;" placeholder="請填寫媒合成功狀態備註">${item.matched_note || ''}</textarea></div>
             <div class="edit-field"><label>媒合成功時間</label><input type="datetime-local" name="matched_at_input" value="${item.matched_at ? new Date(item.matched_at).toISOString().slice(0, 16) : ''}"></div>
             <div class="edit-field"><label>正式結案時間</label><input type="datetime-local" name="closed_at_input" value="${item.closed_at ? new Date(item.closed_at).toISOString().slice(0, 16) : ''}"></div>
@@ -2733,7 +2854,7 @@
       $("detailDrawer").classList.add("show");
       $("detailDrawer").setAttribute("aria-hidden", "false");
       setTimeout(() => {
-        attachFacilityAutocomplete('matchedFacilityInput');
+        renderEditSelectedMatchedFacilities();
         if (isDifficultMode) {
           renderEditQueueList();
           attachFacilityAutocomplete('addFacToQueueInput');
@@ -3015,10 +3136,15 @@
       }
       delete updates.closed_at_input;
 
+      // 媒合成功機構自動收集未提交的文字
+      if ($("editMatchedFacilitySearchInput") && $("editMatchedFacilitySearchInput").value.trim()) {
+        addEditCustomMatchedFacility();
+      }
+
       // 日期空值轉換
       updates.care_plan_approved_at = updates.care_plan_approved_at || null;
       updates.first_service_at = updates.first_service_at || null;
-      updates.matched_facility = updates.matched_facility || null;
+      updates.matched_facility = editSelectedMatchedFacilities.join('、') || null;
       updates.matched_note = updates.matched_note || null;
       updates.match_failed_reason = updates.match_failed_reason || null;
 
