@@ -988,20 +988,27 @@
 
       <!-- Section 1: 媒合成功 -->
       <div id="sectionMatchSuccess">
-        <div class="edit-field" style="margin-bottom: 16px;">
-          <label style="font-size: 13px; font-weight: 800; color: #334155; margin-bottom: 6px; display: block;">媒合機構名稱 (可複選) <span style="color:var(--rose);">*</span></label>
-          <div id="selectedMatchedFacilitiesContainer" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; min-height:42px; padding:8px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; align-items:center;">
+        <div class="edit-field" style="margin-bottom: 16px; position:relative;">
+          <label style="font-size: 13px; font-weight: 800; color: #334155; margin-bottom: 6px; display: block;">媒合成功機構 (可搜尋複選) <span style="color:var(--rose);">*</span></label>
+          
+          <!-- 已選擇機構標籤池 -->
+          <div id="selectedMatchedFacilitiesContainer" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; min-height:42px; padding:8px 10px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; align-items:center;">
           </div>
-          <div style="display:flex; gap:8px;">
-            <input type="text" id="matchFacilityInput" list="facilitySuggestions" placeholder="🔍 輸入關鍵字搜尋或直接填寫機構名稱" style="flex:1; height:42px; padding:0 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px;" onkeydown="if(event.key==='Enter'){ event.preventDefault(); addMatchedFacilityFromInput(); }">
-            <button type="button" class="btn" style="height:42px; padding:0 16px; background:#d97706; color:#fff; border:none; border-radius:10px; font-weight:800; font-size:13px; cursor:pointer; white-space:nowrap; box-shadow:0 2px 6px rgba(217,119,6,0.25);" onclick="addMatchedFacilityFromInput()">+ 新增</button>
-          </div>
-          <datalist id="facilitySuggestions"></datalist>
 
-          <div id="quickTargetFacilitiesBox" style="margin-top:10px; padding:10px; background:#fffbeb; border:1px solid #fde68a; border-radius:10px; display:none;">
-            <div style="font-size:12px; font-weight:800; color:#b45309; margin-bottom:6px;">🎯 本案派案目標機構 (點擊可快速勾選)：</div>
-            <div id="quickTargetFacilitiesList" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+          <!-- 關鍵字搜尋輸入框與下拉選單 -->
+          <div style="position:relative; width:100%;">
+            <input type="text" id="matchFacilitySearchInput" placeholder="🔍 請輸入關鍵字搜尋機構 (例如：紅心、安家...)" 
+              style="width:100%; height:44px; padding:0 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px; outline:none; background:#ffffff; box-sizing:border-box;"
+              oninput="onMatchFacilitySearchInput(this.value)"
+              onfocus="onMatchFacilitySearchFocus()"
+              onkeydown="if(event.key==='Enter'){ event.preventDefault(); addCustomMatchedFacility(); }" />
+
+            <!-- 搜尋結果下拉選單 -->
+            <div id="matchFacilitySearchResults" 
+              style="display:none; position:absolute; top:48px; left:0; right:0; max-height:220px; overflow-y:auto; background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; box-shadow:0 10px 25px rgba(0,0,0,0.15); z-index:1000; padding:6px 0;">
+            </div>
           </div>
+          <div style="font-size:11px; color:#64748b; margin-top:5px;">💡 輸入關鍵字點選下拉選單新增；若查無機構，可直接輸入名稱按 Enter 加入。</div>
         </div>
 
         <div class="edit-field" style="margin-bottom: 16px;">
@@ -3249,12 +3256,13 @@
     let pendingMatchSuccessCaseId = null;
     let currentMatchStatusType = 'success'; // 'success' | 'failed'
     let selectedMatchedFacilities = [];
+    let currentCaseTargetFacilities = [];
 
     function renderSelectedMatchedFacilities() {
       const container = $("selectedMatchedFacilitiesContainer");
       if (!container) return;
       if (selectedMatchedFacilities.length === 0) {
-        container.innerHTML = `<span style="font-size:13px; color:#94a3b8; padding:2px 4px;">尚無選取機構。可使用下方搜尋列或快捷勾選。</span>`;
+        container.innerHTML = `<span style="font-size:13px; color:#94a3b8; padding:2px 4px;">尚未選取機構，請於下方搜尋關鍵字加入</span>`;
         return;
       }
       container.innerHTML = selectedMatchedFacilities.map((name, idx) => `
@@ -3265,49 +3273,117 @@
       `).join('');
     }
 
-    function addMatchedFacilityFromInput() {
-      const input = $("matchFacilityInput");
-      const val = input ? input.value.trim() : '';
-      if (!val) return;
-      if (!selectedMatchedFacilities.includes(val)) {
-        selectedMatchedFacilities.push(val);
-        renderSelectedMatchedFacilities();
-        updateQuickTargetCheckboxes();
-      }
-      if (input) input.value = '';
-    }
-
     function removeMatchedFacility(idx) {
       selectedMatchedFacilities.splice(idx, 1);
       renderSelectedMatchedFacilities();
-      updateQuickTargetCheckboxes();
+      const input = $("matchFacilitySearchInput");
+      if (input) onMatchFacilitySearchInput(input.value);
     }
 
-    function toggleQuickTargetFacility(name, checked) {
-      if (checked) {
-        if (!selectedMatchedFacilities.includes(name)) {
-          selectedMatchedFacilities.push(name);
-        }
-      } else {
-        selectedMatchedFacilities = selectedMatchedFacilities.filter(n => n !== name);
+    function addSelectedMatchedFacility(name) {
+      if (name && !selectedMatchedFacilities.includes(name)) {
+        selectedMatchedFacilities.push(name);
+        renderSelectedMatchedFacilities();
       }
-      renderSelectedMatchedFacilities();
+      const input = $("matchFacilitySearchInput");
+      if (input) input.value = '';
+      const resultsEl = $("matchFacilitySearchResults");
+      if (resultsEl) resultsEl.style.display = "none";
     }
 
-    function updateQuickTargetCheckboxes() {
-      const list = $("quickTargetFacilitiesList");
-      if (!list) return;
-      const checkboxes = list.querySelectorAll('input[type="checkbox"]');
-      checkboxes.forEach(cb => {
-        cb.checked = selectedMatchedFacilities.includes(cb.value);
-      });
+    function addCustomMatchedFacility() {
+      const input = $("matchFacilitySearchInput");
+      const val = input ? input.value.trim() : '';
+      if (val) {
+        addSelectedMatchedFacility(val);
+      }
     }
+
+    function onMatchFacilitySearchFocus() {
+      const input = $("matchFacilitySearchInput");
+      onMatchFacilitySearchInput(input ? input.value : '');
+    }
+
+    function onMatchFacilitySearchInput(query) {
+      const resultsEl = $("matchFacilitySearchResults");
+      if (!resultsEl) return;
+      const q = (query || '').trim().toLowerCase();
+
+      let optionsHtml = '';
+
+      // 1. 本案目標機構 matches
+      const targetMatches = currentCaseTargetFacilities.filter(fName => 
+        !selectedMatchedFacilities.includes(fName) && (!q || fName.toLowerCase().includes(q))
+      );
+
+      // 2. 系統所有機構 matches
+      const allMatches = (allFacilities || []).filter(f => {
+        const name = f.name || '';
+        const short = f.short || '';
+        const matchQ = !q || name.toLowerCase().includes(q) || short.toLowerCase().includes(q);
+        return matchQ && !selectedMatchedFacilities.includes(name) && !targetMatches.includes(name);
+      });
+
+      if (targetMatches.length > 0) {
+        optionsHtml += `<div style="padding:4px 12px; font-size:11px; font-weight:800; color:#b45309; background:#fffbeb;">🎯 本案派案目標機構：</div>`;
+        targetMatches.forEach(fName => {
+          optionsHtml += `
+            <div onclick="addSelectedMatchedFacility('${fName.replace(/'/g, "\\'")}')" 
+              style="padding:8px 14px; font-size:13px; font-weight:700; color:#1e293b; cursor:pointer; transition:background 0.15s;"
+              onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+              📍 ${fName}
+            </div>
+          `;
+        });
+      }
+
+      if (allMatches.length > 0) {
+        if (targetMatches.length > 0) {
+          optionsHtml += `<div style="padding:4px 12px; font-size:11px; font-weight:800; color:#64748b; background:#f8fafc; border-top:1px solid #e2e8f0;">🏛️ 其他系統機構：</div>`;
+        }
+        allMatches.slice(0, 20).forEach(f => {
+          optionsHtml += `
+            <div onclick="addSelectedMatchedFacility('${f.name.replace(/'/g, "\\'")}')" 
+              style="padding:8px 14px; font-size:13px; color:#334155; cursor:pointer; transition:background 0.15s;"
+              onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+              🏢 ${f.name} ${f.short ? `<span style="color:#64748b; font-size:12px;">(${f.short})</span>` : ''}
+            </div>
+          `;
+        });
+      }
+
+      if (q && !selectedMatchedFacilities.includes(q)) {
+        optionsHtml += `
+          <div onclick="addCustomMatchedFacility()" 
+            style="padding:10px 14px; font-size:13px; font-weight:800; color:#d97706; background:#fffbeb; cursor:pointer; border-top:1px dashed #fde68a;">
+            ➕ 新增自訂機構：「${q}」
+          </div>
+        `;
+      }
+
+      if (!optionsHtml) {
+        optionsHtml = `<div style="padding:12px; font-size:13px; color:#94a3b8; text-align:center;">無符合機構，請按 Enter 直接新增</div>`;
+      }
+
+      resultsEl.innerHTML = optionsHtml;
+      resultsEl.style.display = "block";
+    }
+
+    // 點擊區域外部時自動收合搜尋下拉選單
+    document.addEventListener('click', function(e) {
+      const searchInput = $("matchFacilitySearchInput");
+      const searchResults = $("matchFacilitySearchResults");
+      if (searchResults && searchInput && !searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+        searchResults.style.display = "none";
+      }
+    });
 
     function openMatchStatusModal(id, defaultType = 'success') {
       pendingMatchSuccessCaseId = id;
       const caseItem = currentRenderedList.find(c => c.case_id === id);
 
-      $("matchFacilityInput").value = "";
+      if ($("matchFacilitySearchInput")) $("matchFacilitySearchInput").value = "";
+      if ($("matchFacilitySearchResults")) $("matchFacilitySearchResults").style.display = "none";
       if ($("matchFailedReasonSelect")) $("matchFailedReasonSelect").value = "無合適長照機構/居服員可配合";
       if ($("matchFailedDetailInput")) $("matchFailedDetailInput").value = "";
       $("matchSuccessError").style.display = "none";
@@ -3319,31 +3395,14 @@
       }
       renderSelectedMatchedFacilities();
 
-      // 載入該案件的派案目標機構作為快捷勾選
-      const quickBox = $("quickTargetFacilitiesBox");
-      const quickList = $("quickTargetFacilitiesList");
-      if (caseItem && quickBox && quickList) {
-        let targets = [];
+      // 紀錄該案件的派案目標機構名稱
+      currentCaseTargetFacilities = [];
+      if (caseItem) {
         if (Array.isArray(caseItem.target_facility_queue) && caseItem.target_facility_queue.length > 0) {
-          targets = caseItem.target_facility_queue.map(q => q.name);
+          currentCaseTargetFacilities = caseItem.target_facility_queue.map(q => q.name);
         } else {
           const targetIds = caseItem.target_facility_ids || [];
-          targets = (allFacilities || []).filter(f => targetIds.map(String).includes(String(f.id))).map(f => f.name);
-        }
-
-        if (targets.length > 0) {
-          quickBox.style.display = "block";
-          quickList.innerHTML = targets.map(name => {
-            const isChecked = selectedMatchedFacilities.includes(name);
-            return `
-              <label style="display:inline-flex; align-items:center; gap:6px; background:#ffffff; border:1px solid #fcd34d; border-radius:6px; padding:4px 10px; font-size:13px; font-weight:700; color:#78350f; cursor:pointer;">
-                <input type="checkbox" value="${name}" ${isChecked ? 'checked' : ''} onchange="toggleQuickTargetFacility('${name}', this.checked)">
-                <span>${name}</span>
-              </label>
-            `;
-          }).join('');
-        } else {
-          quickBox.style.display = "none";
+          currentCaseTargetFacilities = (allFacilities || []).filter(f => targetIds.map(String).includes(String(f.id))).map(f => f.name);
         }
       }
 
@@ -3393,7 +3452,7 @@
         logo.style.background = "var(--amber)";
         logo.textContent = "M";
         title.textContent = "登記媒合成功";
-        sub.textContent = "請選擇/填寫媒合機構名稱與成功時間";
+        sub.textContent = "請搜尋/選擇媒合機構名稱與成功時間";
       } else {
         tabFailed.style.background = "#fff";
         tabFailed.style.color = "#dc2626";
@@ -3428,9 +3487,9 @@
       errEl.style.display = "none";
 
       if (currentMatchStatusType === 'success') {
-        // 若輸入框中還有未點擊新增的文字，自動加入
-        if ($("matchFacilityInput") && $("matchFacilityInput").value.trim()) {
-          addMatchedFacilityFromInput();
+        // 若輸入框中還有未新增的文字，自動加入
+        if ($("matchFacilitySearchInput") && $("matchFacilitySearchInput").value.trim()) {
+          addCustomMatchedFacility();
         }
 
         const facilityStr = selectedMatchedFacilities.join('、');
@@ -3438,7 +3497,7 @@
         const matchNote = $("matchSuccessNoteInput") ? $("matchSuccessNoteInput").value.trim() : '';
 
         if (!facilityStr) {
-          errEl.textContent = "請至少選擇或輸入一家媒合成功之機構";
+          errEl.textContent = "請至少搜尋或選擇一家媒合成功機構";
           errEl.style.display = "block";
           return;
         }
