@@ -2547,6 +2547,8 @@
       btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       items.forEach(it => it.style.display = (s === 'all' || it.dataset.status === s) ? 'block' : 'none');
+    }
+
     // --- 編輯案件時的媒合機構搜尋與標籤管理 ---
     let editSelectedMatchedFacilities = [];
 
