@@ -991,12 +991,8 @@
         <div class="edit-field" style="margin-bottom: 16px; position:relative;">
           <label style="font-size: 13px; font-weight: 800; color: #334155; margin-bottom: 6px; display: block;">媒合成功機構 (可搜尋複選) <span style="color:var(--rose);">*</span></label>
           
-          <!-- 已選擇機構標籤池 -->
-          <div id="selectedMatchedFacilitiesContainer" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; min-height:42px; padding:8px 10px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; align-items:center;">
-          </div>
-
-          <!-- 關鍵字搜尋輸入框與下拉選單 -->
-          <div style="position:relative; width:100%;">
+          <!-- 上方：關鍵字搜尋輸入框與下拉選單 -->
+          <div style="position:relative; width:100%; margin-bottom:6px;">
             <input type="text" id="matchFacilitySearchInput" placeholder="🔍 請輸入關鍵字搜尋機構 (例如：紅心、安家...)" 
               style="width:100%; height:44px; padding:0 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px; outline:none; background:#ffffff; box-sizing:border-box;"
               oninput="onMatchFacilitySearchInput(this.value)"
@@ -1008,7 +1004,12 @@
               style="display:none; position:absolute; top:48px; left:0; right:0; max-height:220px; overflow-y:auto; background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; box-shadow:0 10px 25px rgba(0,0,0,0.15); z-index:1000; padding:6px 0;">
             </div>
           </div>
-          <div style="font-size:11px; color:#64748b; margin-top:5px;">💡 輸入關鍵字點選下拉選單新增；若查無機構，可直接輸入名稱按 Enter 加入。</div>
+          <div style="font-size:11px; color:#64748b; margin-bottom:10px;">💡 輸入關鍵字點選下拉選單新增；若查無機構，可直接輸入名稱按 Enter 加入。</div>
+
+          <!-- 下方：已選擇機構標籤池 -->
+          <div style="font-size:12px; font-weight:800; color:#475569; margin-bottom:4px;">已新增媒合機構：</div>
+          <div id="selectedMatchedFacilitiesContainer" style="display:flex; flex-wrap:wrap; gap:6px; min-height:42px; padding:8px 10px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; align-items:center;">
+          </div>
         </div>
 
         <div class="edit-field" style="margin-bottom: 16px;">
