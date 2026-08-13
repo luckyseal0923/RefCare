@@ -988,14 +988,30 @@
 
       <!-- Section 1: 媒合成功 -->
       <div id="sectionMatchSuccess">
-        <div class="edit-field" style="margin-bottom: 18px;">
-          <label style="font-size: 13px; font-weight: 800; color: #334155; margin-bottom: 6px; display: block;">媒合機構名稱 <span style="color:var(--rose);">*</span></label>
-          <input type="text" id="matchFacilityInput" list="facilitySuggestions" placeholder="請輸入或選擇機構名稱" style="width:100%; height:46px; padding:0 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px;">
+        <div class="edit-field" style="margin-bottom: 16px;">
+          <label style="font-size: 13px; font-weight: 800; color: #334155; margin-bottom: 6px; display: block;">媒合機構名稱 (可複選) <span style="color:var(--rose);">*</span></label>
+          <div id="selectedMatchedFacilitiesContainer" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; min-height:42px; padding:8px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; align-items:center;">
+          </div>
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="matchFacilityInput" list="facilitySuggestions" placeholder="🔍 輸入關鍵字搜尋或直接填寫機構名稱" style="flex:1; height:42px; padding:0 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px;" onkeydown="if(event.key==='Enter'){ event.preventDefault(); addMatchedFacilityFromInput(); }">
+            <button type="button" class="btn" style="height:42px; padding:0 16px; background:#d97706; color:#fff; border:none; border-radius:10px; font-weight:800; font-size:13px; cursor:pointer; white-space:nowrap; box-shadow:0 2px 6px rgba(217,119,6,0.25);" onclick="addMatchedFacilityFromInput()">+ 新增</button>
+          </div>
           <datalist id="facilitySuggestions"></datalist>
+
+          <div id="quickTargetFacilitiesBox" style="margin-top:10px; padding:10px; background:#fffbeb; border:1px solid #fde68a; border-radius:10px; display:none;">
+            <div style="font-size:12px; font-weight:800; color:#b45309; margin-bottom:6px;">🎯 本案派案目標機構 (點擊可快速勾選)：</div>
+            <div id="quickTargetFacilitiesList" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+          </div>
         </div>
-        <div class="edit-field" style="margin-bottom: 24px;">
+
+        <div class="edit-field" style="margin-bottom: 16px;">
           <label style="font-size: 13px; font-weight: 800; color: #334155; margin-bottom: 6px; display: block;">媒合成功時間 <span style="color:var(--rose);">*</span></label>
-          <input type="datetime-local" id="matchSuccessTimeInput" style="width:100%; height:46px; padding:0 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px;">
+          <input type="datetime-local" id="matchSuccessTimeInput" style="width:100%; height:44px; padding:0 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px;">
+        </div>
+
+        <div class="edit-field" style="margin-bottom: 20px;">
+          <label style="font-size: 13px; font-weight: 800; color: #334155; margin-bottom: 6px; display: block;">媒合成功狀態備註 (選填)</label>
+          <textarea id="matchSuccessNoteInput" placeholder="請填寫媒合成功狀態備註，如：服務項目分工、個案特殊安排..." style="width:100%; height:72px; padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:13px; font-family:inherit; resize:none; line-height:1.5;"></textarea>
         </div>
       </div>
 
@@ -2385,6 +2401,13 @@
 
       const getFacShortName = (fullName) => {
         if (!fullName) return '';
+        const names = fullName.split(/[,、]/).map(n => n.trim()).filter(Boolean);
+        if (names.length > 1) {
+          return names.map(n => {
+            const fac = allFacilities.find(f => f.name === n || f.short === n);
+            return fac ? (fac.short || fac.name) : n;
+          }).join('、');
+        }
         const fac = allFacilities.find(f => f.name === fullName || f.short === fullName);
         return fac ? (fac.short || fac.name) : fullName;
       };
@@ -2423,6 +2446,7 @@
                 : '<span style="color:#64748b; font-weight:800; background:#f1f5f9; padding:2px 8px; border-radius:100px; border:1px solid #e2e8f0; font-size:11px;">-</span>'
               }
             </div>
+            ${item.matched_note ? `<div style="grid-column: 1 / -1; background:#ffffff; padding:8px 12px; border-radius:8px; border:1px solid #fde68a; margin-top:4px;"><strong>媒合成功備註：</strong>${item.matched_note}</div>` : ''}
           </div>
         </div>
       `;
@@ -2636,7 +2660,8 @@
             <div class="edit-field"><label>媒合失敗原因</label><input type="text" name="match_failed_reason" value="${item.match_failed_reason || ''}" placeholder="請填寫失敗原因"></div>
             <div class="edit-field"><label>計畫審核通過日期</label><input type="date" name="care_plan_approved_at" value="${item.care_plan_approved_at || ''}"></div>
             <div class="edit-field"><label>機構首次服務日期</label><input type="date" name="first_service_at" value="${item.first_service_at || ''}"></div>
-            <div class="edit-field"><label>媒合機構</label><input type="text" id="matchedFacilityInput" name="matched_facility" value="${item.matched_facility || ''}" placeholder="請輸入或選擇機構名稱"></div>
+            <div class="edit-field"><label>媒合機構 (多家用頓號 、 隔開)</label><input type="text" id="matchedFacilityInput" name="matched_facility" value="${item.matched_facility || ''}" placeholder="例如：紅心長照、安家居家"></div>
+            <div class="edit-field full"><label>媒合成功狀態備註</label><textarea name="matched_note" style="min-height:60px;" placeholder="請填寫媒合成功狀態備註">${item.matched_note || ''}</textarea></div>
             <div class="edit-field"><label>媒合成功時間</label><input type="datetime-local" name="matched_at_input" value="${item.matched_at ? new Date(item.matched_at).toISOString().slice(0, 16) : ''}"></div>
             <div class="edit-field"><label>正式結案時間</label><input type="datetime-local" name="closed_at_input" value="${item.closed_at ? new Date(item.closed_at).toISOString().slice(0, 16) : ''}"></div>
             <div class="edit-field"><label>起案時間</label><input type="datetime-local" name="created_at_input" value="${item.created_at ? new Date(item.created_at).toISOString().slice(0, 16) : ''}"></div>
@@ -2986,6 +3011,7 @@
       updates.care_plan_approved_at = updates.care_plan_approved_at || null;
       updates.first_service_at = updates.first_service_at || null;
       updates.matched_facility = updates.matched_facility || null;
+      updates.matched_note = updates.matched_note || null;
       updates.match_failed_reason = updates.match_failed_reason || null;
 
       delete updates.addr_county;
@@ -3222,18 +3248,112 @@
     // --- 登記媒合狀態 (成功 / 失敗) ---
     let pendingMatchSuccessCaseId = null;
     let currentMatchStatusType = 'success'; // 'success' | 'failed'
+    let selectedMatchedFacilities = [];
+
+    function renderSelectedMatchedFacilities() {
+      const container = $("selectedMatchedFacilitiesContainer");
+      if (!container) return;
+      if (selectedMatchedFacilities.length === 0) {
+        container.innerHTML = `<span style="font-size:13px; color:#94a3b8; padding:2px 4px;">尚無選取機構。可使用下方搜尋列或快捷勾選。</span>`;
+        return;
+      }
+      container.innerHTML = selectedMatchedFacilities.map((name, idx) => `
+        <span style="display:inline-flex; align-items:center; gap:6px; background:#fef3c7; color:#b45309; border:1px solid #fde68a; font-weight:800; font-size:13px; padding:4px 10px; border-radius:20px;">
+          🏢 ${name}
+          <span onclick="removeMatchedFacility(${idx})" style="cursor:pointer; font-weight:900; color:#d97706; margin-left:4px; font-size:14px;" title="移除">✕</span>
+        </span>
+      `).join('');
+    }
+
+    function addMatchedFacilityFromInput() {
+      const input = $("matchFacilityInput");
+      const val = input ? input.value.trim() : '';
+      if (!val) return;
+      if (!selectedMatchedFacilities.includes(val)) {
+        selectedMatchedFacilities.push(val);
+        renderSelectedMatchedFacilities();
+        updateQuickTargetCheckboxes();
+      }
+      if (input) input.value = '';
+    }
+
+    function removeMatchedFacility(idx) {
+      selectedMatchedFacilities.splice(idx, 1);
+      renderSelectedMatchedFacilities();
+      updateQuickTargetCheckboxes();
+    }
+
+    function toggleQuickTargetFacility(name, checked) {
+      if (checked) {
+        if (!selectedMatchedFacilities.includes(name)) {
+          selectedMatchedFacilities.push(name);
+        }
+      } else {
+        selectedMatchedFacilities = selectedMatchedFacilities.filter(n => n !== name);
+      }
+      renderSelectedMatchedFacilities();
+    }
+
+    function updateQuickTargetCheckboxes() {
+      const list = $("quickTargetFacilitiesList");
+      if (!list) return;
+      const checkboxes = list.querySelectorAll('input[type="checkbox"]');
+      checkboxes.forEach(cb => {
+        cb.checked = selectedMatchedFacilities.includes(cb.value);
+      });
+    }
 
     function openMatchStatusModal(id, defaultType = 'success') {
       pendingMatchSuccessCaseId = id;
+      const caseItem = currentRenderedList.find(c => c.case_id === id);
+
       $("matchFacilityInput").value = "";
       if ($("matchFailedReasonSelect")) $("matchFailedReasonSelect").value = "無合適長照機構/居服員可配合";
       if ($("matchFailedDetailInput")) $("matchFailedDetailInput").value = "";
       $("matchSuccessError").style.display = "none";
       
+      // 初始化已選取的媒合成功機構
+      selectedMatchedFacilities = [];
+      if (caseItem && caseItem.matched_facility) {
+        selectedMatchedFacilities = caseItem.matched_facility.split(/[,、]/).map(s => s.trim()).filter(Boolean);
+      }
+      renderSelectedMatchedFacilities();
+
+      // 載入該案件的派案目標機構作為快捷勾選
+      const quickBox = $("quickTargetFacilitiesBox");
+      const quickList = $("quickTargetFacilitiesList");
+      if (caseItem && quickBox && quickList) {
+        let targets = [];
+        if (Array.isArray(caseItem.target_facility_queue) && caseItem.target_facility_queue.length > 0) {
+          targets = caseItem.target_facility_queue.map(q => q.name);
+        } else {
+          const targetIds = caseItem.target_facility_ids || [];
+          targets = (allFacilities || []).filter(f => targetIds.map(String).includes(String(f.id))).map(f => f.name);
+        }
+
+        if (targets.length > 0) {
+          quickBox.style.display = "block";
+          quickList.innerHTML = targets.map(name => {
+            const isChecked = selectedMatchedFacilities.includes(name);
+            return `
+              <label style="display:inline-flex; align-items:center; gap:6px; background:#ffffff; border:1px solid #fcd34d; border-radius:6px; padding:4px 10px; font-size:13px; font-weight:700; color:#78350f; cursor:pointer;">
+                <input type="checkbox" value="${name}" ${isChecked ? 'checked' : ''} onchange="toggleQuickTargetFacility('${name}', this.checked)">
+                <span>${name}</span>
+              </label>
+            `;
+          }).join('');
+        } else {
+          quickBox.style.display = "none";
+        }
+      }
+
+      // 帶入媒合成功備註與時間
+      if ($("matchSuccessNoteInput")) $("matchSuccessNoteInput").value = caseItem ? (caseItem.matched_note || '') : '';
+      
       const now = new Date();
       const tzOffset = now.getTimezoneOffset() * 60000;
       const localISOTime = (new Date(now.getTime() - tzOffset)).toISOString().slice(0, 16);
-      $("matchSuccessTimeInput").value = localISOTime;
+      $("matchSuccessTimeInput").value = (caseItem && caseItem.matched_at) ? new Date(caseItem.matched_at).toISOString().slice(0, 16) : localISOTime;
 
       switchMatchStatusType(defaultType);
       $("matchSuccessOverlay").style.display = "flex";
@@ -3273,7 +3393,7 @@
         logo.style.background = "var(--amber)";
         logo.textContent = "M";
         title.textContent = "登記媒合成功";
-        sub.textContent = "請填寫媒合機構名稱與成功時間";
+        sub.textContent = "請選擇/填寫媒合機構名稱與成功時間";
       } else {
         tabFailed.style.background = "#fff";
         tabFailed.style.color = "#dc2626";
@@ -3308,11 +3428,17 @@
       errEl.style.display = "none";
 
       if (currentMatchStatusType === 'success') {
-        const facility = $("matchFacilityInput").value.trim();
-        const matchTime = $("matchSuccessTimeInput").value;
+        // 若輸入框中還有未點擊新增的文字，自動加入
+        if ($("matchFacilityInput") && $("matchFacilityInput").value.trim()) {
+          addMatchedFacilityFromInput();
+        }
 
-        if (!facility) {
-          errEl.textContent = "請輸入或選擇媒合機構名稱";
+        const facilityStr = selectedMatchedFacilities.join('、');
+        const matchTime = $("matchSuccessTimeInput").value;
+        const matchNote = $("matchSuccessNoteInput") ? $("matchSuccessNoteInput").value.trim() : '';
+
+        if (!facilityStr) {
+          errEl.textContent = "請至少選擇或輸入一家媒合成功之機構";
           errEl.style.display = "block";
           return;
         }
@@ -3325,8 +3451,9 @@
         try {
           const { error } = await sb.from('cases').update({
             status: '媒合成功',
-            matched_facility: facility,
-            matched_at: matchTime
+            matched_facility: facilityStr,
+            matched_at: matchTime,
+            matched_note: matchNote || null
           }).eq('case_id', pendingMatchSuccessCaseId);
 
           if (error) throw error;

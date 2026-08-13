@@ -729,12 +729,17 @@
       <div class="dialog-card">
         <h4>登記媒合成功</h4>
         <div class="input-field">
-          <label>選擇媒合機構</label>
-          <select id="dialogMatchFacilitySelect" style="width:100%; height:48px; border:1px solid var(--line); border-radius:var(--radius); padding:0 12px; font-size:14px; outline:none; background:white;"></select>
+          <label>選擇/勾選媒合機構 (可複選)</label>
+          <div id="dialogMatchFacilitiesList" style="display:flex; flex-direction:column; gap:6px; max-height:160px; overflow-y:auto; padding:8px; background:#f8fafc; border:1px solid var(--line); border-radius:var(--radius); margin-bottom:8px;"></div>
+          <input type="text" id="dialogMatchCustomFacilityInput" placeholder="➕ 手動輸入其他機構名稱（以頓號區隔）" style="width:100%; height:40px; border:1px solid var(--line); border-radius:var(--radius); padding:0 10px; font-size:13px;">
         </div>
         <div class="input-field">
           <label>媒合成功時間</label>
           <input type="datetime-local" id="dialogMatchSuccessTime">
+        </div>
+        <div class="input-field">
+          <label>媒合成功備註 (選填)</label>
+          <textarea id="dialogMatchSuccessNote" placeholder="請填寫媒合成功狀態備註" style="width:100%; height:60px; border:1px solid var(--line); border-radius:var(--radius); padding:8px 10px; font-size:13px; font-family:inherit; resize:none;"></textarea>
         </div>
         <div id="dialogMatchError" style="color:var(--rose); font-size:12px; font-weight:800; margin-bottom:12px; display:none; text-align:center;"></div>
         <div class="dialog-buttons">
@@ -1353,16 +1358,37 @@
       if (!currentDetailCase) return;
       const c = currentDetailCase;
 
-      const select = $("dialogMatchFacilitySelect");
-      // Filter list of targeted facilities or all facilities
-      const targetIds = c.target_facility_ids || [];
-      const targets = allFacilities.filter(f => targetIds.map(String).includes(String(f.id)));
-      
-      select.innerHTML = targets.map(f => `<option value="${f.name}">${f.name}</option>`).join('') || `<option value="">查無目標機構</option>`;
-      
+      const container = $("dialogMatchFacilitiesList");
+      const existingMatched = (c.matched_facility || '').split(/[,、]/).map(s => s.trim()).filter(Boolean);
+
+      let targets = [];
+      if (Array.isArray(c.target_facility_queue) && c.target_facility_queue.length > 0) {
+        targets = c.target_facility_queue.map(q => q.name);
+      } else {
+        const targetIds = c.target_facility_ids || [];
+        targets = (allFacilities || []).filter(f => targetIds.map(String).includes(String(f.id))).map(f => f.name);
+      }
+
+      if (targets.length === 0) {
+        targets = (allFacilities || []).map(f => f.name);
+      }
+
+      container.innerHTML = targets.map(name => {
+        const isChecked = existingMatched.includes(name);
+        return `
+          <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer;">
+            <input type="checkbox" name="dialogMatchedFac" value="${name}" ${isChecked ? 'checked' : ''}>
+            <span>${name}</span>
+          </label>
+        `;
+      }).join('');
+
+      $("dialogMatchCustomFacilityInput").value = "";
+      $("dialogMatchSuccessNote").value = c.matched_note || "";
+
       const now = new Date();
       const tzOffset = now.getTimezoneOffset() * 60000;
-      $("dialogMatchSuccessTime").value = (new Date(now.getTime() - tzOffset)).toISOString().slice(0, 16);
+      $("dialogMatchSuccessTime").value = (c.matched_at ? new Date(c.matched_at) : new Date(now.getTime() - tzOffset)).toISOString().slice(0, 16);
       $("dialogMatchError").style.display = "none";
       
       $("matchSuccessDialog").style.display = "flex";
@@ -1373,13 +1399,22 @@
     }
 
     async function submitMatchSuccess() {
-      const facility = $("dialogMatchFacilitySelect").value;
+      const checkedBoxes = document.querySelectorAll('input[name="dialogMatchedFac"]:checked');
+      const selected = Array.from(checkedBoxes).map(cb => cb.value);
+      const customVal = $("dialogMatchCustomFacilityInput").value.trim();
+      if (customVal) {
+        const customs = customVal.split(/[,、]/).map(s => s.trim()).filter(Boolean);
+        customs.forEach(c => { if (!selected.includes(c)) selected.push(c); });
+      }
+
+      const facilityStr = selected.join('、');
       const matchTime = $("dialogMatchSuccessTime").value;
+      const matchNote = $("dialogMatchSuccessNote").value.trim();
       const errEl = $("dialogMatchError");
       errEl.style.display = "none";
 
-      if (!facility) {
-        errEl.textContent = "請選擇媒合成功之機構";
+      if (!facilityStr) {
+        errEl.textContent = "請選擇或輸入至少一家媒合成功機構";
         errEl.style.display = "block";
         return;
       }
@@ -1392,8 +1427,9 @@
       try {
         const { error } = await sb.from('cases').update({
           status: '媒合成功',
-          matched_facility: facility,
-          matched_at: matchTime
+          matched_facility: facilityStr,
+          matched_at: matchTime,
+          matched_note: matchNote || null
         }).eq('case_id', currentDetailCase.case_id);
 
         if (error) throw error;
