@@ -3498,12 +3498,20 @@
       resultsEl.style.display = "block";
     }
 
-    // 點擊區域外部時自動收合搜尋下拉選單
+    // 點擊區域外部時自動收合所有搜尋下拉選單
     document.addEventListener('click', function(e) {
+      // 1. 登記媒合成功彈窗的搜尋選單
       const searchInput = $("matchFacilitySearchInput");
       const searchResults = $("matchFacilitySearchResults");
       if (searchResults && searchInput && !searchInput.contains(e.target) && !searchResults.contains(e.target)) {
         searchResults.style.display = "none";
+      }
+
+      // 2. 編輯案件側邊欄的搜尋選單
+      const editSearchInput = $("editMatchedFacilitySearchInput");
+      const editSearchResults = $("editMatchedFacilitySearchResults");
+      if (editSearchResults && editSearchInput && !editSearchInput.contains(e.target) && !editSearchResults.contains(e.target)) {
+        editSearchResults.style.display = "none";
       }
     });
 
