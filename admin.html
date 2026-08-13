@@ -1939,8 +1939,13 @@
            const badgeClass = getGroupBadgeClass(c.target_group, c.status);
            const getFacShortName = (fullName) => {
              if (!fullName) return '';
-             const fac = allFacilities.find(f => f.name === fullName || f.short === fullName);
-             return fac ? (fac.short || fac.name) : fullName;
+             const names = String(fullName).split(/[,、]/).map(n => n.trim()).filter(Boolean);
+             if (names.length === 0) return '';
+             return names.map(n => {
+               const fac = (allFacilities || []).find(f => f.name === n || f.short === n);
+               if (fac && (fac.short || fac.name)) return fac.short || fac.name;
+               return n.replace(/(股份有限公司|有限公司|附設|私立|居家長照機構|長照機構|居家服務所|社區長照機構|養護中心)/g, '').trim() || n;
+             }).join('、');
            };
            const displayGroup = c.status === '案件結案' 
              ? `🟢 派案成功${c.matched_facility ? ` - ${getFacShortName(c.matched_facility)}` : ''}` 
@@ -2409,15 +2414,13 @@
 
       const getFacShortName = (fullName) => {
         if (!fullName) return '';
-        const names = fullName.split(/[,、]/).map(n => n.trim()).filter(Boolean);
-        if (names.length > 1) {
-          return names.map(n => {
-            const fac = allFacilities.find(f => f.name === n || f.short === n);
-            return fac ? (fac.short || fac.name) : n;
-          }).join('、');
-        }
-        const fac = allFacilities.find(f => f.name === fullName || f.short === fullName);
-        return fac ? (fac.short || fac.name) : fullName;
+        const names = String(fullName).split(/[,、]/).map(n => n.trim()).filter(Boolean);
+        if (names.length === 0) return '';
+        return names.map(n => {
+          const fac = (allFacilities || []).find(f => f.name === n || f.short === n);
+          if (fac && (fac.short || fac.name)) return fac.short || fac.name;
+          return n.replace(/(股份有限公司|有限公司|附設|私立|居家長照機構|長照機構|居家服務所|社區長照機構|養護中心)/g, '').trim() || n;
+        }).join('、');
       };
       const isWithin3Days = (matchedAt, closedAt) => {
         if (!matchedAt || !closedAt) return false;
