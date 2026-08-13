@@ -2545,6 +2545,17 @@
         window.editDifficultQueue = null;
       }
 
+      const currentTargets = Array.isArray(item.target_facility_ids) ? item.target_facility_ids.map(String) : [];
+      const facilityCheckboxes = (allFacilities || []).map(f => {
+        const isChecked = currentTargets.includes(String(f.id));
+        return `
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; padding: 4px; background: white; border-radius: 4px; border: 1px solid #cbd5e1;">
+            <input type="checkbox" name="target_facility_ids" value="${f.id}" ${isChecked ? 'checked' : ''} />
+            <span>${f.short ? `[${f.short}] ` : ''}${f.name}</span>
+          </label>
+        `;
+      }).join('');
+
       $("drawerContent").innerHTML = `
         <div class="detail-card full">
           <form id="editForm" class="edit-form">
