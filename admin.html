@@ -488,6 +488,7 @@
     .status-badge.done { background: #f5f3ff; color: #7c3aed; border: 1px solid #c4b5fd; }
     .status-badge.closed { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; }
     .status-badge.closed-success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+    .status-badge.closed-canceled { background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; }
     .status-badge.closed-failed { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
     .status-badge.danger { background: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; }
 
@@ -927,41 +928,85 @@
     </div>
   </div>
   <!-- Close Case Auth Overlay -->
-  <div id="closeCaseAuthOverlay" class="admin-login-overlay" style="display: none; background: rgba(15,23,42,0.6); backdrop-filter: blur(8px);">
-    <div class="admin-login-card">
-      <div class="login-brand">
-        <div class="login-logo">R</div>
+  <!-- Close Case Auth Overlay (雙路線：派案進場 / 取消進場) -->
+  <div id="closeCaseAuthOverlay" class="admin-login-overlay" style="display: none; background: rgba(15,23,42,0.6); backdrop-filter: blur(8px); z-index: 2500;">
+    <div class="admin-login-card" style="width: 480px; max-width: 92vw; padding: 28px 32px; border-radius: 20px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);">
+      <div class="login-brand" style="margin-bottom: 20px; display: flex; align-items: center; gap: 14px;">
+        <div id="closeCaseLogo" class="login-logo" style="background: linear-gradient(135deg, #10b981, #059669); color: white; width: 44px; height: 44px; font-size: 20px; border-radius: 12px;">結</div>
         <div>
-          <div style="font-weight: 950; font-size: 18px;">結案身分驗證</div>
-          <div style="font-size: 13px; color: #64748b;">結案前請再次輸入帳號密碼</div>
+          <div style="font-weight: 950; font-size: 19px; color: #0f172a;" id="closeCaseTitle">案件結案與進場確認</div>
+          <div style="font-size: 13px; color: #64748b; margin-top: 2px;" id="closeCaseSub">請選擇結案路線並填寫相關資訊</div>
         </div>
       </div>
-      <div class="edit-field" style="margin-bottom: 16px;">
-        <label>管理員員編</label>
-        <input type="text" id="authEmpId" placeholder="請輸入員編">
+
+      <!-- Tab / Segmented Buttons for Close Case Route -->
+      <div style="display: flex; background: #f1f5f9; padding: 4px; border-radius: 12px; margin-bottom: 20px;">
+        <button type="button" id="tabCloseService" onclick="switchCloseCaseRoute('service')" style="flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: 800; font-size: 14px; cursor: pointer; transition: all 0.2s; background: #fff; color: #059669; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+          🟢 派案進場
+        </button>
+        <button type="button" id="tabCloseCancel" onclick="switchCloseCaseRoute('cancel')" style="flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: 800; font-size: 14px; cursor: pointer; transition: all 0.2s; background: transparent; color: #64748b;">
+          🔴 取消進場
+        </button>
       </div>
-      <div class="edit-field" style="margin-bottom: 16px;">
-        <label>登入密碼</label>
-        <input type="password" id="authPassword" placeholder="請輸入密碼">
+
+      <!-- Section 1: 派案進場 -->
+      <div id="sectionCloseService">
+        <div class="edit-field" style="margin-bottom: 14px;">
+          <label style="font-size: 13px; font-weight: 800; color: #334155; margin-bottom: 6px; display: block;">照護計畫審核通過日期 (選填)</label>
+          <input type="date" id="carePlanApprovedDateInput" onchange="updateCloseCaseAssessment()" style="width:100%; height:44px; padding:0 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px;">
+        </div>
+        <div class="edit-field" style="margin-bottom: 14px;">
+          <label style="font-size: 13px; font-weight: 800; color: #334155; margin-bottom: 6px; display: block;">機構首次進場服務日期 <span style="color:var(--rose);">*</span></label>
+          <input type="date" id="firstServiceDateInput" onchange="updateCloseCaseAssessment()" style="width:100%; height:44px; padding:0 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px;">
+        </div>
+        <div class="edit-field" style="margin-bottom: 16px;">
+          <label style="font-size: 13px; font-weight: 800; color: #334155; margin-bottom: 6px; display: block;">結案時間 <span style="color:var(--rose);">*</span></label>
+          <input type="datetime-local" id="closeCaseTimeInput" style="width:100%; height:44px; padding:0 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px;">
+          <div id="closeCaseTimeAssessment" style="margin-top: 8px; font-size: 12px; font-weight: 800; display: none;"></div>
+        </div>
       </div>
-      <div class="edit-field" style="margin-bottom: 16px;">
-        <label>照護計畫審核通過日期 <span style="color:var(--rose);">*</span></label>
-        <input type="date" id="carePlanApprovedDateInput" onchange="updateCloseCaseAssessment()">
+
+      <!-- Section 2: 取消進場 -->
+      <div id="sectionCloseCancel" style="display: none;">
+        <div class="edit-field" style="margin-bottom: 14px;">
+          <label style="font-size: 13px; font-weight: 800; color: #334155; margin-bottom: 6px; display: block;">取消進場主要原因 <span style="color:var(--rose);">*</span></label>
+          <select id="cancelServiceReasonSelect" style="width:100%; height:44px; padding:0 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px; background:#fff;">
+            <option value="案家因素">案家因素 (如：家屬自行照顧 / 長輩住院 / 暫無需求)</option>
+            <option value="機構因素">機構因素 (如：機構人力調配不足 / 時間無法配合)</option>
+            <option value="其他因素">其他因素</option>
+          </select>
+        </div>
+        <div class="edit-field" style="margin-bottom: 14px;">
+          <label style="font-size: 13px; font-weight: 800; color: #334155; margin-bottom: 6px; display: block;">原因備註與詳細說明</label>
+          <textarea id="cancelServiceNoteInput" placeholder="請填寫詳細取消原因或多個原因說明備註..." style="width:100%; height:72px; padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:13px; font-family:inherit; resize:none; line-height:1.5;"></textarea>
+        </div>
+        <div class="edit-field" style="margin-bottom: 16px;">
+          <label style="font-size: 13px; font-weight: 800; color: #334155; margin-bottom: 6px; display: block;">取消結案時間 <span style="color:var(--rose);">*</span></label>
+          <input type="datetime-local" id="cancelCloseCaseTimeInput" style="width:100%; height:44px; padding:0 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px;">
+          <div style="margin-top: 6px; font-size: 12px; color: #64748b; line-height: 1.4;">
+            💡 此案取消進場後將直接結案歸檔，<strong>不計入 3 日服務時效指標</strong>。後續若有需要請重新起單。
+          </div>
+        </div>
       </div>
-      <div class="edit-field" style="margin-bottom: 16px;">
-        <label>機構首次進場服務日期 <span style="color:var(--rose);">*</span></label>
-        <input type="date" id="firstServiceDateInput" onchange="updateCloseCaseAssessment()">
+
+      <!-- Auth Section -->
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 18px;">
+        <div style="font-size: 12px; font-weight: 800; color: #475569; margin-bottom: 8px;">🔐 管理員身分驗證</div>
+        <div style="display: flex; gap: 10px;">
+          <div class="edit-field" style="flex: 1; margin-bottom: 0;">
+            <input type="text" id="authEmpId" placeholder="管理員員編 *" style="width:100%; height:40px; padding:0 10px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px;">
+          </div>
+          <div class="edit-field" style="flex: 1; margin-bottom: 0;">
+            <input type="password" id="authPassword" placeholder="登入密碼 *" style="width:100%; height:40px; padding:0 10px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px;">
+          </div>
+        </div>
       </div>
-      <div class="edit-field" style="margin-bottom: 24px;">
-        <label>結案時間 <span style="color:var(--rose);">*</span></label>
-        <input type="datetime-local" id="closeCaseTimeInput">
-        <div id="closeCaseTimeAssessment" style="margin-top: 8px; font-size: 13px; font-weight: 800; display: none;"></div>
-      </div>
+
       <div style="display: flex; gap: 12px;">
-        <button class="btn btn-muted" style="flex: 1; height: 50px; font-size: 16px;" onclick="cancelCloseCaseAuth()">取消</button>
-        <button class="btn btn-primary" style="flex: 1; height: 50px; font-size: 16px;" onclick="confirmCloseCaseAuth()">確認結案</button>
+        <button class="btn btn-muted" style="flex: 1; height: 48px; font-size: 15px; font-weight: 800; border-radius: 12px;" onclick="cancelCloseCaseAuth()">取消</button>
+        <button id="confirmCloseCaseBtn" class="btn btn-primary" style="flex: 1.3; height: 48px; font-size: 15px; font-weight: 800; border-radius: 12px; background: #059669; border-color: #059669;" onclick="confirmCloseCaseAuth()">確認派案結案</button>
       </div>
-      <div id="authError" style="margin-top: 16px; color: var(--rose); font-size: 13px; text-align: center; font-weight: 800; display: none;"></div>
+      <div id="authError" style="margin-top: 14px; color: var(--rose); font-size: 13px; text-align: center; font-weight: 800; display: none;"></div>
     </div>
   </div>
 
@@ -1225,7 +1270,7 @@
               <div class="toolbar-body">
                 <div class="filter-grid">
                   <div class="field"><input id="searchInput" placeholder="搜尋案件編號、個案姓名、機構或關鍵字" /></div>
-                  <div class="field"><select id="statusFilter"><option value="all">全部派案模式</option><option value="指定機構">指定機構</option><option value="合作機構(一輪)">合作機構(一輪)</option><option value="全區機構(二輪)">全區機構(二輪)</option><option value="困難派案(三輪)">困難派案(三輪)</option><option value="媒合成功">媒合成功</option><option value="案件結案">案件結案</option><option value="媒合失敗">媒合失敗</option></select></div>
+                  <div class="field"><select id="statusFilter"><option value="all">全部派案模式</option><option value="指定機構">指定機構</option><option value="合作機構(一輪)">合作機構(一輪)</option><option value="全區機構(二輪)">全區機構(二輪)</option><option value="困難派案(三輪)">困難派案(三輪)</option><option value="媒合成功">媒合成功</option><option value="案件結案">案件結案 (派案進場)</option><option value="已取消進場">已取消進場</option><option value="媒合失敗">媒合失敗</option></select></div>
                   <div class="field"><select id="hospitalFilter"><option value="all">全部個管師</option></select></div>
                   <div class="field"><select id="sortFilter"><option value="newest">時間：新到舊</option><option value="oldest">時間：舊到新</option></select></div>
                   <div class="field"><button class="btn btn-muted" style="width:100%; height:46px;" onclick="resetFilters()">重設篩選</button></div>
@@ -1684,101 +1729,12 @@
       dropdown.style.marginTop = '4px';
       dropdown.style.top = '100%';
       dropdown.style.left = '0';
-      
-      input.parentElement.style.position = 'relative';
-      input.parentElement.appendChild(dropdown);
-
-      function renderList(filterText = '') {
-        const lowerFilter = filterText.toLowerCase();
-        const matches = allFacilities.filter(f => f.name.toLowerCase().includes(lowerFilter));
-        
-        if (matches.length === 0) {
-          dropdown.innerHTML = `<div style="padding: 10px; color: #94a3b8; font-size: 13px; text-align: center;">查無機構</div>`;
-          return;
-        }
-
-        dropdown.innerHTML = matches.map(f => {
-          const hasLine = (f.line_group_id && f.line_group_id.trim() !== '');
-          const lineBadge = hasLine 
-            ? `<span style="background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; font-size:10px; font-weight:800; padding:2px 6px; border-radius:6px; flex-shrink:0;">🟢 LINE 已綁定</span>`
-            : `<span style="background:#f1f5f9; color:#94a3b8; border:1px solid #e2e8f0; font-size:10px; font-weight:700; padding:2px 6px; border-radius:6px; flex-shrink:0;">⚪ 無 LINE 群組</span>`;
-
-          const shortTag = f.short ? `<span style="color:#be123c; font-weight:900; margin-right:4px;">【${f.short}】</span>` : '';
-
-          return `
-            <div class="fac-option" style="padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 13px; color: var(--text-strong); display: flex; align-items: center; justify-content: space-between; gap: 8px; transition: background 0.2s;"
-                 onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='none'"
-                 data-val="${f.name}">
-              <span style="font-weight: 700; color: #1e293b; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                ${shortTag}${f.name}
-                ${f.area ? `<span style="color: #64748b; font-size: 11px; font-weight: normal;">📍 ${f.area}</span>` : ''}
-              </span>
-              ${lineBadge}
-            </div>
-          `;
-        }).join('');
-
-        const options = dropdown.querySelectorAll('.fac-option');
-        options.forEach(opt => {
-          opt.addEventListener('mousedown', (e) => {
-            e.preventDefault(); 
-            input.value = opt.getAttribute('data-val');
-            dropdown.style.display = 'none';
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-          });
-        });
-      }
-
-      input.addEventListener('focus', () => {
-        renderList(input.value);
-        dropdown.style.display = 'block';
-      });
-
-      input.addEventListener('input', () => {
-        renderList(input.value);
-        dropdown.style.display = 'block';
-      });
-
-      input.addEventListener('blur', () => {
-        dropdown.style.display = 'none';
-      });
-    }
-
-    async function loadFacilities() {
-      const { data } = await sb.from('facilities').select('id, facility_name, short_name, phone, service_area, is_round_1, line_group_id');
-      if (data) {
-        allFacilities = data.map(f => ({
-          id: f.id, name: f.facility_name, short: f.short_name, phone: f.phone, area: f.service_area, is_round_1: f.is_round_1, line_group_id: f.line_group_id
-        }));
-        attachFacilityAutocomplete('matchFacilityInput');
-      }
-    }
-
-    async function fetchData() {
-      try {
-        const { data: cases } = await sb.from('cases').select('*').order('created_at', { ascending: false });
-        const { data: replies } = await sb.from('replies').select('*');
-        
-        allCases = (cases || [])
-          .filter(c => c.status !== '系統刪除')
-          .map(c => ({
-            ...c,
-            replies: (replies || []).filter(r => r.case_id === c.case_id)
-          }));
-
-        renderTable();
-        updateKPI();
-        updateInsights();
-        initUI();
-      } catch (err) { console.error("Fetch error:", err); }
-    }
-
-    // --- KPI 統計 ---
+     // --- KPI 統計 ---
     function updateKPI() {
       $("kpiTotal").textContent = allCases.length;
       $("kpiPending").textContent = allCases.filter(c => c.status === '一輪媒合中' || c.status === '合作機構(一輪)').length;
       $("kpiMatching").textContent = allCases.filter(c => c.status === '二輪媒合中' || c.status === '三輪媒合中' || c.status === '指定機構').length;
-      $("kpiDone").textContent = allCases.filter(c => c.status === '案件結案' || c.status === '媒合成功' || c.status === '媒合失敗').length;
+      $("kpiDone").textContent = allCases.filter(c => c.status === '案件結案' || c.status === '已取消進場' || c.status === '媒合成功' || c.status === '媒合失敗').length;
       $("loadedHint").textContent = `目前載入 ${allCases.length} 筆真實轉介案件`;
       updateSelectionSummary();
       
@@ -1794,7 +1750,7 @@
       const now = new Date();
       const pending24h = allCases.filter(c => {
         const hours = (now - new Date(c.created_at)) / (1000 * 60 * 60);
-        return hours > 24 && c.status !== '案件結案' && c.status !== '媒合成功' && c.status !== '媒合失敗';
+        return hours > 24 && c.status !== '案件結案' && c.status !== '已取消進場' && c.status !== '媒合成功' && c.status !== '媒合失敗';
       }).length;
       
       const matchingRound23 = allCases.filter(c => c.status === '二輪媒合中' || c.status === '三輪媒合中').length;
@@ -1906,16 +1862,18 @@
         if (sFilter !== 'all') {
           if (sFilter === '案件結案') {
             matchStatus = c.status === '案件結案';
+          } else if (sFilter === '已取消進場') {
+            matchStatus = c.status === '已取消進場';
           } else if (sFilter === '媒合成功') {
             matchStatus = c.status === '媒合成功';
           } else if (sFilter === '媒合失敗') {
             matchStatus = c.status === '媒合失敗';
           } else {
-            matchStatus = (c.target_group === sFilter || (!c.target_group && sFilter === '指定機構')) && c.status !== '案件結案' && c.status !== '媒合成功' && c.status !== '媒合失敗';
+            matchStatus = (c.target_group === sFilter || (!c.target_group && sFilter === '指定機構')) && c.status !== '案件結案' && c.status !== '已取消進場' && c.status !== '媒合成功' && c.status !== '媒合失敗';
           }
         }
         
-        const isClosed = c.status === '案件結案' || c.status === '媒合失敗';
+        const isClosed = c.status === '案件結案' || c.status === '已取消進場' || c.status === '媒合失敗';
         const matchView = (currentViewMode === 'dashboard' && !isClosed) || (currentViewMode === 'cases' && isClosed);
         
         return matchQ && matchStatus && matchManager && matchView;
@@ -1949,14 +1907,16 @@
            };
            const displayGroup = c.status === '案件結案' 
              ? `🟢 派案成功${c.matched_facility ? ` - ${getFacShortName(c.matched_facility)}` : ''}` 
-             : (c.status === '媒合失敗'
-               ? `🔴 媒合失敗`
-               : (c.status === '媒合成功' 
-                 ? `🟠 媒合成功${c.matched_facility ? ` (${getFacShortName(c.matched_facility)})` : ''}` 
-                 : `● ${c.target_group || '指定機構'}`));
+             : (c.status === '已取消進場'
+               ? `⚪ 已取消進場${c.cancel_service_reason ? ` (${c.cancel_service_reason})` : ''}`
+               : (c.status === '媒合失敗'
+                 ? `🔴 媒合失敗`
+                 : (c.status === '媒合成功' 
+                   ? `🟠 媒合成功${c.matched_facility ? ` (${getFacShortName(c.matched_facility)})` : ''}` 
+                   : `● ${c.target_group || '指定機構'}`)));
            const needTag = c.service_type || '未分類';
  
-           const actionBtn = (c.status === '案件結案' || c.status === '媒合失敗')
+           const actionBtn = (c.status === '案件結案' || c.status === '已取消進場' || c.status === '媒合失敗')
              ? `<button class="icon-btn" style="color:#2563eb; background:#eff6ff; border-color:#dbeafe;" onclick="reopenCase('${c.case_id}')">再開</button>`
              : (c.status === '媒合成功'
                ? `<button class="icon-btn" style="color:#10b981; background:#ecfdf5; border-color:#a7f3d0;" onclick="closeCase('${c.case_id}')">正式結案</button>`
@@ -1991,6 +1951,12 @@
                 statusColor = `#047857`;
                 const finalMatchedName = c.matched_facility ? getFacShortName(c.matched_facility) : facShort;
                 targetHtml = `<span style="color:#059669; font-weight:900;">✅</span><span style="font-size:13px; font-weight:800; color:#065f46;">【${finalMatchedName}】(已確認)</span>`;
+              } else if (c.status === '已取消進場') {
+                badgeBg = '#64748b';
+                badgeText = `取消進場`;
+                statusLabel = `⚪ 已取消進場`;
+                statusColor = `#475569`;
+                targetHtml = `<span style="font-size:12px; font-weight:800; color:#475569;">🛑 ${c.cancel_service_reason || '已取消進場'}</span>`;
               } else if (c.status === '媒合失敗') {
                 badgeBg = '#64748b';
                 badgeText = `詢問完畢`;
@@ -2077,6 +2043,7 @@
 
     function getGroupBadgeClass(g, s) {
       if (s === '案件結案') return 'closed-success';
+      if (s === '已取消進場') return 'closed-canceled';
       if (s === '媒合失敗') return 'closed-failed';
       if (s === '媒合成功') return 'matching'; // orange/amber
       if (g === '合作機構(一輪)') return 'pending'; // blue
@@ -2474,14 +2441,32 @@
         </div>
       `;
 
+      const cancelServiceCardHtml = `
+        <div class="detail-card full" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:16px;">
+          <h4 style="color:#475569; margin-top:0; margin-bottom:12px; font-weight:800; font-size:15px; display:flex; align-items:center; gap:8px;">
+            <span>⚪ 取消進場結案資訊</span>
+            <span style="font-size:12px; background:#e2e8f0; color:#475569; padding:2px 8px; border-radius:100px; font-weight:normal;">不計入 3 日服務時效</span>
+          </h4>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px; font-size:13px; color:var(--text-strong);">
+            <div><strong>取消原因：</strong><span style="color:#be123c; font-weight:800;">${item.cancel_service_reason || '未說明'}</span></div>
+            <div><strong>取消結案時間：</strong>${item.closed_at ? new Date(item.closed_at).toLocaleString() : '未知'}</div>
+            ${item.matched_facility ? `<div><strong>原媒合機構：</strong>${item.matched_facility} (${getFacShortName(item.matched_facility)})</div>` : ''}
+            ${item.matched_at ? `<div><strong>原媒合成功時間：</strong>${new Date(item.matched_at).toLocaleString()}</div>` : ''}
+            ${item.cancel_service_note ? `<div style="grid-column: 1 / -1; background:#ffffff; padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; margin-top:4px;"><strong>取消原因詳細備註：</strong>${item.cancel_service_note}</div>` : ''}
+          </div>
+        </div>
+      `;
+
       let statusCardHtml = '';
-      if (item.status === '媒合失敗' || item.match_failed_reason) {
+      if (item.status === '已取消進場' || item.close_type === '取消進場' || item.cancel_service_reason) {
+        statusCardHtml = cancelServiceCardHtml;
+      } else if (item.status === '媒合失敗' || item.match_failed_reason) {
         statusCardHtml = matchFailedCardHtml;
       } else if (item.status === '媒合成功' || item.status === '案件結案' || item.matched_facility) {
         statusCardHtml = matchSuccessCardHtml;
       }
 
-      const drawerActionBtn = (item.status === '案件結案' || item.status === '媒合失敗')
+      const drawerActionBtn = (item.status === '案件結案' || item.status === '已取消進場' || item.status === '媒合失敗')
         ? `<button class="btn btn-primary" style="flex:1; background:linear-gradient(135deg, #3b82f6, #2563eb); border:none;" onclick="reopenCase('${item.case_id}')">案件再開</button>`
         : (item.status === '媒合成功'
           ? `<button class="btn btn-primary" style="flex:1; background:linear-gradient(135deg, #10b981, #059669); border:none;" onclick="closeCase('${item.case_id}')">正式結案</button>`
@@ -2765,11 +2750,21 @@
                 <option value="二輪媒合中" ${item.status==='二輪媒合中'?'selected':''}>二輪媒合中</option>
                 <option value="三輪媒合中" ${item.status==='三輪媒合中'?'selected':''}>三輪媒合中</option>
                 <option value="媒合成功" ${item.status==='媒合成功'?'selected':''}>媒合成功</option>
-                <option value="案件結案" ${item.status==='案件結案'?'selected':''}>案件結案</option>
+                <option value="案件結案" ${item.status==='案件結案'?'selected':''}>案件結案 (派案進場)</option>
+                <option value="已取消進場" ${item.status==='已取消進場'?'selected':''}>已取消進場</option>
                 <option value="媒合失敗" ${item.status==='媒合失敗'?'selected':''}>媒合失敗</option>
               </select>
             </div>
             
+            <div class="edit-field"><label>取消進場原因</label>
+              <select name="cancel_service_reason">
+                <option value="">-- 無 / 未取消 --</option>
+                <option value="案家因素" ${item.cancel_service_reason==='案家因素'?'selected':''}>案家因素</option>
+                <option value="機構因素" ${item.cancel_service_reason==='機構因素'?'selected':''}>機構因素</option>
+                <option value="其他因素" ${item.cancel_service_reason==='其他因素'?'selected':''}>其他因素</option>
+              </select>
+            </div>
+            <div class="edit-field full"><label>取消進場詳細備註</label><textarea name="cancel_service_note" style="min-height:50px;" placeholder="請填寫取消進場備註">${item.cancel_service_note || ''}</textarea></div>
             <div class="edit-field"><label>媒合失敗原因</label><input type="text" name="match_failed_reason" value="${item.match_failed_reason || ''}" placeholder="請填寫失敗原因"></div>
             <div class="edit-field"><label>計畫審核通過日期</label><input type="date" name="care_plan_approved_at" value="${item.care_plan_approved_at || ''}"></div>
             <div class="edit-field"><label>機構首次服務日期</label><input type="date" name="first_service_at" value="${item.first_service_at || ''}"></div>
@@ -3152,6 +3147,13 @@
       updates.matched_facility = editSelectedMatchedFacilities.join('、') || null;
       updates.matched_note = updates.matched_note || null;
       updates.match_failed_reason = updates.match_failed_reason || null;
+      updates.cancel_service_reason = updates.cancel_service_reason || null;
+      updates.cancel_service_note = updates.cancel_service_note || null;
+      if (updates.status === '已取消進場') {
+        updates.close_type = '取消進場';
+      } else if (updates.status === '案件結案') {
+        updates.close_type = '派案進場';
+      }
 
       delete updates.addr_county;
       delete updates.addr_district;
@@ -3699,12 +3701,59 @@
     }
 
     let pendingCloseCaseId = null;
+    let currentCloseCaseRoute = 'service'; // 'service' or 'cancel'
+
+    function switchCloseCaseRoute(route) {
+      currentCloseCaseRoute = route;
+      const tabService = $("tabCloseService");
+      const tabCancel = $("tabCloseCancel");
+      const secService = $("sectionCloseService");
+      const secCancel = $("sectionCloseCancel");
+      const confirmBtn = $("confirmCloseCaseBtn");
+      const errEl = $("authError");
+      if (errEl) errEl.style.display = "none";
+
+      if (route === 'service') {
+        tabService.style.background = "#fff";
+        tabService.style.color = "#059669";
+        tabService.style.boxShadow = "0 1px 3px rgba(0,0,0,0.1)";
+
+        tabCancel.style.background = "transparent";
+        tabCancel.style.color = "#64748b";
+        tabCancel.style.boxShadow = "none";
+
+        secService.style.display = "block";
+        secCancel.style.display = "none";
+
+        confirmBtn.textContent = "確認派案結案";
+        confirmBtn.style.background = "#059669";
+        confirmBtn.style.borderColor = "#059669";
+      } else {
+        tabCancel.style.background = "#fff";
+        tabCancel.style.color = "#e11d48";
+        tabCancel.style.boxShadow = "0 1px 3px rgba(0,0,0,0.1)";
+
+        tabService.style.background = "transparent";
+        tabService.style.color = "#64748b";
+        tabService.style.boxShadow = "none";
+
+        secService.style.display = "none";
+        secCancel.style.display = "block";
+
+        confirmBtn.textContent = "確認取消進場";
+        confirmBtn.style.background = "#e11d48";
+        confirmBtn.style.borderColor = "#e11d48";
+      }
+    }
+
     function closeCase(id) {
       pendingCloseCaseId = id;
       $("authEmpId").value = "";
       $("authPassword").value = "";
       $("carePlanApprovedDateInput").value = "";
       $("firstServiceDateInput").value = "";
+      if ($("cancelServiceReasonSelect")) $("cancelServiceReasonSelect").value = "案家因素";
+      if ($("cancelServiceNoteInput")) $("cancelServiceNoteInput").value = "";
       $("authError").style.display = "none";
 
       // Set default time to Taiwan current time
@@ -3712,7 +3761,9 @@
       const tzOffset = now.getTimezoneOffset() * 60000;
       const localISOTime = (new Date(now.getTime() - tzOffset)).toISOString().slice(0, 16);
       $("closeCaseTimeInput").value = localISOTime;
+      if ($("cancelCloseCaseTimeInput")) $("cancelCloseCaseTimeInput").value = localISOTime;
 
+      switchCloseCaseRoute('service');
       $("closeCaseAuthOverlay").style.display = "flex";
       updateCloseCaseAssessment();
     }
@@ -3722,8 +3773,14 @@
       const firstServiceDateVal = $("firstServiceDateInput").value;
       const assessmentEl = $("closeCaseTimeAssessment");
 
-      if (!carePlanDateVal || !firstServiceDateVal) {
+      if (!firstServiceDateVal) {
         assessmentEl.style.display = "none";
+        return;
+      }
+
+      if (!carePlanDateVal) {
+        assessmentEl.style.display = "block";
+        assessmentEl.innerHTML = `<span style="color:#0284c7;">ℹ️ 未填寫計畫審核日期，將以首次服務日期（${firstServiceDateVal}）記錄進場。</span>`;
         return;
       }
 
@@ -3752,37 +3809,76 @@
       if (!pendingCloseCaseId) return;
       const eid = $("authEmpId").value.trim();
       const pwd = $("authPassword").value.trim();
-      const closeTime = $("closeCaseTimeInput").value;
-      const carePlanDate = $("carePlanApprovedDateInput").value;
-      const firstServiceDate = $("firstServiceDateInput").value;
       const errEl = $("authError");
 
       if (!eid || !pwd) {
-        errEl.textContent = "請輸入員編與密碼";
-        errEl.style.display = "block";
-        return;
-      }
-      if (!closeTime) {
-        errEl.textContent = "請選擇結案時間";
-        errEl.style.display = "block";
-        return;
-      }
-      if (!carePlanDate) {
-        errEl.textContent = "請選擇照護計畫審核通過日期";
-        errEl.style.display = "block";
-        return;
-      }
-      if (!firstServiceDate) {
-        errEl.textContent = "請選擇機構首次進場服務日期";
+        errEl.textContent = "請輸入管理員員編與密碼";
         errEl.style.display = "block";
         return;
       }
 
-      const workingDays = getTaiwanWorkingDays(carePlanDate, firstServiceDate);
-      if (workingDays === -1) {
-        errEl.textContent = "警告：首次服務日期不可早於審核通過日期！";
-        errEl.style.display = "block";
-        return;
+      let updatePayload = {};
+
+      if (currentCloseCaseRoute === 'service') {
+        const closeTime = $("closeCaseTimeInput").value;
+        const carePlanDate = $("carePlanApprovedDateInput").value;
+        const firstServiceDate = $("firstServiceDateInput").value;
+
+        if (!firstServiceDate) {
+          errEl.textContent = "請選擇機構首次進場服務日期";
+          errEl.style.display = "block";
+          return;
+        }
+        if (!closeTime) {
+          errEl.textContent = "請選擇結案時間";
+          errEl.style.display = "block";
+          return;
+        }
+
+        if (carePlanDate && firstServiceDate) {
+          const workingDays = getTaiwanWorkingDays(carePlanDate, firstServiceDate);
+          if (workingDays === -1) {
+            errEl.textContent = "警告：首次服務日期不可早於審核通過日期！";
+            errEl.style.display = "block";
+            return;
+          }
+        }
+
+        updatePayload = {
+          status: '案件結案',
+          close_type: '派案進場',
+          closed_at: closeTime,
+          care_plan_approved_at: carePlanDate || null,
+          first_service_at: firstServiceDate,
+          cancel_service_reason: null,
+          cancel_service_note: null
+        };
+      } else {
+        // 取消進場
+        const cancelReason = $("cancelServiceReasonSelect").value;
+        const cancelNote = $("cancelServiceNoteInput").value.trim();
+        const cancelCloseTime = $("cancelCloseCaseTimeInput").value;
+
+        if (!cancelReason) {
+          errEl.textContent = "請選擇取消進場原因";
+          errEl.style.display = "block";
+          return;
+        }
+        if (!cancelCloseTime) {
+          errEl.textContent = "請選擇取消結案時間";
+          errEl.style.display = "block";
+          return;
+        }
+
+        updatePayload = {
+          status: '已取消進場',
+          close_type: '取消進場',
+          closed_at: cancelCloseTime,
+          care_plan_approved_at: null,
+          first_service_at: null,
+          cancel_service_reason: cancelReason,
+          cancel_service_note: cancelNote || null
+        };
       }
 
       errEl.style.display = "none";
@@ -3803,21 +3899,20 @@
         // Auth success, close overlay and update status
         $("closeCaseAuthOverlay").style.display = "none";
         
-        const { error: updateErr } = await sb.from('cases').update({
-          status: '案件結案',
-          closed_at: closeTime,
-          care_plan_approved_at: carePlanDate,
-          first_service_at: firstServiceDate
-        }).eq('case_id', pendingCloseCaseId);
+        const { error: updateErr } = await sb.from('cases').update(updatePayload).eq('case_id', pendingCloseCaseId);
 
         if (updateErr) throw updateErr;
         
-        alert("已結案");
+        if (currentCloseCaseRoute === 'service') {
+          alert("已完成派案進場結案！");
+        } else {
+          alert("已成功登記取消進場並結案歸檔（不計入服務時效指標）！");
+        }
         pendingCloseCaseId = null;
         fetchData();
         closeDrawer();
       } catch (err) { 
-        alert("結案失敗：" + err.message); 
+        alert("操作失敗：" + err.message); 
       }
     }
 

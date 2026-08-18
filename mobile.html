@@ -749,38 +749,78 @@
       </div>
     </div>
 
-    <!-- Dialog Modal: Close Case -->
+    <!-- Dialog Modal: Close Case (雙路線：派案進場 / 取消進場) -->
     <div id="closeCaseDialog" class="dialog-overlay">
       <div class="dialog-card">
-        <h4>案件結案身份驗證</h4>
-        <div style="font-size: 12px; color: var(--text-soft); margin-bottom: 16px; line-height: 1.4;">
-          結案前請再次驗證管理員密碼。
+        <h4>案件結案與進場確認</h4>
+        <div style="font-size: 12px; color: var(--text-soft); margin-bottom: 14px; line-height: 1.4;">
+          請選擇結案路線並輸入管理員密碼驗證。
         </div>
-        <div class="input-field">
+
+        <!-- Segmented Tab -->
+        <div style="display: flex; background: #f1f5f9; padding: 3px; border-radius: 10px; margin-bottom: 16px;">
+          <button type="button" id="mobileTabCloseService" onclick="switchMobileCloseCaseRoute('service')" style="flex: 1; padding: 8px; border: none; border-radius: 7px; font-weight: 800; font-size: 13px; cursor: pointer; transition: all 0.2s; background: #fff; color: #059669; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            🟢 派案進場
+          </button>
+          <button type="button" id="mobileTabCloseCancel" onclick="switchMobileCloseCaseRoute('cancel')" style="flex: 1; padding: 8px; border: none; border-radius: 7px; font-weight: 800; font-size: 13px; cursor: pointer; transition: all 0.2s; background: transparent; color: #64748b;">
+            🔴 取消進場
+          </button>
+        </div>
+
+        <!-- Section 1: 派案進場 -->
+        <div id="mobileSectionCloseService">
+          <div class="input-field">
+            <label>照護計畫審核通過日期 (選填)</label>
+            <input type="date" id="dialogCarePlanApprovedDate" onchange="assessTimeLimit()">
+          </div>
+          <div class="input-field">
+            <label>機構首次進場服務日期 <span style="color:var(--rose);">*</span></label>
+            <input type="date" id="dialogFirstServiceDate" onchange="assessTimeLimit()">
+          </div>
+          <div class="input-field">
+            <label>結案時間 <span style="color:var(--rose);">*</span></label>
+            <input type="datetime-local" id="dialogCloseTime" onchange="assessTimeLimit()" oninput="assessTimeLimit()">
+            <div id="dialogCloseTimeAssessment" style="margin-top: 8px; font-size: 11px; font-weight: 800;"></div>
+          </div>
+        </div>
+
+        <!-- Section 2: 取消進場 -->
+        <div id="mobileSectionCloseCancel" style="display: none;">
+          <div class="input-field">
+            <label>取消進場主要原因 <span style="color:var(--rose);">*</span></label>
+            <select id="dialogCancelReason" style="width: 100%; border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; font-size: 14px; background: #fff;">
+              <option value="案家因素">案家因素 (如：自行照顧/住院/暫無需求)</option>
+              <option value="機構因素">機構因素 (如：人力不足/時間無法配合)</option>
+              <option value="其他因素">其他因素</option>
+            </select>
+          </div>
+          <div class="input-field">
+            <label>原因備註與詳細說明</label>
+            <textarea id="dialogCancelNote" placeholder="請填寫詳細取消原因備註..." style="width: 100%; border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; font-size: 13px; min-height: 60px;"></textarea>
+          </div>
+          <div class="input-field">
+            <label>取消結案時間 <span style="color:var(--rose);">*</span></label>
+            <input type="datetime-local" id="dialogCancelCloseTime">
+            <div style="margin-top: 4px; font-size: 11px; color: #64748b; line-height: 1.4;">
+              💡 取消進場不計入 3 日服務時效指標。
+            </div>
+          </div>
+        </div>
+
+        <!-- Auth fields -->
+        <div class="input-field" style="margin-top: 10px;">
           <label>管理員員編</label>
           <input type="text" id="dialogCloseEmpId" readonly style="background:#f1f5f9; color:#64748b;">
         </div>
         <div class="input-field">
-          <label>登入密碼</label>
+          <label>登入密碼 <span style="color:var(--rose);">*</span></label>
           <input type="password" id="dialogClosePassword" placeholder="請輸入密碼">
         </div>
-        <div class="input-field">
-          <label>照護計畫審核通過日期 <span style="color:var(--rose);">*</span></label>
-          <input type="date" id="dialogCarePlanApprovedDate" onchange="assessTimeLimit()">
-        </div>
-        <div class="input-field">
-          <label>機構首次進場服務日期 <span style="color:var(--rose);">*</span></label>
-          <input type="date" id="dialogFirstServiceDate" onchange="assessTimeLimit()">
-        </div>
-        <div class="input-field">
-          <label>結案時間</label>
-          <input type="datetime-local" id="dialogCloseTime" onchange="assessTimeLimit()" oninput="assessTimeLimit()">
-          <div id="dialogCloseTimeAssessment" style="margin-top: 8px; font-size: 11px; font-weight: 800;"></div>
-        </div>
+
         <div id="dialogCloseError" style="color:var(--rose); font-size:12px; font-weight:800; margin-bottom:12px; display:none; text-align:center;"></div>
         <div class="dialog-buttons">
           <button class="btn-dialog muted" onclick="closeCloseDialog()">取消</button>
-          <button class="btn-dialog green" onclick="submitCloseCase()">確認結案</button>
+          <button id="mobileBtnSubmitClose" class="btn-dialog green" onclick="submitCloseCase()">確認派案結案</button>
         </div>
       </div>
     </div>
@@ -1286,7 +1326,7 @@
         </details>
 
         <!-- Dynamic Match Success Card (Only displayed if matched) -->
-        ${isMatched ? `
+        ${isMatched && c.status !== '已取消進場' ? `
           <details class="sheet-collapse yellow-collapse">
             <summary class="sheet-collapse-summary">🟠 媒合成功資訊</summary>
             <div style="margin-top:10px;">
@@ -1314,6 +1354,21 @@
                   }
                 </div>
                 ${c.matched_note ? `<div style="margin-top:6px; background:#ffffff; padding:6px 8px; border-radius:6px; border:1px solid #fde68a;"><strong>媒合成功備註：</strong>${c.matched_note}</div>` : ''}
+              </div>
+            </div>
+          </details>
+        ` : ''}
+
+        <!-- Dynamic Cancel Service Card -->
+        ${(c.status === '已取消進場' || c.close_type === '取消進場' || c.cancel_service_reason) ? `
+          <details class="sheet-collapse" open>
+            <summary class="sheet-collapse-summary">⚪ 取消進場結案資訊 (不計入服務時效)</summary>
+            <div style="margin-top:10px;">
+              <div class="sheet-card" style="background:#f8fafc; border:1px solid #cbd5e1; margin-bottom:0; color:#475569;">
+                <div><strong>取消原因：</strong><span style="color:#be123c; font-weight:800;">${c.cancel_service_reason || '未說明'}</span></div>
+                <div><strong>結案時間：</strong>${c.closed_at ? new Date(c.closed_at).toLocaleString() : '未知'}</div>
+                ${c.matched_facility ? `<div><strong>原媒合機構：</strong>${c.matched_facility}</div>` : ''}
+                ${c.cancel_service_note ? `<div style="margin-top:6px; background:#ffffff; padding:6px 8px; border-radius:6px; border:1px solid #cbd5e1;"><strong>詳細備註：</strong>${c.cancel_service_note}</div>` : ''}
               </div>
             </div>
           </details>
@@ -1449,6 +1504,50 @@
     }
 
     // --- Action dialog: Close Case ---
+    // --- Action dialog: Close Case ---
+    let currentMobileCloseRoute = 'service';
+
+    function switchMobileCloseCaseRoute(route) {
+      currentMobileCloseRoute = route;
+      const tabService = $("mobileTabCloseService");
+      const tabCancel = $("mobileTabCloseCancel");
+      const secService = $("mobileSectionCloseService");
+      const secCancel = $("mobileSectionCloseCancel");
+      const submitBtn = $("mobileBtnSubmitClose");
+      const errEl = $("dialogCloseError");
+      if (errEl) errEl.style.display = "none";
+
+      if (route === 'service') {
+        tabService.style.background = "#fff";
+        tabService.style.color = "#059669";
+        tabService.style.boxShadow = "0 1px 3px rgba(0,0,0,0.1)";
+
+        tabCancel.style.background = "transparent";
+        tabCancel.style.color = "#64748b";
+        tabCancel.style.boxShadow = "none";
+
+        secService.style.display = "block";
+        secCancel.style.display = "none";
+
+        submitBtn.textContent = "確認派案結案";
+        submitBtn.className = "btn-dialog green";
+      } else {
+        tabCancel.style.background = "#fff";
+        tabCancel.style.color = "#e11d48";
+        tabCancel.style.boxShadow = "0 1px 3px rgba(0,0,0,0.1)";
+
+        tabService.style.background = "transparent";
+        tabService.style.color = "#64748b";
+        tabService.style.boxShadow = "none";
+
+        secService.style.display = "none";
+        secCancel.style.display = "block";
+
+        submitBtn.textContent = "確認取消進場";
+        submitBtn.className = "btn-dialog red";
+      }
+    }
+
     function openCloseCaseDialog() {
       if (!currentDetailCase) return;
       
@@ -1456,12 +1555,17 @@
       $("dialogClosePassword").value = "";
       $("dialogCarePlanApprovedDate").value = "";
       $("dialogFirstServiceDate").value = "";
+      if ($("dialogCancelReason")) $("dialogCancelReason").value = "案家因素";
+      if ($("dialogCancelNote")) $("dialogCancelNote").value = "";
       $("dialogCloseError").style.display = "none";
 
       const now = new Date();
       const tzOffset = now.getTimezoneOffset() * 60000;
-      $("dialogCloseTime").value = (new Date(now.getTime() - tzOffset)).toISOString().slice(0, 16);
+      const localISOTime = (new Date(now.getTime() - tzOffset)).toISOString().slice(0, 16);
+      $("dialogCloseTime").value = localISOTime;
+      if ($("dialogCancelCloseTime")) $("dialogCancelCloseTime").value = localISOTime;
 
+      switchMobileCloseCaseRoute('service');
       $("closeCaseDialog").style.display = "flex";
       assessTimeLimit();
     }
@@ -1475,8 +1579,14 @@
       const firstServiceDateVal = $("dialogFirstServiceDate").value;
       const assessmentEl = $("dialogCloseTimeAssessment");
 
-      if (!carePlanDateVal || !firstServiceDateVal) {
+      if (!firstServiceDateVal) {
         assessmentEl.style.display = "none";
+        return;
+      }
+
+      if (!carePlanDateVal) {
+        assessmentEl.style.display = "block";
+        assessmentEl.innerHTML = `<span style="color:#0284c7;">ℹ️ 未填寫計畫審核日期，將以首次服務日期記錄。</span>`;
         return;
       }
 
@@ -1499,9 +1609,6 @@
     async function submitCloseCase() {
       const eid = $("dialogCloseEmpId").value;
       const pwd = $("dialogClosePassword").value;
-      const closeTime = $("dialogCloseTime").value;
-      const carePlanDate = $("dialogCarePlanApprovedDate").value;
-      const firstServiceDate = $("dialogFirstServiceDate").value;
       const errEl = $("dialogCloseError");
       errEl.style.display = "none";
 
@@ -1510,27 +1617,68 @@
         errEl.style.display = "block";
         return;
       }
-      if (!closeTime) {
-        errEl.textContent = "請選擇結案時間";
-        errEl.style.display = "block";
-        return;
-      }
-      if (!carePlanDate) {
-        errEl.textContent = "請選擇照護計畫審核通過日期";
-        errEl.style.display = "block";
-        return;
-      }
-      if (!firstServiceDate) {
-        errEl.textContent = "請選擇機構首次進場服務日期";
-        errEl.style.display = "block";
-        return;
-      }
 
-      const workingDays = getTaiwanWorkingDays(carePlanDate, firstServiceDate);
-      if (workingDays === -1) {
-        errEl.textContent = "警告：首次服務日期不可早於審核通過日期！";
-        errEl.style.display = "block";
-        return;
+      let updatePayload = {};
+
+      if (currentMobileCloseRoute === 'service') {
+        const closeTime = $("dialogCloseTime").value;
+        const carePlanDate = $("dialogCarePlanApprovedDate").value;
+        const firstServiceDate = $("dialogFirstServiceDate").value;
+
+        if (!firstServiceDate) {
+          errEl.textContent = "請選擇機構首次進場服務日期";
+          errEl.style.display = "block";
+          return;
+        }
+        if (!closeTime) {
+          errEl.textContent = "請選擇結案時間";
+          errEl.style.display = "block";
+          return;
+        }
+
+        if (carePlanDate && firstServiceDate) {
+          const workingDays = getTaiwanWorkingDays(carePlanDate, firstServiceDate);
+          if (workingDays === -1) {
+            errEl.textContent = "警告：首次服務日期不可早於審核通過日期！";
+            errEl.style.display = "block";
+            return;
+          }
+        }
+
+        updatePayload = {
+          status: '案件結案',
+          close_type: '派案進場',
+          closed_at: closeTime,
+          care_plan_approved_at: carePlanDate || null,
+          first_service_at: firstServiceDate,
+          cancel_service_reason: null,
+          cancel_service_note: null
+        };
+      } else {
+        const cancelReason = $("dialogCancelReason").value;
+        const cancelNote = $("dialogCancelNote").value.trim();
+        const cancelCloseTime = $("dialogCancelCloseTime").value;
+
+        if (!cancelReason) {
+          errEl.textContent = "請選擇取消進場原因";
+          errEl.style.display = "block";
+          return;
+        }
+        if (!cancelCloseTime) {
+          errEl.textContent = "請選擇取消結案時間";
+          errEl.style.display = "block";
+          return;
+        }
+
+        updatePayload = {
+          status: '已取消進場',
+          close_type: '取消進場',
+          closed_at: cancelCloseTime,
+          care_plan_approved_at: null,
+          first_service_at: null,
+          cancel_service_reason: cancelReason,
+          cancel_service_note: cancelNote || null
+        };
       }
 
       try {
@@ -1548,21 +1696,22 @@
         }
 
         // Close the case
-        const { error: updateErr } = await sb.from('cases').update({
-          status: '案件結案',
-          closed_at: closeTime,
-          care_plan_approved_at: carePlanDate,
-          first_service_at: firstServiceDate
-        }).eq('case_id', currentDetailCase.case_id);
+        const { error: updateErr } = await sb.from('cases')
+          .update(updatePayload)
+          .eq('case_id', currentDetailCase.case_id);
 
         if (updateErr) throw updateErr;
 
-        alert("已成功完成結案！");
+        if (currentMobileCloseRoute === 'service') {
+          alert("已成功完成派案結案！");
+        } else {
+          alert("已成功登記取消進場並結案歸檔（不計入服務時效）！");
+        }
         closeCloseDialog();
         closeDetailsSheet();
         fetchMyCases();
       } catch (err) {
-        errEl.textContent = "結案失敗：" + err.message;
+        errEl.textContent = "操作失敗：" + err.message;
         errEl.style.display = "block";
       }
     }
