@@ -1729,7 +1729,96 @@
       dropdown.style.marginTop = '4px';
       dropdown.style.top = '100%';
       dropdown.style.left = '0';
-     // --- KPI 統計 ---
+      
+      input.parentElement.style.position = 'relative';
+      input.parentElement.appendChild(dropdown);
+
+      function renderList(filterText = '') {
+        const lowerFilter = filterText.toLowerCase();
+        const matches = allFacilities.filter(f => f.name.toLowerCase().includes(lowerFilter));
+        
+        if (matches.length === 0) {
+          dropdown.innerHTML = `<div style="padding: 10px; color: #94a3b8; font-size: 13px; text-align: center;">查無機構</div>`;
+          return;
+        }
+
+        dropdown.innerHTML = matches.map(f => {
+          const hasLine = (f.line_group_id && f.line_group_id.trim() !== '');
+          const lineBadge = hasLine 
+            ? `<span style="background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; font-size:10px; font-weight:800; padding:2px 6px; border-radius:6px; flex-shrink:0;">🟢 LINE 已綁定</span>`
+            : `<span style="background:#f1f5f9; color:#94a3b8; border:1px solid #e2e8f0; font-size:10px; font-weight:700; padding:2px 6px; border-radius:6px; flex-shrink:0;">⚪ 無 LINE 群組</span>`;
+
+          const shortTag = f.short ? `<span style="color:#be123c; font-weight:900; margin-right:4px;">【${f.short}】</span>` : '';
+
+          return `
+            <div class="fac-option" style="padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 13px; color: var(--text-strong); display: flex; align-items: center; justify-content: space-between; gap: 8px; transition: background 0.2s;"
+                 onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='none'"
+                 data-val="${f.name}">
+              <span style="font-weight: 700; color: #1e293b; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                ${shortTag}${f.name}
+                ${f.area ? `<span style="color: #64748b; font-size: 11px; font-weight: normal;">📍 ${f.area}</span>` : ''}
+              </span>
+              ${lineBadge}
+            </div>
+          `;
+        }).join('');
+
+        const options = dropdown.querySelectorAll('.fac-option');
+        options.forEach(opt => {
+          opt.addEventListener('mousedown', (e) => {
+            e.preventDefault(); 
+            input.value = opt.getAttribute('data-val');
+            dropdown.style.display = 'none';
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+          });
+        });
+      }
+
+      input.addEventListener('focus', () => {
+        renderList(input.value);
+        dropdown.style.display = 'block';
+      });
+
+      input.addEventListener('input', () => {
+        renderList(input.value);
+        dropdown.style.display = 'block';
+      });
+
+      input.addEventListener('blur', () => {
+        dropdown.style.display = 'none';
+      });
+    }
+
+    async function loadFacilities() {
+      const { data } = await sb.from('facilities').select('id, facility_name, short_name, phone, service_area, is_round_1, line_group_id');
+      if (data) {
+        allFacilities = data.map(f => ({
+          id: f.id, name: f.facility_name, short: f.short_name, phone: f.phone, area: f.service_area, is_round_1: f.is_round_1, line_group_id: f.line_group_id
+        }));
+        attachFacilityAutocomplete('matchFacilityInput');
+      }
+    }
+
+    async function fetchData() {
+      try {
+        const { data: cases } = await sb.from('cases').select('*').order('created_at', { ascending: false });
+        const { data: replies } = await sb.from('replies').select('*');
+        
+        allCases = (cases || [])
+          .filter(c => c.status !== '系統刪除')
+          .map(c => ({
+            ...c,
+            replies: (replies || []).filter(r => r.case_id === c.case_id)
+          }));
+
+        renderTable();
+        updateKPI();
+        updateInsights();
+        initUI();
+      } catch (err) { console.error("Fetch error:", err); }
+    }
+
+    // --- KPI 統計 ---
     function updateKPI() {
       $("kpiTotal").textContent = allCases.length;
       $("kpiPending").textContent = allCases.filter(c => c.status === '一輪媒合中' || c.status === '合作機構(一輪)').length;
