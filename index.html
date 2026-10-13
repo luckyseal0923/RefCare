@@ -1772,7 +1772,8 @@
       });
     }
 
-    function initForm() {
+    async function initForm() {
+      await window.refcareReady;
       generateCaseId();
       $("referralTime").value = getTaiwanDateTimeLocal();
       updateSidebar();
@@ -1790,12 +1791,7 @@
       
       try {
         showStatus("success", "驗證中...");
-        const { data, error } = await window.supabaseClient
-          .from('case_managers')
-          .select('*')
-          .eq('emp_id', eid)
-          .eq('password', pwd)
-          .single();
+        const { data, error } = await window.refcareAuth.login(eid, pwd);
         
         if (error || !data) {
           showStatus("error", "員編或密碼錯誤");
@@ -1808,6 +1804,7 @@
         $("hospitalExt").value = data.ext || "";
         showStatus("success", `驗證成功：歡迎 ${data.name}`);
         updateSidebar();
+        await loadFacilities();
       } catch (err) {
         showStatus("error", "驗證失敗，請檢查網路");
       }
@@ -2472,39 +2469,10 @@
           throw new Error("Supabase 未初始化");
         }
         
-        // 1. 檢查員編是否已存在
-        const { data: existing, error: checkError } = await sb
-          .from('case_managers')
-          .select('id')
-          .eq('emp_id', eid)
-          .maybeSingle();
-          
-        if (existing) {
-          msgEl.textContent = "此員編已被註冊，請使用其他員編";
-          msgEl.style.display = "block";
-          msgEl.style.color = "#e11d48";
-          msgEl.style.background = "#fff1f2";
-          msgEl.style.border = "1px solid #fda4af";
-          return;
-        }
-        
-        // 2. 插入新帳號 (預設為待啟用，角色為個案管理師)
-        const newManager = {
-          emp_id: eid,
-          password: pwd,
-          name: name,
-          email: email,
-          phone: phone,
-          hospital: hospital,
-          ext: ext,
-          role: '個案管理師',
-          approved: false
-        };
-        
-        const { error: insertError } = await sb
-          .from('case_managers')
-          .insert([newManager]);
-          
+        const { error: insertError } = await window.refcareAuth.register({
+          emp_id: eid, password: pwd, name, email, phone, hospital, ext
+        });
+
         if (insertError) {
           throw insertError;
         }

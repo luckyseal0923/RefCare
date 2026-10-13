@@ -953,34 +953,7 @@
     ========================= */
     function getQueryParams() {
       const params = new URLSearchParams(window.location.search);
-      return {
-        case_id: params.get("case_id") || "REF-20260330-WF79",
-        hospital: params.get("hospital") || "萬芳醫院急診",
-        patient_name: params.get("patient_name") || "王阿滿",
-        age: params.get("age") || "82",
-        gender: params.get("gender") || "女",
-        height: params.get("height") || "155",
-        weight: params.get("weight") || "48",
-        address: params.get("address") || "台北市文山區興隆路三段 88 號 5 樓",
-        diagnosis: params.get("diagnosis") || params.get("case_summary") || "肺炎治療後病況穩定，因反覆跌倒與生活功能下降，出院後需持續居家照護與日常生活協助。",
-        cms_level: params.get("cms_level") || "第 6 級",
-        mobility: params.get("mobility") || "無法行走，但可站立",
-        consciousness: params.get("consciousness") || "清楚",
-        service_type: params.get("service_type") || "居家服務",
-        service_time: params.get("service_time") || "週一至週五白天",
-        service_codes: params.get("service_codes") || encodeURIComponent(JSON.stringify([
-          "BA01 基本身體清潔",
-          "BA04 協助餵食或灌食",
-          "BA11 肢體關節活動"
-        ])),
-        case_summary: params.get("case_summary") || "個案與女兒同住，主要照顧者白天需上班，返家前希望先銜接居家服務，協助清潔、移位與進食照顧。",
-        special: params.get("special") || params.get("special_need_long") || "高跌倒風險、需女性居服員",
-        case_manager: params.get("case_manager") || "林個管",
-        case_manager_phone: params.get("case_manager_phone") || "0912-345678",
-        case_manager_ext: params.get("case_manager_ext") || "1234",
-        created_at: params.get("created_at") || new Date().toISOString(),
-        status: params.get("status") || ""
-      };
+      return { case_id: params.get("case_id") || "" };
     }
 
     function showClosedCaseView(caseId) {
@@ -1042,7 +1015,10 @@
             .eq('case_id', queryData.case_id)
             .single();
           
-          if (!error && sbData) {
+          if (error || !sbData) {
+            throw new Error("此案件目前無法讀取，請聯絡原起案個管師。");
+          }
+          if (sbData) {
             // Supabase case data loaded log removed
             data = {
               ...queryData,
@@ -1060,7 +1036,8 @@
             await loadFacilities(TARGET_FACILITY_IDS, sbData.case_id);
           }
         } catch (err) {
-          console.warn("Supabase fetch error:", err);
+          document.querySelector(".wrap").textContent = "案件載入失敗，請聯絡原起案個管師取得可用連結。";
+          return;
         }
       }
 
@@ -1538,7 +1515,7 @@ ${cleanUrl}`;
 
         // 存入 Supabase
         if (window.supabaseClient) {
-          const { error: sbError } = await window.supabaseClient
+          const { data: savedReply, error: sbError } = await window.supabaseClient
             .from('replies')
             .insert([{
               case_id: payload.case_id,
@@ -1550,58 +1527,13 @@ ${cleanUrl}`;
             }]);
           
           if (sbError) throw sbError;
+          window.replyNotificationSent = savedReply?.[0]?.notification_sent === true;
 
-          // 🆕 困難派案半自動順序發送邏輯
-          const cData = window.currentCaseData;
-          if (cData && cData.target_group === "困難派案(三輪)" && Array.isArray(cData.target_facility_queue) && cData.target_facility_queue.length > 0) {
-            const queue = cData.target_facility_queue;
-            const currentIdx = parseInt(cData.current_queue_index) || 0;
-
-            if (replyStatus === "accept") {
-              // 有人力 -> 標記媒合成功，停止後續發送
-              await window.supabaseClient.from('cases').update({
-                status: "媒合成功",
-                queue_status: "MATCHED"
-              }).eq('case_id', payload.case_id);
-            } else if (replyStatus === "reject") {
-              // 無人力 -> 自動推進至下一家
-              const nextIdx = currentIdx + 1;
-              if (nextIdx < queue.length) {
-                const nextFac = queue[nextIdx];
-                await window.supabaseClient.from('cases').update({
-                  current_queue_index: nextIdx,
-                  queue_status: "WAITING_REPLY",
-                  target_group_line_id: nextFac.line_group_id || ""
-                }).eq('case_id', payload.case_id);
-
-                // 發送 N8N Webhook 給下一家
-                fetch(N8N_WEBHOOKS.difficult, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    ...cData,
-                    current_queue_index: nextIdx,
-                    target_group_line_id: nextFac.line_group_id || ""
-                  })
-                }).catch(e => console.warn('[Auto-advance Webhook Error]', e));
-              } else {
-                // 已無下家 -> 媒合失敗
-                await window.supabaseClient.from('cases').update({
-                  status: "媒合失敗",
-                  queue_status: "ENDED"
-                }).eq('case_id', payload.case_id);
-              }
-            } else if (replyStatus === "coordinate") {
-              // 部分時段有人力 -> 暫停，等待個管師確認
-              await window.supabaseClient.from('cases').update({
-                queue_status: "PAUSED_PARTIAL"
-              }).eq('case_id', payload.case_id);
-            }
-          }
+          // Assignment, duplicate reply and queue updates are checked atomically by the backend.
         }
 
         // 🔔 N8N：機構回覆通知
-        notifyN8N(N8N_WEBHOOKS.facilityReply, payload);
+        // The backend sends the reply notification after the atomic database save.
 
         const statusMap = {
           "accept": "可收案",
@@ -1611,7 +1543,7 @@ ${cleanUrl}`;
 
         showStatus(
           "success",
-          `已成功回覆：${statusMap[replyStatus]}！系統正為您轉跳感謝頁面...`
+          `已成功回覆：${statusMap[replyStatus]}！${window.replyNotificationSent ? "" : "LINE 通知尚未送出，請另行聯絡個管師。"}系統正為您轉跳感謝頁面...`
         );
 
         setTimeout(() => {

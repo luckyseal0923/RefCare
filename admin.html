@@ -3973,11 +3973,7 @@
       errEl.style.display = "none";
 
       try {
-        const { data, error } = await sb.from('case_managers')
-          .select('*')
-          .eq('emp_id', eid)
-          .eq('password', pwd)
-          .single();
+        const { data, error } = await window.refcareAuth.login(eid, pwd);
         
         if (error || !data) {
           errEl.textContent = "員編或密碼錯誤，請重新輸入";
@@ -4012,7 +4008,7 @@
         return;
       }
 
-      const replyUrl = window.location.origin + window.location.pathname.replace('admin.html', 'facility.html') + '?case_id=' + id;
+      const replyUrl = await window.refcareAuth.replyLink(id);
       const serviceCodesStr = Array.isArray(c.service_codes) && c.service_codes.length > 0 ? c.service_codes.join(', ') : (c.service_codes || '無');
 
       const messageText = `📋【 RefCare 個案轉介資訊 】
@@ -4056,7 +4052,7 @@ ${replyUrl}`;
     }
 
     async function copyFacilityLink(id) {
-      const url = window.location.origin + window.location.pathname.replace('admin.html', 'facility.html') + '?case_id=' + id;
+      const url = await window.refcareAuth.replyLink(id);
       try {
         await navigator.clipboard.writeText(url);
       } catch (err) {
@@ -4230,7 +4226,7 @@ ${replyUrl}`;
         ext: $("editMExt").value.trim()
       };
 
-      if (!updates.emp_id || !updates.password || !updates.name) {
+      if (!updates.emp_id || !updates.name) {
         return alert("請填寫必填欄位");
       }
 
@@ -4479,39 +4475,10 @@ ${replyUrl}`;
       }
       
       try {
-        // 1. 檢查員編是否已存在
-        const { data: existing, error: checkError } = await sb
-          .from('case_managers')
-          .select('id')
-          .eq('emp_id', eid)
-          .maybeSingle();
-          
-        if (existing) {
-          msgEl.textContent = "此員編已被註冊，請使用其他員編";
-          msgEl.style.display = "block";
-          msgEl.style.color = "#e11d48";
-          msgEl.style.background = "#fff1f2";
-          msgEl.style.border = "1px solid #fda4af";
-          return;
-        }
-        
-        // 2. 插入新帳號 (預設為待啟用，角色為個案管理師)
-        const newManager = {
-          emp_id: eid,
-          password: pwd,
-          name: name,
-          email: email,
-          phone: phone,
-          hospital: hospital,
-          ext: ext,
-          role: '個案管理師',
-          approved: false
-        };
-        
-        const { error: insertError } = await sb
-          .from('case_managers')
-          .insert([newManager]);
-          
+        const { error: insertError } = await window.refcareAuth.register({
+          emp_id: eid, password: pwd, name, email, phone, hospital, ext
+        });
+
         if (insertError) {
           throw insertError;
         }
@@ -4554,11 +4521,7 @@ ${replyUrl}`;
       errEl.style.display = "none";
 
       try {
-        const { data, error } = await sb.from('case_managers')
-          .select('*')
-          .eq('emp_id', eid)
-          .eq('password', pwd)
-          .single();
+        const { data, error } = await window.refcareAuth.login(eid, pwd);
         
         if (error || !data) {
           errEl.textContent = "員編或密碼錯誤，請重新輸入";
@@ -4610,14 +4573,16 @@ ${replyUrl}`;
       }
     }
 
-    function doLogout() {
+    async function doLogout() {
       if (confirm("確定要登出系統嗎？")) {
+        await window.refcareAuth.logout();
         sessionStorage.clear();
         location.reload();
       }
     }
 
-    function checkLogin() {
+    async function checkLogin() {
+      await window.refcareReady;
       const savedEid = sessionStorage.getItem('admin_token');
       const savedRole = sessionStorage.getItem('admin_role');
       if (savedEid && savedRole) {
@@ -4636,7 +4601,7 @@ ${replyUrl}`;
     }
 
     // --- 初始化 ---
-    document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener("DOMContentLoaded", async () => {
       preloadTaiwanHolidays();
       $("drawerOverlay").onclick = closeDrawer;
       $("drawerClose").onclick = closeDrawer;
@@ -4648,7 +4613,7 @@ ${replyUrl}`;
       $("closeCaseTimeInput").oninput = updateCloseCaseAssessment;
       $("closeCaseTimeInput").onchange = updateCloseCaseAssessment;
 
-      if (!checkLogin()) {
+      if (!(await checkLogin())) {
         // 如果沒登入，就不自動抓資料
         return;
       }
@@ -4801,19 +4766,10 @@ ${replyUrl}`;
       const pwd = prompt('請輸入密碼：');
       if (!pwd) return false;
       
-      if (empId === 'admin' && pwd === 'admin123') {
-        sessionStorage.setItem('isAdminAuthorized', 'true');
-        alert('管理者登入成功！');
-        return true;
-      }
-      
       try {
-        const { data, error } = await sb.from('case_managers')
-          .select('role, password')
-          .eq('emp_id', empId)
-          .single();
+        const { data, error } = await window.refcareAuth.login(empId, pwd);
           
-        if (data && data.password === pwd && data.role === '系統管理員') {
+        if (data && !error && data.role === '系統管理員') {
           sessionStorage.setItem('isAdminAuthorized', 'true');
           alert('驗證成功，已取得管理者權限。');
           return true;
