@@ -167,13 +167,25 @@ function createApp(options = {}) {
     assert(match && TABLES.has(match[1]), 404, '找不到此功能');
     const table = match[1]; const params = new URLSearchParams(url.searchParams);
     assert(['GET', 'POST', 'PATCH', 'DELETE'].includes(req.method), 405, '不支援此操作');
-    assert(![...params.keys()].some(k => ['or', 'and', 'not', 'columns'].includes(k)), 400, '不支援此查詢');
+    assert(![...params.keys()].some(k => ['or', 'and', 'not'].includes(k)), 400, '不支援此查詢');
+    const insertColumns = params.getAll('columns');
+    assert(!insertColumns.length || (req.method === 'POST' && insertColumns.length === 1), 400, '不支援此查詢');
     const projection = params.get('select') || '*';
     assert(/^(\*|[a-z_][a-z0-9_]*(,[a-z_][a-z0-9_]*)*)$/.test(projection), 400, '不支援關聯查詢');
     assert(!projection.split(',').some(k => HIDDEN.has(k)), 403, '此欄位不可讀取');
     const user = req.headers['x-refcare-case-id'] ? null : await staff(req); const isAdmin = user?.role === '系統管理員'; const access = user ? null : await grant(req);
     assert(user || access, 401, '請先登入或使用有效的案件回覆連結');
     let input; if (req.method !== 'GET') { writes(); input = await body(req); }
+    if (insertColumns.length) {
+      // Supabase SDK array inserts include quoted columns. They must match the full body.
+      assert(insertColumns[0].length <= 8192 && /^"[a-z_][a-z0-9_]*"(,"[a-z_][a-z0-9_]*")*$/.test(insertColumns[0]), 400, '新增欄位清單無效');
+      const rows = Array.isArray(input) ? input : [input];
+      assert(rows.length > 0 && rows.every(x => x && typeof x === 'object' && !Array.isArray(x)), 400, '資料格式錯誤');
+      const fields = new Set(insertColumns[0].split(',').map(x => x.slice(1, -1)));
+      const submitted = new Set(rows.flatMap(x => Object.keys(x)));
+      assert(fields.size === submitted.size && [...submitted].every(k => fields.has(k)), 400, '新增欄位清單與資料不一致');
+      params.delete('columns');
+    }
     let result;
     if (!user) {
       assert((!ADMIN_TABLES.has(table) || (table === 'case_managers' && req.method === 'GET') || (table === 'platform_feedbacks' && req.method === 'POST')) && table !== 'facility_groups', 403, '權限不足');
@@ -233,6 +245,8 @@ function createApp(options = {}) {
           }
         }
       }
+      // Rebuild after server profile injection so the SDK cannot omit trusted fields.
+      if (insertColumns.length) params.set('columns', [...new Set((Array.isArray(input) ? input : [input]).flatMap(x => Object.keys(x)))].map(k => `"${k}"`).join(','));
       result = table === 'platform_feedbacks' && req.method === 'POST' ? await saveFeedback(input) : await db(table, params, req.method, input, req.headers.prefer);
       result.data = clean(result.data);
     }

@@ -2,6 +2,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { createApp, hashPassword, passwordMatches } = require('../server.cjs');
+const { createClient } = require('@supabase/supabase-js');
 
 const admin = { id: 'admin-id', emp_id: 'admin-test', password: 'disposable-test-password', role: '系統管理員', approved: true, name: 'Test Admin', hospital: 'Test Hospital', phone: '000', ext: '00' };
 const employee = { ...admin, id: 'staff-id', emp_id: 'staff-test', role: '個案管理師' };
@@ -44,6 +45,71 @@ async function fixture(t, overrides = {}) {
   return { request, login, calls, tables };
 }
 const grantHeaders = { 'X-RefCare-Case-Id': activeCase.case_id, 'X-RefCare-Reply-Token': activeCase.reply_access_token };
+function sdk(f, headers = {}) {
+  return createClient('http://refcare.test/api/supabase', 'disposable-sdk-key', {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    realtime: { transport: class DisabledRealtime { constructor() { throw new Error('REST tests must not open WebSocket connections'); } } },
+    global: { fetch: (input, init) => {
+      const url = new URL(input);
+      return f.request(url.pathname + url.search, { ...init, headers: { ...Object.fromEntries(new Headers(init.headers)), ...headers } });
+    } },
+  });
+}
+
+test('real Supabase SDK bulk insert preserves server-owned case profile fields', async t => {
+  const f = await fixture(t); const { cookie } = await f.login('staff-test');
+  const row = { case_id: 'SDK-TEST-CASE', status: '一輪媒合中', service_codes: ['BA17a'], address_detail: { county: 'Virtual county' } };
+  const result = await sdk(f, { Cookie: cookie }).from('cases').insert([row]).select('case_id,hospital,case_manager,case_manager_phone,case_manager_ext');
+  assert.equal(result.error, null);
+  assert.equal(result.status, 201);
+  assert.deepEqual(result.data, [{ case_id: row.case_id, hospital: employee.hospital, case_manager: employee.name, case_manager_phone: employee.phone, case_manager_ext: employee.ext }]);
+  const call = f.calls.find(c => c.method === 'POST' && c.url.pathname.endsWith('/cases'));
+  assert.ok(call);
+  const columns = call.url.searchParams.get('columns').split(',').map(x => JSON.parse(x));
+  assert.deepEqual(new Set(columns), new Set(Object.keys(JSON.parse(call.body)[0])));
+  assert.deepEqual(JSON.parse(call.body)[0].address_detail, row.address_detail);
+  assert.equal(f.calls.some(c => c.url.hostname === 'n8nwfh.zeabur.app'), false);
+});
+
+test('real SDK facility reply insert with columns still uses scoped atomic RPC', async t => {
+  const f = await fixture(t);
+  const result = await sdk(f, grantHeaders).from('replies').insert([{ case_id: activeCase.case_id, facility_id: activeCase.target_facility_ids[0], reply_status: 'accept', note: 'Virtual SDK test' }]);
+  assert.equal(result.error, null);
+  assert.equal(result.status, 201);
+  assert.ok(f.calls.some(c => c.url.pathname.endsWith('/rpc/refcare_submit_reply')));
+  assert.equal(f.calls.some(c => c.method === 'POST' && c.url.pathname.endsWith('/replies')), false);
+});
+
+test('real SDK platform feedback insert validates and saves all required fields', async t => {
+  const f = await fixture(t);
+  const row = { name: 'Virtual reporter', facility_name: 'Virtual facility', phone: '000', issue: 'SDK test only' };
+  const result = await sdk(f, grantHeaders).from('platform_feedbacks').insert([row]);
+  assert.equal(result.error, null);
+  assert.deepEqual(f.tables.platform_feedbacks, [row]);
+});
+
+test('insert columns cannot hide submitted control fields or change the body projection', async t => {
+  const f = await fixture(t); const { cookie } = await f.login();
+  for (const columns of ['"case_id"', '"case_id","status","other"', '"case_id",cases(*)', 'case_id,status']) {
+    const r = await f.request('/api/supabase/rest/v1/cases?columns=' + encodeURIComponent(columns), { method: 'POST', headers: { Cookie: cookie }, body: JSON.stringify([{ case_id: 'BAD-COLUMNS', status: '一輪媒合中' }]) });
+    assert.equal(r.status, 400);
+  }
+  const forbidden = { case_id: 'FORBIDDEN-COLUMNS', legacy_reply_link_enabled: true };
+  const r = await f.request('/api/supabase/rest/v1/cases?columns=' + encodeURIComponent('"case_id","legacy_reply_link_enabled"'), { method: 'POST', headers: { Cookie: cookie }, body: JSON.stringify([forbidden]) });
+  assert.equal(r.status, 403);
+  assert.equal(f.calls.some(c => c.method === 'POST' && c.url.pathname.endsWith('/cases')), false);
+});
+
+test('columns stays unavailable for reads, updates and duplicate query parameters', async t => {
+  const f = await fixture(t); const { cookie } = await f.login();
+  for (const method of ['GET', 'PATCH', 'DELETE']) {
+    const r = await f.request('/api/supabase/rest/v1/cases?case_id=eq.TEST-A&columns=%22status%22', { method, headers: { Cookie: cookie }, ...(method === 'GET' ? {} : { body: '{"status":"案件結案"}' }) });
+    assert.equal(r.status, 400);
+  }
+  const r = await f.request('/api/supabase/rest/v1/cases?columns=%22case_id%22&columns=%22case_id%22', { method: 'POST', headers: { Cookie: cookie }, body: '[{"case_id":"DUPLICATE-COLUMNS"}]' });
+  assert.equal(r.status, 400);
+  assert.equal(f.calls.some(c => ['POST', 'PATCH', 'DELETE'].includes(c.method)), false);
+});
 
 test('anonymous database request is rejected', async t => { const f = await fixture(t); const r = await f.request('/api/supabase/rest/v1/cases'); assert.equal(r.status, 401); assert.equal(f.calls.length, 0); });
 test('login returns only safe identity and an HttpOnly session', async t => { const f = await fixture(t); const { response, cookie } = await f.login(); assert.equal(response.status, 200); assert.match(response.headers.get('set-cookie'), /HttpOnly; SameSite=Lax/); const x = await response.json(); assert.equal(x.data.password, undefined); assert.ok(cookie); assert.ok(f.calls.every(c => !c.url.searchParams.has('password'))); });
