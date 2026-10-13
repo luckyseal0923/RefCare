@@ -204,12 +204,14 @@ function createApp(options = {}) {
         try {
           const facility = await one('facilities', { id: `eq.${item.facility_id}`, select: 'facility_name' });
           await notify('https://n8nwfh.zeabur.app/webhook/facility_reply', { case_id: access.case_id, facility_id: item.facility_id, facility_name: facility?.facility_name || '', reply: item.reply_status, reply_note: item.note, reporter: item.reporter || '', reply_time: new Date().toISOString() });
-          if (saved.data.advance) {
-            const updated = await one('cases', { case_id: `eq.${access.case_id}`, select: '*' });
-            await notify('https://n8nwfh.zeabur.app/webhook/case_difficult', { ...clean(updated), reply_url: replyLink(updated) });
-          }
           sent = true;
         } catch { /* A saved reply must never be reported as unsaved merely because LINE failed. */ }
+        if (saved.data.advance) {
+          try {
+            const updated = await one('cases', { case_id: `eq.${access.case_id}`, select: '*' });
+            await notify('https://n8nwfh.zeabur.app/webhook/case_difficult', { ...clean(updated), reply_url: replyLink(updated) });
+          } catch { sent = false; }
+        }
         return json(res, 201, [{ saved: true, notification_sent: sent }]);
       } else if (table === 'platform_feedbacks' && req.method === 'POST') {
         // Feedback is available for a granted facility, with no read permission.
