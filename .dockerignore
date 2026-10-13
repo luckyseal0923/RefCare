@@ -1,0 +1,12 @@
+.git
+node_modules
+dist
+.env
+.env.*
+*.log
+tests
+docs
+*.sql
+*.xlsx
+*.docx
+n8n_workflow*.json

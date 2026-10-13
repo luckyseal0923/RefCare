@@ -913,7 +913,8 @@
     let activeReplyTab = 'all';
 
     // --- Check login status ---
-    window.onload = function() {
+    window.onload = async function() {
+      await window.refcareReady;
       preloadTaiwanHolidays();
       if (checkLoginStatus()) {
         initApp();
@@ -954,11 +955,7 @@
       }
 
       try {
-        const { data, error } = await sb.from('case_managers')
-          .select('*')
-          .eq('emp_id', eid)
-          .eq('password', pwd)
-          .single();
+        const { data, error } = await window.refcareAuth.login(eid, pwd);
 
         if (error || !data) {
           errEl.textContent = "員編或密碼錯誤";
@@ -984,8 +981,9 @@
       }
     }
 
-    function handleLogout() {
+    async function handleLogout() {
       if (confirm("確定要登出行動工作台嗎？")) {
+        await window.refcareAuth.logout();
         sessionStorage.clear();
         location.reload();
       }
@@ -1683,11 +1681,7 @@
 
       try {
         // Authenticate credentials
-        const { data, error } = await sb.from('case_managers')
-          .select('*')
-          .eq('emp_id', eid)
-          .eq('password', pwd)
-          .single();
+        const { data, error } = await window.refcareAuth.login(eid, pwd);
 
         if (error || !data) {
           errEl.textContent = "密碼驗證失敗";
@@ -1803,7 +1797,7 @@
     }
 
     async function copyCaseLink(caseId) {
-      const url = window.location.origin + window.location.pathname.replace('mobile.html', 'facility.html') + '?case_id=' + caseId;
+      const url = await window.refcareAuth.replyLink(caseId);
       try {
         await navigator.clipboard.writeText(url);
       } catch (err) {
