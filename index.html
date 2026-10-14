@@ -1141,8 +1141,9 @@
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
+  <script type="module" src="/src/site-update.js"></script>
 </head>
-<body>
+<body data-refcare-page="portal" data-refcare-draft-scope="body">
   <div id="status" class="status"></div>
 
   <!-- CM Register Modal Overlay -->
@@ -1273,6 +1274,7 @@
   </header>
 
   <main class="page">
+    <div class="refcare-mobile-update" aria-label="網站更新"><div data-refcare-update="compact"></div></div>
     <section class="workflow-card">
       <div class="workflow-title">
         <div>
@@ -1307,8 +1309,8 @@
               <a href="javascript:void(0)" onclick="openCMRegisterModal()" style="color:#0f766e; text-decoration:none; font-size:13px; font-weight:900; background:#ccfbf1; padding:6px 12px; border-radius:10px; transition: all 0.2s;">個管師帳號申請</a>
             </div>
             <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center;">
-              <input type="text" id="empIdAuth" placeholder="員編" style="flex:1; min-width:140px;" />
-              <input type="password" id="empPasswordAuth" placeholder="密碼" style="flex:1; min-width:140px;" />
+              <input type="text" id="empIdAuth" data-refcare-update-ignore placeholder="員編" style="flex:1; min-width:140px;" />
+              <input type="password" id="empPasswordAuth" data-refcare-update-ignore placeholder="密碼" style="flex:1; min-width:140px;" />
               <button type="button" class="btn btn-primary" onclick="authByEmpId()" style="width:120px; padding:12px; margin:0; border-radius:12px;">驗證</button>
             </div>
           </div>
@@ -1567,7 +1569,7 @@
             <button type="button" class="btn btn-secondary" onclick="openFacModal()" style="padding:8px 16px; font-size:13px;">➕ 選擇機構 / 群組</button>
           </div>
 
-          <div id="selectedFacList" class="facility-list">
+          <div id="selectedFacList" class="facility-list" data-refcare-draft-action>
             <div style="grid-column:1/-1; text-align:center; padding:20px; color:#94a3b8; font-size:14px;">尚未選擇任何機構</div>
           </div>
         </section>
@@ -1601,6 +1603,10 @@
             <div class="kpi"><div class="kpi-value">--</div><div class="kpi-label">待媒合</div></div>
           </div>
         </section>
+        <section class="summary-card" aria-label="網站更新">
+          <h2 class="section-title" style="font-size:17px; margin-bottom:14px;">網站更新</h2>
+          <div data-refcare-update="card"></div>
+        </section>
       </aside>
     </div>
   </main>
@@ -1612,7 +1618,7 @@
         <button onclick="closeServiceModal()" style="border:none; background:none; color:white; font-size:24px; cursor:pointer;">×</button>
       </div>
       <div class="modal-body">
-        <div id="serviceListDisplay" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:10px;">
+        <div id="serviceListDisplay" data-refcare-draft-action style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:10px;">
           <!-- 動態渲染服務碼 -->
         </div>
       </div>
@@ -1634,9 +1640,9 @@
           <button class="btn btn-light" style="padding:6px 12px; font-size:12px;" onclick="openGrpAdd()">＋ 新增群組</button>
         </div>
         <div style="margin-bottom:16px;">
-          <input type="text" id="facSearchInput" placeholder="搜尋機構名稱、區域..." oninput="renderFacList()" />
+          <input type="text" id="facSearchInput" data-refcare-update-ignore placeholder="搜尋機構名稱、區域..." oninput="renderFacList()" />
         </div>
-        <div id="facListWrap" class="fac-list">
+        <div id="facListWrap" class="fac-list" data-refcare-draft-action>
         </div>
       </div>
       <div class="modal-foot">

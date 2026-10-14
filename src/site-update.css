@@ -1,0 +1,23 @@
+.refcare-update-widget { display: grid; gap: 8px; min-width: 0; color: #475569; font-family: inherit; }
+.refcare-version-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px; font-size: 12px; }
+.refcare-version-row strong { color: #334155; font-variant-numeric: tabular-nums; }
+.refcare-update-status { margin: 0; font-size: 12px; line-height: 1.6; color: #64748b; overflow-wrap: anywhere; }
+.refcare-update-button { border: 1px solid #cbd5e1; background: #f8fafc; color: #334155; border-radius: 12px; padding: 10px 14px; cursor: pointer; font: inherit; font-size: 13px; font-weight: 800; transition: background .15s, border-color .15s; }
+.refcare-update-button:hover { background: #eef2f6; border-color: #94a3b8; }
+.refcare-update-button:focus-visible { outline: 3px solid #38bdf8; outline-offset: 3px; }
+.refcare-update-button:disabled { cursor: wait; opacity: .6; }
+.refcare-has-update .refcare-update-status { color: #92400e; font-weight: 800; }
+.refcare-has-update .refcare-update-button { border-color: #f59e0b; background: #fffbeb; color: #92400e; }
+[data-refcare-update="compact"] { gap: 4px; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 14px; background: #fff; max-width: 300px; }
+[data-refcare-update="compact"] .refcare-update-button { padding: 7px 12px; }
+.refcare-mobile-update { display: none; }
+.refcare-login-update { margin-top: 18px; padding-top: 16px; border-top: 1px solid #e2e8f0; }
+@media (max-width: 768px) {
+  .refcare-mobile-update { display: block; margin-bottom: 16px; }
+  .refcare-mobile-update [data-refcare-update] { max-width: none; }
+}
+@media (max-width: 640px) {
+  body[data-refcare-page="admin"] .topbar { flex-wrap: wrap; }
+  body[data-refcare-page="admin"] .top-actions { justify-content: flex-start; width: 100%; }
+  body[data-refcare-page="admin"] .top-actions [data-refcare-update] { max-width: none; flex: 1; min-width: 210px; }
+}
