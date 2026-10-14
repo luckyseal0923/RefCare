@@ -673,6 +673,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script type="module" src="/src/site-update.js"></script>
+  <script type="module" src="/src/refcare-time.js"></script>
   <style>
     /* Admin Login & Register Overlay */
     .admin-login-overlay {
@@ -1985,7 +1986,7 @@
       } else {
         $("emptyState").style.display = "none";
         $("tableBody").innerHTML = filtered.map((c, idx) => {
-          const dateStr = new Date(c.created_at).toLocaleString('zh-TW', { hour12: false, year: 'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+          const dateStr = new Date(c.created_at).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false, year: 'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
           const progress = getReplyProgress(c);
            const badgeClass = getGroupBadgeClass(c.target_group, c.status);
            const getFacShortName = (fullName) => {
@@ -2152,7 +2153,7 @@
       if (!c) return;
       currentEditingIndex = idx;
       $("drawerPatientName").textContent = c.patient_name;
-      $("drawerMeta").textContent = `${c.case_id}｜${c.hospital}｜${new Date(c.created_at).toLocaleString()}`;
+      $("drawerMeta").textContent = `${c.case_id}｜${c.hospital}｜${new Date(c.created_at).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false })}`;
       $("drawerContent").innerHTML = createDrawerContent(c);
       $("drawerOverlay").classList.add("show");
       $("detailDrawer").classList.add("show");
@@ -2570,7 +2571,7 @@
           <div class="detail-card">
             <h4>起案資訊</h4>
             <div><strong>案件編號：</strong>${item.case_id}</div>
-            <div><strong>起案時間：</strong>${new Date(item.created_at).toLocaleString()}</div>
+            <div><strong>起案時間：</strong>${new Date(item.created_at).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false })}</div>
             <div><strong>醫院單位：</strong>${item.hospital}</div>
             <div><strong>個管人員：</strong>${item.case_manager || '未認證'}</div>
             <div><strong>聯絡電話：</strong>${item.case_manager_phone || '--'}${item.case_manager_ext ? ' 分機 ' + item.case_manager_ext : ''}</div>
@@ -2884,9 +2885,9 @@
               </div>
             </div>
             <div class="edit-field full"><label>媒合成功狀態備註</label><textarea name="matched_note" style="min-height:60px;" placeholder="請填寫媒合成功狀態備註">${item.matched_note || ''}</textarea></div>
-            <div class="edit-field"><label>媒合成功時間</label><input type="datetime-local" name="matched_at_input" value="${item.matched_at ? new Date(item.matched_at).toISOString().slice(0, 16) : ''}"></div>
-            <div class="edit-field"><label>正式結案時間</label><input type="datetime-local" name="closed_at_input" value="${item.closed_at ? new Date(item.closed_at).toISOString().slice(0, 16) : ''}"></div>
-            <div class="edit-field"><label>起案時間</label><input type="datetime-local" name="created_at_input" value="${item.created_at ? new Date(item.created_at).toISOString().slice(0, 16) : ''}"></div>
+            <div class="edit-field"><label>媒合成功時間（臺灣）</label><input type="datetime-local" name="matched_at_input" value="${window.refcareTime.taiwanInput(item.matched_at)}"></div>
+            <div class="edit-field"><label>正式結案時間（臺灣）</label><input type="datetime-local" name="closed_at_input" value="${window.refcareTime.taiwanInput(item.closed_at)}"></div>
+            <div class="edit-field"><label>起案時間（臺灣）</label><input type="datetime-local" name="created_at_input" value="${window.refcareTime.taiwanInput(item.created_at)}"></div>
             
 
             <div class="edit-field full" style="display:flex; flex-direction:column; gap:8px;">
@@ -3208,26 +3209,16 @@
         }
       }
 
-      // 起案時間反序列化
-      if (updates.created_at_input) {
-        updates.created_at = new Date(updates.created_at_input).toISOString();
+      // All three inputs use Taiwan time. Unchanged values must retain their seconds.
+      for (const field of ['created_at', 'matched_at', 'closed_at']) {
+        const name = field + '_input';
+        const typed = updates[name];
+        if (field !== 'created_at' || typed) {
+          const value = window.refcareTime.editedTimestamp(typed, currentEditingCase?.[field]);
+          if (value !== undefined) updates[field] = value;
+        }
+        delete updates[name];
       }
-      delete updates.created_at_input;
-
-      // 媒合成功資訊反序列化
-      if (updates.matched_at_input) {
-        updates.matched_at = new Date(updates.matched_at_input).toISOString();
-      } else {
-        updates.matched_at = null;
-      }
-      delete updates.matched_at_input;
-
-      if (updates.closed_at_input) {
-        updates.closed_at = new Date(updates.closed_at_input).toISOString();
-      } else {
-        updates.closed_at = null;
-      }
-      delete updates.closed_at_input;
 
       // 媒合成功機構自動收集未提交的文字
       if ($("editMatchedFacilitySearchInput") && $("editMatchedFacilitySearchInput").value.trim()) {
@@ -3342,7 +3333,7 @@
       "BA01 基本身體清潔", "BA02 基本日常照顧", "BA03 測量生命徵象", "BA04 協助餵食或灌食",
       "BA05 餐食照顧", "BA07 協助洗頭", "BA08 協助排泄", "BA11 肢體關節活動",
       "BA13 陪同外出", "BA14 陪同就醫", "BA15 家務協助", "BA17 協助服藥",
-      "GA09 居服督導訪視", "CA01 照顧者支持服務"
+      "GA09 居服督導訪視", "CA01 照顧者支持服務", "SC09 居家短照"
     ];
 
     window.openDifficultAdjustModal = async function(caseId) {

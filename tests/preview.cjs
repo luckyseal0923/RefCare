@@ -10,12 +10,19 @@ const sample = {
   facilities: [{ id: '22222222-2222-4222-8222-222222222222', facility_name: '測試機構', short_name: '測試', phone: '0000000000', service_area: '測試地區', is_round_1: true }],
   replies: [], facility_groups: [], platform_feedbacks: [],
 };
-const app = createApp({ versionProvider: () => previewVersion, config: { serviceKey: 'preview-only-nonsecret', origin: 'http://localhost:3100', writeEnabled: false, notificationsEnabled: false, secureCookies: false }, fetchImpl: async rawUrl => {
+const app = createApp({ versionProvider: () => previewVersion, config: { serviceKey: 'preview-only-nonsecret', origin: 'http://localhost:3100', writeEnabled: true, notificationsEnabled: false, secureCookies: false }, fetchImpl: async (rawUrl, init) => {
   const url = new URL(rawUrl); const table = url.pathname.split('/rest/v1/')[1];
   let rows = (sample[table] || []).filter(row => [...url.searchParams].every(([key, value]) => value.startsWith('eq.') ? String(row[key]) === value.slice(3) : value.startsWith('in.(') ? value.slice(4, -1).split(',').includes(String(row[key])) : true));
+  if (init.method === 'PATCH' || init.method === 'POST') {
+    const input = JSON.parse(init.body);
+    const entries = Array.isArray(input) ? input : [input];
+    requests.push({ method: init.method, synthetic_table: table, submitted_fields: Object.keys(entries[0]), submitted_times: Object.fromEntries(Object.entries(entries[0]).filter(([key]) => ['created_at', 'matched_at', 'closed_at'].includes(key))) });
+    if (init.method === 'PATCH') rows.forEach(row => Object.assign(row, input));
+    else { rows = entries.map(row => table === 'cases' ? { ...row, created_at: row.created_at || new Date().toISOString() } : row); sample[table].push(...rows); }
+  }
   const projection = url.searchParams.get('select');
   if (projection && projection !== '*') rows = rows.map(row => Object.fromEntries(projection.split(',').filter(k => k in row).map(k => [k, row[k]])));
-  return new Response(JSON.stringify(rows), { status: 200 });
+  return new Response(JSON.stringify(rows), { status: init.method === 'POST' ? 201 : 200 });
 } });
 const handle = app.listeners('request')[0];
 http.createServer(async (req, res) => {

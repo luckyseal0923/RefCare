@@ -114,6 +114,7 @@ function createApp(options = {}) {
   async function api(req, res, url) {
     if (!['GET', 'HEAD'].includes(req.method)) assert(req.headers.origin === config.origin, 403, '請從正式網站操作');
     if (url.pathname === '/api/version' && req.method === 'GET') return json(res, 200, { version: versionProvider() });
+    if (url.pathname === '/api/time' && req.method === 'GET') return json(res, 200, { server_time: new Date().toISOString(), time_zone: 'Asia/Taipei' });
     if (url.pathname === '/api/health' && req.method === 'GET') return json(res, 200, { ready: !!config.serviceKey, database: new URL(config.supabaseUrl).hostname, write_enabled: config.writeEnabled, notifications_enabled: config.notificationsEnabled });
     if (url.pathname === '/api/login' && req.method === 'POST') {
       const input = await body(req); const empId = String(input.emp_id || '').trim(); const password = String(input.password || '');
