@@ -12,6 +12,22 @@
 [data-refcare-update="compact"] .refcare-update-button { padding: 7px 12px; }
 .refcare-mobile-update { display: none; }
 .refcare-login-update { margin-top: 18px; padding-top: 16px; border-top: 1px solid #e2e8f0; }
+body[data-refcare-page="admin"] .refcare-admin-mobile-update { display: none; }
+body[data-refcare-page="admin"] .refcare-sidebar-update { margin-top: 12px; padding: 12px 0 0; border: 0; border-top: 1px solid rgba(255,255,255,.1); border-radius: 0; background: transparent; max-width: none; }
+body[data-refcare-page="admin"] .refcare-sidebar-update .refcare-version-row { gap: 4px 8px; }
+body[data-refcare-page="admin"] .refcare-sidebar-update .refcare-version-row strong { display: inline; margin: 0; color: #e2e8f0; font-size: 12px; }
+body[data-refcare-page="admin"] .refcare-sidebar-update .refcare-update-status { color: #94a3b8; }
+body[data-refcare-page="admin"] .refcare-sidebar-update .refcare-update-button { margin-top: 4px; border-color: #475569; background: #334155; color: #e2e8f0; }
+body[data-refcare-page="admin"] .refcare-sidebar-update .refcare-update-button:hover { border-color: #94a3b8; background: #475569; }
+body[data-refcare-page="admin"] .refcare-sidebar-update.refcare-has-update .refcare-update-status { color: #fcd34d; }
+body[data-refcare-page="admin"] .refcare-sidebar-update.refcare-has-update .refcare-update-button { border-color: #f59e0b; background: #fffbeb; color: #92400e; }
+@media (min-width: 1281px) {
+  body[data-refcare-page="admin"] .sidebar { overflow-y: auto; }
+  body[data-refcare-page="admin"] .sidebar > * { flex-shrink: 0; }
+}
+@media (max-width: 1280px) {
+  body[data-refcare-page="admin"] .refcare-admin-mobile-update { display: grid; }
+}
 @media (max-width: 768px) {
   .refcare-mobile-update { display: block; margin-bottom: 16px; }
   .refcare-mobile-update [data-refcare-update] { max-width: none; }
