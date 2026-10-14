@@ -29,6 +29,7 @@ async function passwordMatches(password, stored) {
 
 function createApp(options = {}) {
   const config = {
+    appVersion: require('./release.json').version,
     supabaseUrl: process.env.SUPABASE_URL || 'https://supabase-ref-care.zeabur.app',
     serviceKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
     origin: process.env.APP_ORIGIN || 'https://refcare.zeabur.app',
@@ -39,6 +40,7 @@ function createApp(options = {}) {
     ...options.config,
   };
   const upstreamFetch = options.fetchImpl || fetch;
+  const versionProvider = options.versionProvider || (() => config.appVersion);
   const cookieKey = crypto.createHash('sha256').update(`refcare-session-v1:${config.serviceKey}`).digest();
   const attempts = new Map();
   function limited(key, max = 12) {
@@ -111,6 +113,7 @@ function createApp(options = {}) {
   function replyLink(row) { return `${config.origin}/facility.html?case_id=${encodeURIComponent(row.case_id)}&token=${encodeURIComponent(row.reply_access_token)}`; }
   async function api(req, res, url) {
     if (!['GET', 'HEAD'].includes(req.method)) assert(req.headers.origin === config.origin, 403, '請從正式網站操作');
+    if (url.pathname === '/api/version' && req.method === 'GET') return json(res, 200, { version: versionProvider() });
     if (url.pathname === '/api/health' && req.method === 'GET') return json(res, 200, { ready: !!config.serviceKey, database: new URL(config.supabaseUrl).hostname, write_enabled: config.writeEnabled, notifications_enabled: config.notificationsEnabled });
     if (url.pathname === '/api/login' && req.method === 'POST') {
       const input = await body(req); const empId = String(input.emp_id || '').trim(); const password = String(input.password || '');

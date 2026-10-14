@@ -1,6 +1,15 @@
 /* Database access goes through the same-origin server. No database keys are shipped. */
 (() => {
-  const rawFetch = window.fetch.bind(window);
+  const browserFetch = window.fetch.bind(window);
+  window.refcareRequests = { pendingWrites: 0 };
+  async function rawFetch(input, init = {}) {
+    const method = String(init.method || (typeof input === 'object' && input.method) || 'GET').toUpperCase();
+    const writing = !['GET', 'HEAD', 'OPTIONS'].includes(method);
+    const signal = () => window.dispatchEvent(new Event('refcare:requests'));
+    if (writing) { window.refcareRequests.pendingWrites++; signal(); }
+    try { return await browserFetch(input, init); }
+    finally { if (writing) { window.refcareRequests.pendingWrites--; signal(); } }
+  }
   const params = new URLSearchParams(window.location.search);
   const grantHeaders = {};
   if (params.get('case_id') && params.get('token')) {
