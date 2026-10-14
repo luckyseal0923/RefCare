@@ -8,7 +8,7 @@ if (input) {
   let inFlight;
   function render() {
     const now = clock.now();
-    if (now) input.value = taiwanInput(now);
+    if (now) input.value = taiwanInput(now).replace('T', ' ');
   }
   function refresh() {
     if (inFlight) return inFlight;
