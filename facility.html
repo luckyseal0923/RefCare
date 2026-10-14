@@ -1206,12 +1206,10 @@ ${formatServiceCodes(data.service_codes)}`;
       try {
         const d = new Date(utcString);
         if (isNaN(d.getTime())) return utcString;
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const date = String(d.getDate()).padStart(2, '0');
-        const h = String(d.getHours()).padStart(2, '0');
-        const min = String(d.getMinutes()).padStart(2, '0');
-        return `${y}-${m}-${date} ${h}:${min}`;
+        return new Intl.DateTimeFormat('sv-SE', {
+          timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit',
+          hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+        }).format(d);
       } catch (e) {
         return utcString;
       }
@@ -1230,17 +1228,7 @@ ${formatServiceCodes(data.service_codes)}`;
         return id.substring(0, 2) + '*****' + id.substring(id.length - 3);
       };
 
-      let serviceCodesStr = '無';
-      if (Array.isArray(d.service_codes)) {
-        serviceCodesStr = d.service_codes.length > 0 ? d.service_codes.join(', ') : '無';
-      } else if (typeof d.service_codes === 'string') {
-        try {
-          const parsed = JSON.parse(decodeURIComponent(d.service_codes));
-          serviceCodesStr = Array.isArray(parsed) ? parsed.join(', ') : d.service_codes;
-        } catch(e) {
-          serviceCodesStr = d.service_codes || '無';
-        }
-      }
+      const serviceCodesStr = formatServiceCodes(d.service_codes);
 
       const cleanUrl = window.location.origin + window.location.pathname + '?case_id=' + (d.case_id || '');
 
@@ -1287,16 +1275,18 @@ ${cleanUrl}`;
     }
 
     function formatServiceCodes(value) {
-      if (!value) return "BA01 基本身體清潔、BA04 協助餵食或灌食、BA11 肢體關節活動";
+      if (!value || (Array.isArray(value) && value.length === 0)) return "未選擇";
 
       try {
-        const decoded = decodeURIComponent(value);
-        let parsed = null;
-        try {
-          parsed = JSON.parse(decoded);
-        } catch(e) {
-          // If not JSON, use as is
-          return decoded;
+        let parsed = value;
+        if (!Array.isArray(parsed)) {
+          const decoded = decodeURIComponent(value);
+          try {
+            parsed = JSON.parse(decoded);
+          } catch(e) {
+            // Keep legacy plain text unchanged.
+            return decoded;
+          }
         }
 
         if (Array.isArray(parsed) && parsed.length) {
@@ -1328,7 +1318,8 @@ ${cleanUrl}`;
             "BA22": "巡視服務",
             "BA23": "協助洗頭",
             "BA24": "協助排泄",
-            "GA09": "居家喘息"
+            "GA09": "居家喘息",
+            "SC09": "居家短照"
           };
 
           return parsed.map(item => {

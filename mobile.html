@@ -1069,7 +1069,7 @@
         const total = c.total_targets || 0;
         const replied = (c.replies || []).filter(r => r.reply_status && r.reply_status !== 'pending').length;
         const progressPercent = total > 0 ? Math.min((replied / total) * 100, 100) : 0;
-        const dateStr = new Date(c.created_at).toLocaleDateString();
+        const dateStr = new Date(c.created_at).toLocaleDateString('zh-TW', { timeZone: 'Asia/Taipei' });
 
         let badgeHtml = '';
         if (c.status === '媒合成功') {

@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "start": "node server.cjs",
-    "test": "node --test tests/backend.test.cjs tests/update.test.cjs",
+    "test": "node --test tests/backend.test.cjs tests/update.test.cjs tests/time.test.cjs",
     "release": "node scripts/bump-release.cjs"
   },
   "devDependencies": {

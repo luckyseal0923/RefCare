@@ -1142,6 +1142,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script type="module" src="/src/site-update.js"></script>
+  <script type="module" src="/src/refcare-time.js"></script>
 </head>
 <body data-refcare-page="portal" data-refcare-draft-scope="body">
   <div id="status" class="status"></div>
@@ -1338,6 +1339,7 @@
             <div class="field">
               <label>起案時間</label>
               <input type="datetime-local" id="referralTime" readonly style="background:#f8fafc;" />
+              <small id="referralTimeStatus" style="color:#64748b; line-height:1.6;">正在取得系統時間…</small>
             </div>
           </div>
         </section>
@@ -1517,7 +1519,7 @@
               </select>
             </div>
             <div class="field full">
-              <label>長照服務碼 (BA 碼)</label>
+              <label>長照服務碼（BA／GA／SC 碼）</label>
               <div style="display:flex; align-items:center; gap:12px;">
                 <button type="button" class="btn btn-secondary" onclick="openServiceModal()" style="width:auto; padding:8px 16px;">選擇服務碼</button>
                 <div id="selectedServicesDisplay" style="font-size:13px; color:#64748b; flex:1; border-bottom:1px dashed #cbd5e1; padding-bottom:4px;">尚未選擇</div>
@@ -1696,12 +1698,6 @@
     /* =========================
        1. 初始化與側邊欄連動
     ========================= */
-    function getTaiwanDateTimeLocal() {
-      const now = new Date();
-      const taiwanTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
-      return taiwanTime.toISOString().slice(0, 16);
-    }
-    
     function generateCaseId() {
       const now = new Date();
       const rand = Math.random().toString(36).substring(2, 4).toUpperCase();
@@ -1781,7 +1777,6 @@
     async function initForm() {
       await window.refcareReady;
       generateCaseId();
-      $("referralTime").value = getTaiwanDateTimeLocal();
       updateSidebar();
       loadFacilities();
       initAddressSelectors();
@@ -1850,7 +1845,8 @@
       { code: "BA22", name: "巡視服務" },
       { code: "BA23", name: "協助洗頭" },
       { code: "BA24", name: "協助排泄" },
-      { code: "GA09", name: "居家喘息" }
+      { code: "GA09", name: "居家喘息" },
+      { code: "SC09", name: "居家短照" }
     ];
     let selectedServiceCodes = new Set();
     function openServiceModal() {
@@ -2303,7 +2299,7 @@
         window.historyCases = data;
 
         const listHtml = data.map((item, index) => {
-          const dateStr = item.created_at ? new Date(item.created_at).toLocaleString('zh-TW', { hour12: false }) : '無時間';
+          const dateStr = item.created_at ? new Date(item.created_at).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false }) : '無時間';
           return `
             <div class="history-item-card" onclick="importHistoryRecord(${index})">
               <div class="history-item-info">
